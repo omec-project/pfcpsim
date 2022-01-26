@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-# Copyright 2020-present Open Networking Foundation
+# Copyright 2022-present Open Networking Foundation
 
 PROJECT_NAME             := pfcpsim
 VERSION                  ?= $(shell cat ./VERSION)
@@ -29,4 +29,3 @@ build-pfcpsim-client:
 	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build -f cmd/pfcpsim-client/Dockerfile . \
 	--target ${DOCKER_TARGET} \
 	--tag ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}${DOCKER_TARGET}:${DOCKER_TAG} \
-

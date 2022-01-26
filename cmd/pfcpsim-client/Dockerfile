@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2022 Open Networking Foundation
+
 # Stage pfcpsim-client-build: builds the pfcpsim-client docker image
 FROM golang AS pfcpsim-client-build
 WORKDIR /pfcpsim-client
