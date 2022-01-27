@@ -9,7 +9,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/wmnsk/go-pfcp/ie"
 	"net"
-	"time"
 )
 
 const (
@@ -43,13 +42,13 @@ func NewPFCPSimClient(lAddr string, ueAddressPool string, nodeBAddress string, u
 	}
 }
 
-func (m *PFCPSimClient) Disconnect() {
-	m.client.DisconnectN4()
+func (c *PFCPSimClient) Disconnect() {
+	c.client.DisconnectN4()
 	log.Infof("PFCP client Disconnected")
 }
 
-func (m *PFCPSimClient) Connect(remoteAddress string) error {
-	err := m.client.ConnectN4(remoteAddress)
+func (c *PFCPSimClient) Connect(remoteAddress string) error {
+	err := c.client.ConnectN4(remoteAddress)
 	if err != nil {
 		return err
 	}
@@ -60,8 +59,8 @@ func (m *PFCPSimClient) Connect(remoteAddress string) error {
 
 // TeardownAssociation uses the PFCP client to tearing down an already established association.
 // If called while no association is established by PFCP client, the latter will return an error
-func (m *PFCPSimClient) TeardownAssociation() {
-	err := m.client.TeardownAssociation()
+func (c *PFCPSimClient) TeardownAssociation() {
+	err := c.client.TeardownAssociation()
 	if err != nil {
 		log.Errorf("Error while tearing down association: %v", err)
 		return
@@ -72,16 +71,14 @@ func (m *PFCPSimClient) TeardownAssociation() {
 
 // SetupAssociation uses the PFCP client to establish an association,
 // logging its success by checking PFCPclient.IsAssociationAlive
-func (m *PFCPSimClient) SetupAssociation() {
-	err := m.client.SetupAssociation()
+func (c *PFCPSimClient) SetupAssociation() {
+	err := c.client.SetupAssociation()
 	if err != nil {
 		log.Errorf("Error while setting up association: %v", err)
 		return
 	}
 
-	time.Sleep(pfcpsim.DefaultHeartbeatPeriod)
-
-	if !m.client.IsAssociationAlive() {
+	if !c.client.IsAssociationAlive() {
 		log.Errorf("Error while peeking heartbeat response: %v", err)
 		return
 	}
@@ -90,25 +87,26 @@ func (m *PFCPSimClient) SetupAssociation() {
 }
 
 // getNextUEAddress retrieves the next available IP address from ueAddressPool
-func (m *PFCPSimClient) getNextUEAddress() net.IP {
+func (c *PFCPSimClient) getNextUEAddress() net.IP {
 	// TODO handle case net address is full
-	if m.lastUEAddress == nil {
-		ueIpFromPool, _, _ := net.ParseCIDR(m.ueAddressPool)
-		m.lastUEAddress = iplib.NextIP(ueIpFromPool)
+	if c.lastUEAddress == nil {
+		ueIpFromPool, _, _ := net.ParseCIDR(c.ueAddressPool)
+		c.lastUEAddress = iplib.NextIP(ueIpFromPool)
 
-		return m.lastUEAddress
+		return c.lastUEAddress
 
 	} else {
-		m.lastUEAddress = iplib.NextIP(m.lastUEAddress)
-		return m.lastUEAddress
+		c.lastUEAddress = iplib.NextIP(c.lastUEAddress)
+		return c.lastUEAddress
 	}
 }
 
 // InitializeSessions create 'count' sessions incrementally.
 // Once created, the sessions are established through PFCP client.
-func (m *PFCPSimClient) InitializeSessions(count int) {
+func (c *PFCPSimClient) InitializeSessions(count int) {
+	baseID := c.activeSessions + 1
 
-	for i := 1; i < (count + 1); i++ {
+	for i := baseID; i < (count + baseID); i++ {
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i + 10)
 		downlinkTEID := uint32(i + 11)
@@ -126,13 +124,13 @@ func (m *PFCPSimClient) InitializeSessions(count int) {
 		downlinkAppQerID := uint32(i + 1)
 
 		pdrs := []*ie.IE{
-			pfcpsim.NewUplinkPDR(pfcpsim.Create, uplinkPdrID, uplinkTEID, m.upfAddress, uplinkFarID, sessQerID, uplinkAppQerID),
-			pfcpsim.NewDownlinkPDR(pfcpsim.Create, dowlinkPdrID, m.getNextUEAddress().String(), downlinkFarID, sessQerID, downlinkAppQerID),
+			pfcpsim.NewUplinkPDR(pfcpsim.Create, uplinkPdrID, uplinkTEID, c.upfAddress, uplinkFarID, sessQerID, uplinkAppQerID),
+			pfcpsim.NewDownlinkPDR(pfcpsim.Create, dowlinkPdrID, c.getNextUEAddress().String(), downlinkFarID, sessQerID, downlinkAppQerID),
 		}
 
 		fars := []*ie.IE{
 			pfcpsim.NewUplinkFAR(pfcpsim.Create, uplinkFarID, ActionForward),
-			pfcpsim.NewDownlinkFAR(pfcpsim.Create, downlinkFarID, ActionDrop, downlinkTEID, m.nodeBAddress),
+			pfcpsim.NewDownlinkFAR(pfcpsim.Create, downlinkFarID, ActionDrop, downlinkTEID, c.nodeBAddress),
 		}
 
 		qers := []*ie.IE{
@@ -142,23 +140,23 @@ func (m *PFCPSimClient) InitializeSessions(count int) {
 			pfcpsim.NewQER(pfcpsim.Create, appQerID, 0x08, 50000, 50000, 30000, 30000),
 		}
 
-		err := m.client.EstablishSession(pdrs, fars, qers)
+		err := c.client.EstablishSession(pdrs, fars, qers)
 		if err != nil {
 			log.Errorf("Error while establishing sessions: %v", err)
 			return
 		}
 
 		// TODO show session's F-SEID
-		m.activeSessions++
-		log.Infof("Created sessions")
+		c.activeSessions++
+		log.Infof("Created session")
 	}
 
 }
 
 // DeleteAllSessions uses the PFCP client DeleteAllSessions. If failure happens at any stage,
 // an error is logged.
-func (m *PFCPSimClient) DeleteAllSessions() {
-	err := m.client.DeleteAllSessions()
+func (c *PFCPSimClient) DeleteAllSessions() {
+	err := c.client.DeleteAllSessions()
 	if err != nil {
 		log.Errorf("Error while deleting sessions: %v", err)
 		return
