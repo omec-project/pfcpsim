@@ -5,7 +5,7 @@ import (
 )
 
 type farBuilder struct {
-	id          uint32
+	farID       uint32
 	applyAction uint8
 	method      IEMethod
 }
@@ -16,12 +16,18 @@ type downlinkFARBuilder struct {
 	downlinkIP string
 }
 
+// NewFARBuilder returns a farBuilder containing initialized values to:
+// farID = 1, method = Create, applyAction = ActionDrop
 func NewFARBuilder() *farBuilder {
-	return &farBuilder{}
+	return &farBuilder{
+		farID:       uint32(1),
+		method:      Create,
+		applyAction: ActionDrop,
+	}
 }
 
 func (b *farBuilder) WithID(id uint32) *farBuilder {
-	b.id = id
+	b.farID = id
 	return b
 }
 
@@ -42,7 +48,7 @@ func (b *farBuilder) BuildUplinkFAR() *ie.IE {
 	}
 
 	return createFunc(
-		ie.NewFARID(b.id),
+		ie.NewFARID(b.farID),
 		ie.NewApplyAction(b.applyAction),
 		ie.NewForwardingParameters(
 			ie.NewDestinationInterface(ie.DstInterfaceCore),
@@ -71,7 +77,7 @@ func (b *downlinkFARBuilder) BuildDownlinkFAR() *ie.IE {
 	}
 
 	return createFunc(
-		ie.NewFARID(b.id),
+		ie.NewFARID(b.farID),
 		ie.NewApplyAction(b.applyAction),
 		ie.NewUpdateForwardingParameters(
 			ie.NewDestinationInterface(ie.DstInterfaceAccess),

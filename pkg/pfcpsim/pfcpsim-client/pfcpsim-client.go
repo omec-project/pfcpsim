@@ -13,13 +13,6 @@ import (
 	"github.com/wmnsk/go-pfcp/ie"
 )
 
-const (
-	ActionForward uint8 = 0x2
-	ActionDrop    uint8 = 0x1
-	ActionBuffer  uint8 = 0x4
-	ActionNotify  uint8 = 0x8
-)
-
 type PFCPSimClient struct {
 	ueAddressPool string
 	nodeBAddress  string
@@ -131,8 +124,8 @@ func (c *PFCPSimClient) InitializeSessions(count int) {
 		}
 
 		fars := []*ie.IE{
-			session.NewUplinkFAR(session.Create, uplinkFarID, ActionForward),
-			session.NewDownlinkFAR(session.Create, downlinkFarID, ActionDrop, downlinkTEID, c.nodeBAddress),
+			session.NewUplinkFAR(session.Create, uplinkFarID, session.ActionForward),
+			session.NewDownlinkFAR(session.Create, downlinkFarID, session.ActionDrop, downlinkTEID, c.nodeBAddress),
 		}
 
 		qers := []*ie.IE{

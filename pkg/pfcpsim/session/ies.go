@@ -18,6 +18,13 @@ const (
 )
 
 const (
+	ActionForward uint8 = 0x2
+	ActionDrop    uint8 = 0x1
+	ActionBuffer  uint8 = 0x4
+	ActionNotify  uint8 = 0x8
+)
+
+const (
 	dummyPrecedence = 100
 )
 
@@ -70,9 +77,7 @@ func NewUplinkFAR(method IEMethod, id uint32, applyAction uint8) *ie.IE {
 }
 
 func NewDownlinkFAR(method IEMethod, id uint32, applyAction uint8, teid uint32, downlinkIP string) *ie.IE {
-	builder := NewFARBuilder()
-
-	return builder.WithID(id).
+	return NewFARBuilder().WithID(id).
 		WithAction(applyAction).
 		WithMethod(method).
 		WithTEID(teid).
@@ -82,17 +87,13 @@ func NewDownlinkFAR(method IEMethod, id uint32, applyAction uint8, teid uint32, 
 }
 
 func NewQER(method IEMethod, id uint32, qfi uint8, ulMbr uint64, dlMbr uint64, ulGbr uint64, dlGbr uint64) *ie.IE {
-	createFunc := ie.NewCreateQER
-	if method == Update {
-		createFunc = ie.NewUpdateQER
-	}
-
-	return createFunc(
-		ie.NewQERID(id),
-		ie.NewQFI(qfi),
-		// FIXME: we don't support gating, always OPEN
-		ie.NewGateStatus(0, 0),
-		ie.NewMBR(ulMbr, dlMbr),
-		ie.NewGBR(ulGbr, dlGbr),
-	)
+	return NewQERBuilder().
+		WithID(id).
+		WithQFI(qfi).
+		WithMethod(method).
+		WithDownlinkGBR(dlGbr).
+		WithDownlinkMBR(dlMbr).
+		WithUplinkGBR(ulGbr).
+		WithUplinkMBR(ulMbr).
+		Build()
 }
