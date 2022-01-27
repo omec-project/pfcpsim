@@ -19,7 +19,7 @@ const (
 	ActionNotify  uint8 = 0x8
 )
 
-type MockSMF struct {
+type PFCPSimClient struct {
 	ueAddressPool string
 	nodeBAddress  string
 	upfAddress    string
@@ -31,11 +31,11 @@ type MockSMF struct {
 	client *pfcpsim.PFCPClient
 }
 
-func NewMockSMF(lAddr string, ueAddressPool string, nodeBAddress string, upfAddress string) *MockSMF {
+func NewPFCPSimClient(lAddr string, ueAddressPool string, nodeBAddress string, upfAddress string) *PFCPSimClient {
 
 	pfcpClient := pfcpsim.NewPFCPClient(lAddr)
 
-	return &MockSMF{
+	return &PFCPSimClient{
 		ueAddressPool: ueAddressPool,
 		nodeBAddress:  nodeBAddress,
 		upfAddress:    upfAddress,
@@ -43,12 +43,12 @@ func NewMockSMF(lAddr string, ueAddressPool string, nodeBAddress string, upfAddr
 	}
 }
 
-func (m *MockSMF) Disconnect() {
+func (m *PFCPSimClient) Disconnect() {
 	m.client.DisconnectN4()
 	log.Infof("PFCP client Disconnected")
 }
 
-func (m *MockSMF) Connect(remoteAddress string) error {
+func (m *PFCPSimClient) Connect(remoteAddress string) error {
 	err := m.client.ConnectN4(remoteAddress)
 	if err != nil {
 		return err
@@ -60,7 +60,7 @@ func (m *MockSMF) Connect(remoteAddress string) error {
 
 // TeardownAssociation uses the PFCP client to tearing down an already established association.
 // If called while no association is established by PFCP client, the latter will return an error
-func (m *MockSMF) TeardownAssociation() {
+func (m *PFCPSimClient) TeardownAssociation() {
 	err := m.client.TeardownAssociation()
 	if err != nil {
 		log.Errorf("Error while tearing down association: %v", err)
@@ -72,7 +72,7 @@ func (m *MockSMF) TeardownAssociation() {
 
 // SetupAssociation uses the PFCP client to establish an association,
 // logging its success by checking PFCPclient.IsAssociationAlive
-func (m *MockSMF) SetupAssociation() {
+func (m *PFCPSimClient) SetupAssociation() {
 	err := m.client.SetupAssociation()
 	if err != nil {
 		log.Errorf("Error while setting up association: %v", err)
@@ -90,7 +90,7 @@ func (m *MockSMF) SetupAssociation() {
 }
 
 // getNextUEAddress retrieves the next available IP address from ueAddressPool
-func (m *MockSMF) getNextUEAddress() net.IP {
+func (m *PFCPSimClient) getNextUEAddress() net.IP {
 	// TODO handle case net address is full
 	if m.lastUEAddress == nil {
 		ueIpFromPool, _, _ := net.ParseCIDR(m.ueAddressPool)
@@ -106,7 +106,7 @@ func (m *MockSMF) getNextUEAddress() net.IP {
 
 // InitializeSessions create 'count' sessions incrementally.
 // Once created, the sessions are established through PFCP client.
-func (m *MockSMF) InitializeSessions(count int) {
+func (m *PFCPSimClient) InitializeSessions(count int) {
 
 	for i := 1; i < (count + 1); i++ {
 		// using variables to ease comprehension on how rules are linked together
@@ -156,8 +156,8 @@ func (m *MockSMF) InitializeSessions(count int) {
 }
 
 // DeleteAllSessions uses the PFCP client DeleteAllSessions. If failure happens at any stage,
-// an error is logged through MockSMF logger.
-func (m *MockSMF) DeleteAllSessions() {
+// an error is logged.
+func (m *PFCPSimClient) DeleteAllSessions() {
 	err := m.client.DeleteAllSessions()
 	if err != nil {
 		log.Errorf("Error while deleting sessions: %v", err)

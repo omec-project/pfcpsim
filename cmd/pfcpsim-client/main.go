@@ -25,7 +25,7 @@ var (
 
 	sessionCount int
 
-	globalMockSmf *pfcpsim_client.MockSMF
+	globalMockSmf *pfcpsim_client.PFCPSimClient
 )
 
 const (
@@ -271,7 +271,7 @@ func handleUserInput() {
 func main() {
 	parseArgs()
 
-	globalMockSmf = pfcpsim_client.NewMockSMF(localAddress.String(),
+	globalMockSmf = pfcpsim_client.NewPFCPSimClient(localAddress.String(),
 		ueAddressPool,
 		NodeBAddress.String(),
 		upfAddress.String(),
