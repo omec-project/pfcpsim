@@ -5,13 +5,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/omec-project/pfcpsim/pkg/pfcpsim/pfcpsim-client"
-	"github.com/pborman/getopt/v2"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"net"
 	"os"
 	"strings"
+
+	"github.com/omec-project/pfcpsim/pkg/pfcpsim/pfcpsim-client"
+	"github.com/pborman/getopt/v2"
+	log "github.com/sirupsen/logrus"
 )
 
 var (

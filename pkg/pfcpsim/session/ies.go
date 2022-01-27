@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2022 Open Networking Foundation
 
-package pfcpsim
+package session
 
 import (
-	"github.com/wmnsk/go-pfcp/ie"
 	"net"
+
+	"github.com/wmnsk/go-pfcp/ie"
 )
 
 type IEMethod uint8
@@ -65,34 +66,19 @@ func NewDownlinkPDR(method IEMethod, id uint16, ueAddress string,
 }
 
 func NewUplinkFAR(method IEMethod, id uint32, applyAction uint8) *ie.IE {
-	createFunc := ie.NewCreateFAR
-	if method == Update {
-		createFunc = ie.NewUpdateFAR
-	}
-
-	return createFunc(
-		ie.NewFARID(id),
-		ie.NewApplyAction(applyAction),
-		ie.NewForwardingParameters(
-			ie.NewDestinationInterface(ie.DstInterfaceCore),
-		),
-	)
+	return NewFARBuilder().WithID(id).WithAction(applyAction).WithMethod(method).BuildUplinkFAR()
 }
 
 func NewDownlinkFAR(method IEMethod, id uint32, applyAction uint8, teid uint32, downlinkIP string) *ie.IE {
-	createFunc := ie.NewCreateFAR
-	if method == Update {
-		createFunc = ie.NewUpdateFAR
-	}
+	builder := NewFARBuilder()
 
-	return createFunc(
-		ie.NewFARID(id),
-		ie.NewApplyAction(applyAction),
-		ie.NewUpdateForwardingParameters(
-			ie.NewDestinationInterface(ie.DstInterfaceAccess),
-			ie.NewOuterHeaderCreation(0x100, teid, downlinkIP, "", 0, 0, 0),
-		),
-	)
+	return builder.WithID(id).
+		WithAction(applyAction).
+		WithMethod(method).
+		WithTEID(teid).
+		WithDownlinkIP(downlinkIP).
+		BuildDownlinkFAR()
+
 }
 
 func NewQER(method IEMethod, id uint32, qfi uint8, ulMbr uint64, dlMbr uint64, ulGbr uint64, dlGbr uint64) *ie.IE {

@@ -7,11 +7,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	ieLib "github.com/wmnsk/go-pfcp/ie"
-	"github.com/wmnsk/go-pfcp/message"
 	"net"
 	"sync"
 	"time"
+
+	ieLib "github.com/wmnsk/go-pfcp/ie"
+	"github.com/wmnsk/go-pfcp/message"
 )
 
 const (
@@ -352,6 +353,10 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 // DeleteAllSessions sends Session Deletion Request and awaits for PFCP Session Deletion Response.
 // Returns error if the process fails at any stage.
 func (c *PFCPClient) DeleteAllSessions() error {
+	if !c.isAssociationActive {
+		return fmt.Errorf("cannot delete sessions: Client is not associated")
+	}
+
 	var remoteSEID uint64
 
 	for FSEID := c.numSessions; FSEID > 0; FSEID-- {
