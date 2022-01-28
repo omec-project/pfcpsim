@@ -11,7 +11,6 @@ import (
     "sync"
     "time"
 
-    log "github.com/sirupsen/logrus"
     ieLib "github.com/wmnsk/go-pfcp/ie"
     "github.com/wmnsk/go-pfcp/message"
 )
@@ -138,8 +137,6 @@ func (c *PFCPClient) ConnectN4(remoteAddr string) error {
 
     go c.receiveFromN4()
 
-    log.Infof("PFCP client is connected")
-
     return nil
 }
 
@@ -147,14 +144,7 @@ func (c *PFCPClient) DisconnectN4() {
     if c.cancelHeartbeats != nil {
         c.cancelHeartbeats()
     }
-
-    err := c.conn.Close()
-    if err != nil {
-        log.Errorf("Error while disconnecting: %v", err)
-        return
-    }
-
-    log.Infof("PFCP client disconnected")
+    c.conn.Close()
 }
 
 func (c *PFCPClient) PeekNextHeartbeatResponse(timeout time.Duration) (*message.HeartbeatResponse, error) {
@@ -288,8 +278,6 @@ func (c *PFCPClient) SetupAssociation() error {
 
     go c.StartHeartbeats(ctx)
 
-    log.Infof("Setup association completed")
-
     return nil
 }
 
@@ -330,8 +318,6 @@ func (c *PFCPClient) TeardownAssociation() error {
         c.cancelHeartbeats()
     }
     c.setAssociationStatus(false)
-
-    log.Infoln("Teardown association completed")
 
     return nil
 }
@@ -380,10 +366,6 @@ func (c *PFCPClient) GetNumActiveSessions() uint64 {
 // DeleteAllSessions sends Session Deletion Request for each session and awaits for PFCP Session Deletion Response.
 // Returns error if the process fails at any stage.
 func (c *PFCPClient) DeleteAllSessions() error {
-    if !c.isAssociationActive {
-        return fmt.Errorf("cannot delete sessions: Client is not associated")
-    }
-
     var remoteSEID uint64
 
     for FSEID := c.numSessions; FSEID > 0; FSEID-- {
@@ -413,8 +395,6 @@ func (c *PFCPClient) DeleteAllSessions() error {
         // decrease number of active sessions (erase FSEID)
         c.numSessions--
     }
-
-    log.Infof("Deleted all sessions")
 
     return nil
 }
