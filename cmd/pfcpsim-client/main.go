@@ -27,7 +27,8 @@ var (
 
 	lastUEAddress net.IP
 
-	inputFile string
+	inputFile  string
+	outputFile string
 
 	sessionCount int
 
@@ -45,8 +46,8 @@ const (
 
 // copyOutputToLogfile reads from Stdout and Stderr to save in a persistent file,
 // provided through logfile parameter.
-func copyOutputToLogfile(logfile string) func() {
-	f, _ := os.OpenFile(logfile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+func copyOutputToLogfile() func() {
+	f, _ := os.OpenFile(outputFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 
 	out := os.Stdout
 	multiWriter := io.MultiWriter(out, f)
@@ -115,7 +116,7 @@ func getLocalAddress() (net.IP, error) {
 // parseArgs perform flag parsing and validation saving necessary data to global variables.
 func parseArgs() {
 	inputF := getopt.StringLong("input-file", 'f', "", "File to poll for input commands. Default is stdin")
-	outputFile := getopt.StringLong("output-file", 'o', "", "File in which copy from Stdout. Default uses only Stdout")
+	outputF := getopt.StringLong("output-file", 'o', "", "File in which copy from Stdout. Default uses only Stdout")
 	remotePeer := getopt.StringLong("remote-peer-address", 'r', "127.0.0.1", "Address or hostname of the remote peer (PFCP Agent)")
 	upfAddr := getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF (UP4)")
 	sessionCnt := getopt.IntLong("session-count", 'c', 1, "Set the amount of sessions to create, starting from 1 (included)")
@@ -138,9 +139,8 @@ func parseArgs() {
 		log.Infof("Verbosity level set to: %v", level.String())
 	}
 
-	if *outputFile != "" {
-		fn := copyOutputToLogfile(*outputFile)
-		defer fn()
+	if *outputF != "" {
+		outputFile = *outputF
 	}
 
 	if *inputF != "" {
@@ -323,7 +323,8 @@ func InitializeSessions(count int) {
 				Build(),
 
 			// DownlinkPDR
-			session.NewPDRBuilder().WithID(dowlinkPdrID).
+			session.NewPDRBuilder().
+				WithID(dowlinkPdrID).
 				WithMEthod(session.Create).
 				WithRulesIDs(downlinkFarID, sessQerID, downlinkAppQerID).
 				WithPrecedence(100).
@@ -386,6 +387,11 @@ func InitializeSessions(count int) {
 
 func main() {
 	parseArgs()
+
+	if outputFile != "" {
+		fn := copyOutputToLogfile()
+		defer fn()
+	}
 
 	localAddress, err := getLocalAddress()
 	if err != nil {
