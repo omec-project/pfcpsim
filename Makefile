@@ -13,10 +13,7 @@ DOCKER_BUILDKIT          ?= 1
 
 DOCKER_TARGET           ?= pfcpsim-client
 
-run-pfcpsim-client:
-	go run cmd/pfcpsim-client/main.go -v -i en0 -c 2
-
 build-pfcpsim-client:
-	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build -f cmd/pfcpsim-client/Dockerfile . \
+	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build -f Dockerfile . \
 	--target ${DOCKER_TARGET} \
 	--tag ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}${DOCKER_TARGET}:${DOCKER_TAG} \

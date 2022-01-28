@@ -8,12 +8,8 @@ type farBuilder struct {
 	farID       uint32
 	applyAction uint8
 	method      IEMethod
-}
-
-type downlinkFARBuilder struct {
-	farBuilder
-	teid       uint32
-	downlinkIP string
+	teid        uint32
+	downlinkIP  string
 }
 
 // NewFARBuilder returns a farBuilder containing initialized values to:
@@ -56,21 +52,17 @@ func (b *farBuilder) BuildUplinkFAR() *ie.IE {
 	)
 }
 
-func (b *farBuilder) WithTEID(teid uint32) *downlinkFARBuilder {
-	return &downlinkFARBuilder{
-		farBuilder: *b,
-		teid:       teid,
-	}
+func (b *farBuilder) WithTEID(teid uint32) *farBuilder {
+	b.teid = teid
+	return b
 }
 
-func (b *farBuilder) WithDownlinkIP(downlinkIP string) *downlinkFARBuilder {
-	return &downlinkFARBuilder{
-		farBuilder: *b,
-		downlinkIP: downlinkIP,
-	}
+func (b *farBuilder) WithDownlinkIP(downlinkIP string) *farBuilder {
+	b.downlinkIP = downlinkIP
+	return b
 }
 
-func (b *downlinkFARBuilder) BuildDownlinkFAR() *ie.IE {
+func (b *farBuilder) BuildDownlinkFAR() *ie.IE {
 	createFunc := ie.NewCreateFAR
 	if b.method == Update {
 		createFunc = ie.NewUpdateFAR
