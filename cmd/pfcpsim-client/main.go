@@ -5,27 +5,33 @@ package main
 
 import (
 	"fmt"
-	"github.com/omec-project/pfcpsim/pkg/pfcpsim/pfcpsim-client"
-	"github.com/pborman/getopt/v2"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"net"
 	"os"
+	"os/exec"
 	"strings"
+
+	"github.com/c-robinson/iplib"
+	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
+	"github.com/pborman/getopt/v2"
+	log "github.com/sirupsen/logrus"
+	"github.com/wmnsk/go-pfcp/ie"
 )
 
 var (
 	remotePeerAddress net.IP
-	localAddress      net.IP
 	upfAddress        net.IP
-	NodeBAddress      net.IP
+	nodeBAddress      net.IP
 	ueAddressPool     string
+
+	lastUEAddress net.IP
 
 	inputFile string
 
 	sessionCount int
 
-	globalMockSmf *pfcpsim_client.PFCPSimClient
+	// Emulates 5G SMF/ 4G SGW
+	globalPFCPSimClient *pfcpsim.PFCPClient
 )
 
 const (
@@ -35,13 +41,10 @@ const (
 
 	defaultUpfN3Address = "198.18.0.1"
 
-	defaultSliceID = 0
-
-	srcIfaceAccess = 0x1
-	srcIfaceCore   = 0x2
-
-	directionUplink   = 0x1
-	directionDownlink = 0x2
+	ActionForward uint8 = 0x2
+	ActionDrop    uint8 = 0x1
+	ActionBuffer  uint8 = 0x4
+	ActionNotify  uint8 = 0x8
 )
 
 // copyOutputToLogfile reads from Stdout and Stderr to save in a persistent file,
@@ -83,30 +86,31 @@ func copyOutputToLogfile(logfile string) func() {
 
 }
 
-// getInterfaceAddress retrieves the IP of interfaceName.
+// getLocalAddress discovers local IP by retrieving interface used for default gateway.
 // Returns error if fail occurs at any stage.
-func getInterfaceAddress(interfaceName string) (net.IP, error) {
-	ifaces, err := net.Interfaces()
+func getLocalAddress() (net.IP, error) {
+	cmd := "route -n get default | grep 'interface:' | grep -o '[^ ]*$'"
+	cmdOutput, err := exec.Command("bash", "-c", cmd).Output()
 	if err != nil {
-		log.Errorf("could not retrieve network interfaces: %v", err)
 		return nil, err
 	}
 
-	for _, i := range ifaces {
-		addrs, err := i.Addrs()
-		if err != nil {
-			log.Errorf("localAddresses: %+v\n", err.Error())
-			continue
-		}
+	interfaceName := strings.TrimSuffix(string(cmdOutput[:]), "\n")
 
-		for _, addr := range addrs {
-			switch iface := addr.(type) {
-			case *net.IPNet:
-				if strings.Contains(i.Name, interfaceName) {
-					return iface.IP, nil
-				}
+	itf, _ := net.InterfaceByName(interfaceName)
+	item, _ := itf.Addrs()
+	var ip net.IP
+	for _, addr := range item {
+		switch v := addr.(type) {
+		case *net.IPNet:
+			if v.IP.To4() != nil { //Verify if IP is IPV4
+				ip = v.IP
 			}
 		}
+	}
+
+	if ip != nil {
+		return ip, nil
 	}
 
 	return nil, fmt.Errorf("could not find interface: %v", interfaceName)
@@ -118,7 +122,6 @@ func parseArgs() {
 	outputFile := getopt.StringLong("output-file", 'o', "", "File in which copy from Stdout. Default uses only Stdout")
 	remotePeer := getopt.StringLong("remote-peer-address", 'r', "127.0.0.1", "Address or hostname of the remote peer (PFCP Agent)")
 	upfAddr := getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF (UP4)")
-	interfaceName := getopt.StringLong("interface", 'i', "", "Set interface name to discover local address")
 	sessionCnt := getopt.IntLong("session-count", 'c', 1, "Set the amount of sessions to create, starting from 1 (included)")
 	ueAddrPool := getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")
 	NodeBAddr := getopt.StringLong("nodeb-address", 'g', defaultGNodeBAddress, "The IPv4 of (g/e)NodeBAddress")
@@ -154,8 +157,8 @@ func parseArgs() {
 	sessionCount = *sessionCnt
 
 	// IPs checks
-	NodeBAddress = net.ParseIP(*NodeBAddr)
-	if NodeBAddress == nil {
+	nodeBAddress = net.ParseIP(*NodeBAddr)
+	if nodeBAddress == nil {
 		log.Fatalf("Could not retrieve IP address of (g/e)NodeB")
 	}
 
@@ -180,12 +183,6 @@ func parseArgs() {
 		log.Fatalf("Could not parse ue address pool: %v", err)
 	}
 	ueAddressPool = *ueAddrPool
-
-	localAddress, err = getInterfaceAddress(*interfaceName)
-	if err != nil {
-		log.Fatalf("Error while retriving interface information: %v", err)
-	}
-
 }
 
 // readInput will cycle through user's input. if inputFile was provided as a flag, Stdin redirection is performed.
@@ -246,38 +243,119 @@ func handleUserInput() {
 			switch userAnswer {
 			case "disassociate":
 				log.Tracef("Selected teardown association")
-				globalMockSmf.TeardownAssociation()
+				err := globalPFCPSimClient.TeardownAssociation()
+				if err != nil {
+					log.Errorf("Error while tearing down association: %v", err)
+				}
+
 			case "associate":
 				log.Tracef("Selected setup association")
-				globalMockSmf.SetupAssociation()
+				err := globalPFCPSimClient.SetupAssociation()
+				if err != nil {
+					log.Errorf("Error while setting up association: %v", err)
+				}
+
 			case "create":
 				log.Tracef("Selected create sessions")
-				globalMockSmf.InitializeSessions(sessionCount)
+				InitializeSessions(sessionCount)
+
 			case "delete":
 				log.Tracef("Selected delete sessions")
-				globalMockSmf.DeleteAllSessions()
+				err := globalPFCPSimClient.DeleteAllSessions()
+				if err != nil {
+					log.Errorf("Error while deleting sessions: %v", err)
+				}
+
 			case "exit":
 				log.Tracef("Shutting down")
-				globalMockSmf.Disconnect()
+				globalPFCPSimClient.DisconnectN4()
 				os.Exit(0)
 
 			default:
-				fmt.Println("Not implemented or bad entry")
+				log.Error("Command not found")
 			}
 		}
 	}
 }
 
+// getNextUEAddress retrieves the next available IP address from ueAddressPool
+func getNextUEAddress() net.IP {
+	// TODO handle case net IP is full
+	if lastUEAddress == nil {
+		ueIpFromPool, _, _ := net.ParseCIDR(ueAddressPool)
+		lastUEAddress = iplib.NextIP(ueIpFromPool)
+
+		return lastUEAddress
+
+	} else {
+		lastUEAddress = iplib.NextIP(lastUEAddress)
+		return lastUEAddress
+	}
+}
+
+// InitializeSessions create 'count' sessions incrementally.
+// Once created, the sessions are established through PFCP client.
+func InitializeSessions(count int) {
+	baseID := globalPFCPSimClient.GetNumActiveSessions() + 1
+
+	for i := baseID; i < (uint64(count) + baseID); i++ {
+		// using variables to ease comprehension on how rules are linked together
+		uplinkTEID := uint32(i + 10)
+		downlinkTEID := uint32(i + 11)
+
+		uplinkFarID := uint32(i)
+		downlinkFarID := uint32(i + 1)
+
+		uplinkPdrID := uint16(i)
+		dowlinkPdrID := uint16(i + 1)
+
+		sessQerID := uint32(i + 3)
+
+		appQerID := uint32(i)
+
+		uplinkAppQerID := appQerID
+		downlinkAppQerID := appQerID + 1
+
+		pdrs := []*ie.IE{
+			pfcpsim.NewUplinkPDR(pfcpsim.Create, uplinkPdrID, uplinkTEID, upfAddress.String(), uplinkFarID, sessQerID, uplinkAppQerID),
+			pfcpsim.NewDownlinkPDR(pfcpsim.Create, dowlinkPdrID, getNextUEAddress().String(), downlinkFarID, sessQerID, downlinkAppQerID),
+		}
+
+		fars := []*ie.IE{
+			pfcpsim.NewUplinkFAR(pfcpsim.Create, uplinkFarID, ActionForward),
+			pfcpsim.NewDownlinkFAR(pfcpsim.Create, downlinkFarID, ActionDrop, downlinkTEID, nodeBAddress.String()),
+		}
+
+		qers := []*ie.IE{
+			// session QER
+			pfcpsim.NewQER(pfcpsim.Create, sessQerID, 0x09, 500000, 500000, 0, 0),
+			// application QER
+			//pfcpsim.NewQER(pfcpsim.Create, appQerID, 0x08, 50000, 50000, 30000, 30000),
+		}
+
+		err := globalPFCPSimClient.EstablishSession(pdrs, fars, qers)
+		if err != nil {
+			log.Errorf("Error while establishing sessions: %v", err)
+			return
+		}
+
+		// TODO show session's F-SEID
+		log.Infof("Created session")
+	}
+
+}
+
 func main() {
 	parseArgs()
 
-	globalMockSmf = pfcpsim_client.NewPFCPSimClient(localAddress.String(),
-		ueAddressPool,
-		NodeBAddress.String(),
-		upfAddress.String(),
-	)
+	localAddress, err := getLocalAddress()
+	if err != nil {
+		log.Fatalf("Error while retrieving local address: %v", err)
+	}
 
-	err := globalMockSmf.Connect(remotePeerAddress.String())
+	globalPFCPSimClient = pfcpsim.NewPFCPClient(localAddress.String())
+
+	err = globalPFCPSimClient.ConnectN4(remotePeerAddress.String())
 	if err != nil {
 		log.Fatalf("Failed to connect to remote peer: %v", err)
 	}

@@ -7,11 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	ieLib "github.com/wmnsk/go-pfcp/ie"
-	"github.com/wmnsk/go-pfcp/message"
 	"net"
 	"sync"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	ieLib "github.com/wmnsk/go-pfcp/ie"
+	"github.com/wmnsk/go-pfcp/message"
 )
 
 const (
@@ -30,7 +32,7 @@ type PFCPClient struct {
 	numSessions uint64
 
 	// Save remoteSEID for session deletion
-	remoteSEIDS []uint64
+	remoteSEIDs []uint64
 
 	aliveLock           sync.Mutex
 	isAssociationActive bool
@@ -136,6 +138,8 @@ func (c *PFCPClient) ConnectN4(remoteAddr string) error {
 
 	go c.receiveFromN4()
 
+	log.Infof("PFCP client is connected")
+
 	return nil
 }
 
@@ -143,7 +147,14 @@ func (c *PFCPClient) DisconnectN4() {
 	if c.cancelHeartbeats != nil {
 		c.cancelHeartbeats()
 	}
-	c.conn.Close()
+
+	err := c.conn.Close()
+	if err != nil {
+		log.Errorf("Error while disconnecting: %v", err)
+		return
+	}
+
+	log.Infof("PFCP client disconnected")
 }
 
 func (c *PFCPClient) PeekNextHeartbeatResponse(timeout time.Duration) (*message.HeartbeatResponse, error) {
@@ -253,6 +264,8 @@ func (c *PFCPClient) SendAndRecvHeartbeat() error {
 	return nil
 }
 
+// SetupAssociation sends PFCP Association Setup Request and waits for PFCP Association Setup Response.
+// Returns error if the process fails at any stage.
 func (c *PFCPClient) SetupAssociation() error {
 	err := c.SendAssociationSetupRequest()
 	if err != nil {
@@ -275,6 +288,8 @@ func (c *PFCPClient) SetupAssociation() error {
 
 	go c.StartHeartbeats(ctx)
 
+	log.Infof("Setup association completed")
+
 	return nil
 }
 
@@ -285,6 +300,8 @@ func (c *PFCPClient) IsAssociationAlive() bool {
 	return c.isAssociationActive
 }
 
+// TeardownAssociation tears down an already established association.
+// If called while no association is established, an error is returned
 func (c *PFCPClient) TeardownAssociation() error {
 	if !c.IsAssociationAlive() {
 		return errors.New("association does not exist")
@@ -314,6 +331,8 @@ func (c *PFCPClient) TeardownAssociation() error {
 	}
 	c.setAssociationStatus(false)
 
+	log.Infoln("Teardown association completed")
+
 	return nil
 }
 
@@ -331,25 +350,34 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 
 	resp, err := c.PeekNextResponse(5)
 	if err != nil {
+		// delete FSEID if session was not established.
+		c.numSessions--
 		return err
 	}
 
 	estResp, ok := resp.(*message.SessionEstablishmentResponse)
 	if !ok {
+		c.numSessions--
 		return fmt.Errorf("invalid message received, expected session establishment response")
 	}
 
 	if cause, err := estResp.Cause.Cause(); err != nil || cause != ieLib.CauseRequestAccepted {
+		c.numSessions--
 		return fmt.Errorf("session establishment response returns invalid cause: %v", cause)
 	}
 
 	remoteUpfSEID, _ := estResp.UPFSEID.FSEID()
-	c.remoteSEIDS = append(c.remoteSEIDS, remoteUpfSEID.SEID)
+	c.remoteSEIDs = append(c.remoteSEIDs, remoteUpfSEID.SEID)
 
 	return nil
 }
 
-// DeleteAllSessions sends Session Deletion Request and awaits for PFCP Session Deletion Response.
+// GetNumActiveSessions returns the number of active sessions.
+func (c *PFCPClient) GetNumActiveSessions() uint64 {
+	return c.numSessions
+}
+
+// DeleteAllSessions sends Session Deletion Request for each session and awaits for PFCP Session Deletion Response.
 // Returns error if the process fails at any stage.
 func (c *PFCPClient) DeleteAllSessions() error {
 	var remoteSEID uint64
@@ -357,7 +385,7 @@ func (c *PFCPClient) DeleteAllSessions() error {
 	for FSEID := c.numSessions; FSEID > 0; FSEID-- {
 
 		// pop remoteSEID from slice
-		remoteSEID, c.remoteSEIDS = c.remoteSEIDS[len(c.remoteSEIDS)-1], c.remoteSEIDS[:len(c.remoteSEIDS)-1]
+		remoteSEID, c.remoteSEIDs = c.remoteSEIDs[len(c.remoteSEIDs)-1], c.remoteSEIDs[:len(c.remoteSEIDs)-1]
 
 		err := c.SendSessionDeletionRequest(FSEID, remoteSEID)
 		if err != nil {
@@ -381,6 +409,8 @@ func (c *PFCPClient) DeleteAllSessions() error {
 		// decrease number of active sessions (erase FSEID)
 		c.numSessions--
 	}
+
+	log.Infof("Deleted all sessions")
 
 	return nil
 }
