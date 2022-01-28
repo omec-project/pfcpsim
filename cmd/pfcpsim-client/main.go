@@ -42,11 +42,6 @@ const (
 	defaultUeAddressPool = "17.0.0.0/24"
 
 	defaultUpfN3Address = "198.18.0.1"
-
-	ActionForward uint8 = 0x2
-	ActionDrop    uint8 = 0x1
-	ActionBuffer  uint8 = 0x4
-	ActionNotify  uint8 = 0x8
 )
 
 // copyOutputToLogfile reads from Stdout and Stderr to save in a persistent file,
