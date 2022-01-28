@@ -5,15 +5,15 @@ import (
 )
 
 type farBuilder struct {
-	farID       uint32
-	applyAction uint8
-	method      IEMethod
-	teid        uint32
-	downlinkIP  string
+	farID         uint32
+	applyAction   uint8
+	method        IEMethod
+	teid          uint32
+	downlinkIP    string
+	isDownlinkFAR bool
 }
 
-// NewFARBuilder returns a farBuilder containing initialized values to:
-// farID = 1, method = Create, applyAction = ActionDrop
+// NewFARBuilder returns a farBuilder.
 func NewFARBuilder() *farBuilder {
 	return &farBuilder{
 		farID:       uint32(1),
@@ -75,6 +75,41 @@ func (b *farBuilder) BuildDownlinkFAR() *ie.IE {
 			ie.NewDestinationInterface(ie.DstInterfaceAccess),
 			// FIXME desc 0x100?
 			ie.NewOuterHeaderCreation(0x100, b.teid, b.downlinkIP, "", 0, 0, 0),
+		),
+	)
+}
+
+func (b *farBuilder) MarkDownlink() *farBuilder {
+	b.isDownlinkFAR = true
+	return b
+}
+
+// BuildFAR returns by default an UplinkFAR.
+// To build a DownlinkFAR, method MarkDownlink has to be priorly invoked.
+func (b *farBuilder) BuildFAR() *ie.IE {
+	createFunc := ie.NewCreateFAR
+	if b.method == Update {
+		createFunc = ie.NewUpdateFAR
+	}
+
+	if b.isDownlinkFAR {
+		return createFunc(
+			ie.NewFARID(b.farID),
+			ie.NewApplyAction(b.applyAction),
+			ie.NewUpdateForwardingParameters(
+				ie.NewDestinationInterface(ie.DstInterfaceAccess),
+				// FIXME desc 0x100?
+				ie.NewOuterHeaderCreation(0x100, b.teid, b.downlinkIP, "", 0, 0, 0),
+			),
+		)
+	}
+
+	// Uplink
+	return createFunc(
+		ie.NewFARID(b.farID),
+		ie.NewApplyAction(b.applyAction),
+		ie.NewForwardingParameters(
+			ie.NewDestinationInterface(ie.DstInterfaceCore),
 		),
 	)
 }
