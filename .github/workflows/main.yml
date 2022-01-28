@@ -3,32 +3,33 @@
 
 name: Build PFCPsim
 on: [push, pull_request]
+
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
     env:
-      DOCKER_REPO: "opennetworking/pfcpsim"
+      DOCKER_REPO: 'opennetworking/pfcpsim'
+
     steps:
       - name: Checkout this repository
         uses: actions/checkout@v2
 
-      - name: version to env variable
-        run: |
-          VER=$(cat VERSION)
-          echo "VERSION=$VER" >> $GITHUB_ENV
+      - name: Read version file
+        id: get_version
+        uses: andstor/file-reader-action@v1
+        with:
+          path: ./VERSION
 
-      - name: Build and export to Docker for testing.
+      - name: Build and export to Docker for testing
         uses: docker/build-push-action@v2
         with:
           context: .
           push: false
           load: true # load the built image to local docker instance. Needed for testing step.
-          build-args: |
-            "PROTOBUF_VERSION=${{ matrix.PROTOBUF_VERSION }}"
-          tags: "${{ env.DOCKER_REPO }}:pfcpsim-client-${{ env.VERSION }}" # Local Runtime image
-          target: "pfcpsim-client"
+          tags: '${{ env.DOCKER_REPO }}:pfcpsim-client-${{ steps.get_version.outputs.content }}' # Local Runtime image
+          target: 'pfcpsim-client'
 
-        - name: Test docker build
-          run: |
-            docker run --rm ${{ env.DOCKER_REPO }}:pfcpsim-client-${{ env.VERSION }} pfcpsim-client --help
+      - name: Test docker build
+        run: |
+          docker run --rm ${{ env.DOCKER_REPO }}:pfcpsim-client-${{ steps.get_version.outputs.content }} pfcpsim-client --help
