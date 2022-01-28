@@ -96,7 +96,6 @@ func getLocalAddress() (net.IP, error) {
 	}
 
 	cmdOutput, err := exec.Command("bash", "-c", cmd).Output()
-	fmt.Printf("cmdOutput: %v\n", cmdOutput)
 	if err != nil {
 		return nil, err
 	}
