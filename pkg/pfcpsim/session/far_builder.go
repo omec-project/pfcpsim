@@ -37,21 +37,6 @@ func (b *farBuilder) WithAction(action uint8) *farBuilder {
 	return b
 }
 
-func (b *farBuilder) BuildUplinkFAR() *ie.IE {
-	createFunc := ie.NewCreateFAR
-	if b.method == Update {
-		createFunc = ie.NewUpdateFAR
-	}
-
-	return createFunc(
-		ie.NewFARID(b.farID),
-		ie.NewApplyAction(b.applyAction),
-		ie.NewForwardingParameters(
-			ie.NewDestinationInterface(ie.DstInterfaceCore),
-		),
-	)
-}
-
 func (b *farBuilder) WithTEID(teid uint32) *farBuilder {
 	b.teid = teid
 	return b
@@ -60,23 +45,6 @@ func (b *farBuilder) WithTEID(teid uint32) *farBuilder {
 func (b *farBuilder) WithDownlinkIP(downlinkIP string) *farBuilder {
 	b.downlinkIP = downlinkIP
 	return b
-}
-
-func (b *farBuilder) BuildDownlinkFAR() *ie.IE {
-	createFunc := ie.NewCreateFAR
-	if b.method == Update {
-		createFunc = ie.NewUpdateFAR
-	}
-
-	return createFunc(
-		ie.NewFARID(b.farID),
-		ie.NewApplyAction(b.applyAction),
-		ie.NewUpdateForwardingParameters(
-			ie.NewDestinationInterface(ie.DstInterfaceAccess),
-			// FIXME desc 0x100?
-			ie.NewOuterHeaderCreation(0x100, b.teid, b.downlinkIP, "", 0, 0, 0),
-		),
-	)
 }
 
 func (b *farBuilder) MarkDownlink() *farBuilder {

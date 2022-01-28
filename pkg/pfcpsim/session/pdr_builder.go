@@ -53,6 +53,11 @@ func (b *pdrBuilder) WithTEID(teid uint32) *pdrBuilder {
 	return b
 }
 
+func (b *pdrBuilder) WithMEthod(method IEMethod) *pdrBuilder {
+	b.method = method
+	return b
+}
+
 func (b *pdrBuilder) WithN3Address(n3Address string) *uplinkPDRBuilder {
 	return &uplinkPDRBuilder{
 		pdrBuilder: *b,
