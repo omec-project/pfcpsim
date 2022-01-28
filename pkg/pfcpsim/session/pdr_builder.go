@@ -17,12 +17,12 @@ type pdrBuilder struct {
 	appQerID   uint32
 }
 
-type DownlinkPDRBuilder struct {
+type downlinkPDRBuilder struct {
 	pdrBuilder
 	ueAddress string
 }
 
-type UplinkPDRBuilder struct {
+type uplinkPDRBuilder struct {
 	pdrBuilder
 	n3Address string
 }
@@ -53,15 +53,15 @@ func (b *pdrBuilder) WithTEID(teid uint32) *pdrBuilder {
 	return b
 }
 
-func (b *pdrBuilder) WithN3Address(n3Address string) *UplinkPDRBuilder {
-	return &UplinkPDRBuilder{
+func (b *pdrBuilder) WithN3Address(n3Address string) *uplinkPDRBuilder {
+	return &uplinkPDRBuilder{
 		pdrBuilder: *b,
 		n3Address:  n3Address,
 	}
 }
 
-func (b *pdrBuilder) WithUEAddress(ueAddress string) *DownlinkPDRBuilder {
-	return &DownlinkPDRBuilder{
+func (b *pdrBuilder) WithUEAddress(ueAddress string) *downlinkPDRBuilder {
+	return &downlinkPDRBuilder{
 		pdrBuilder: *b,
 		ueAddress:  ueAddress,
 	}
@@ -74,7 +74,7 @@ func (b *pdrBuilder) WithRulesIDs(farID uint32, sessionQERID uint32, appQERID ui
 	return b
 }
 
-func (b *DownlinkPDRBuilder) Build() *ie.IE {
+func (b *downlinkPDRBuilder) Build() *ie.IE {
 	createFunc := ie.NewCreatePDR
 	if b.method == Update {
 		createFunc = ie.NewUpdatePDR
@@ -94,7 +94,7 @@ func (b *DownlinkPDRBuilder) Build() *ie.IE {
 	)
 }
 
-func (b *UplinkPDRBuilder) Build() *ie.IE {
+func (b *uplinkPDRBuilder) Build() *ie.IE {
 	createFunc := ie.NewCreatePDR
 	if b.method == Update {
 		createFunc = ie.NewUpdatePDR

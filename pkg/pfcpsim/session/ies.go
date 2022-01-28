@@ -71,29 +71,3 @@ func NewDownlinkPDR(method IEMethod, id uint16, ueAddress string,
 		ie.NewQERID(sessQerID),
 	)
 }
-
-func NewUplinkFAR(method IEMethod, id uint32, applyAction uint8) *ie.IE {
-	return NewFARBuilder().WithID(id).WithAction(applyAction).WithMethod(method).BuildUplinkFAR()
-}
-
-func NewDownlinkFAR(method IEMethod, id uint32, applyAction uint8, teid uint32, downlinkIP string) *ie.IE {
-	return NewFARBuilder().WithID(id).
-		WithAction(applyAction).
-		WithMethod(method).
-		WithTEID(teid).
-		WithDownlinkIP(downlinkIP).
-		BuildDownlinkFAR()
-
-}
-
-func NewQER(method IEMethod, id uint32, qfi uint8, ulMbr uint64, dlMbr uint64, ulGbr uint64, dlGbr uint64) *ie.IE {
-	return NewQERBuilder().
-		WithID(id).
-		WithQFI(qfi).
-		WithMethod(method).
-		WithDownlinkGBR(dlGbr).
-		WithDownlinkMBR(dlMbr).
-		WithUplinkGBR(ulGbr).
-		WithUplinkMBR(ulMbr).
-		Build()
-}

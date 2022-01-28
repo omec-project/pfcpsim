@@ -85,7 +85,7 @@ func (b *farBuilder) MarkDownlink() *farBuilder {
 }
 
 // BuildFAR returns by default an UplinkFAR.
-// To build a DownlinkFAR, method MarkDownlink has to be priorly invoked.
+// Returns a DownlinkFAR if MarkDownlink was invoked.
 func (b *farBuilder) BuildFAR() *ie.IE {
 	createFunc := ie.NewCreateFAR
 	if b.method == Update {
