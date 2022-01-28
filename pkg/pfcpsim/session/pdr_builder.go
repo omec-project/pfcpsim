@@ -65,6 +65,7 @@ func (b *pdrBuilder) WithRulesIDs(farID uint32, sessionQERID uint32, appQERID ui
 	b.farID = farID
 	b.sessQerID = sessionQERID
 	b.appQerID = appQERID
+
 	return b
 }
 
@@ -110,5 +111,4 @@ func (b *pdrBuilder) BuildPDR() *ie.IE {
 		ie.NewQERID(b.sessQerID),
 		ie.NewQERID(b.appQerID),
 	)
-
 }
