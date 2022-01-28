@@ -10,10 +10,13 @@ COPY go.sum ./go.sum
 
 RUN go mod download
 
-COPY cmd/pfcpsim-client ./
+COPY . ./
 RUN CGO_ENABLED=0 go build -o /bin/pfcpsim-client cmd/pfcpsim-client/main.go
 
 # Stage pfcpsim-client: runtime image of pfcpsim-client
-FROM alpine AS pfcpsim-client
+FROM golang AS pfcpsim-client
+
+RUN apt-get update && apt-get install -y net-tools iputils-ping
+
 COPY --from=pfcpsim-client-build /bin/pfcpsim-client /bin
 ENTRYPOINT [ "/bin/pfcpsim-client" ]

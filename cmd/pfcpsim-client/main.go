@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 
 	"github.com/c-robinson/iplib"
@@ -83,11 +84,19 @@ func copyOutputToLogfile() func() {
 
 }
 
-// getLocalAddress discovers local IP by retrieving interface used for default gateway.
+// getLocalAddress discovers local IP by retrieving interface used for default gateway, using `route` tool.
 // Returns error if fail occurs at any stage.
 func getLocalAddress() (net.IP, error) {
+	// cmd to run for darwin platforms
 	cmd := "route -n get default | grep 'interface:' | grep -o '[^ ]*$'"
+
+	if runtime.GOOS != "darwin" {
+		// assuming linux platform
+		cmd = "route | grep '^default' | grep -o '[^ ]*$'"
+	}
+
 	cmdOutput, err := exec.Command("bash", "-c", cmd).Output()
+	fmt.Printf("cmdOutput: %v\n", cmdOutput)
 	if err != nil {
 		return nil, err
 	}
