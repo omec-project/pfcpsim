@@ -10,7 +10,7 @@ COPY go.sum ./go.sum
 
 RUN go mod download
 
-COPY . ./
+COPY cmd/pfcpsim-client ./
 RUN CGO_ENABLED=0 go build -o /bin/pfcpsim-client cmd/pfcpsim-client/main.go
 
 # Stage pfcpsim-client: runtime image of pfcpsim-client
