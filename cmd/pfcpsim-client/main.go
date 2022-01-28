@@ -325,7 +325,8 @@ func createSessions(count int) {
                 WithTEID(uplinkTEID).
                 WithRulesIDs(uplinkFarID, sessQerID, uplinkAppQerID).
                 WithN3Address(upfAddress.String()).
-                Build(),
+                WithSDFFilter("permit out ip from any to assigned").
+                BuildPDR(),
 
             // DownlinkPDR
             session.NewPDRBuilder().
@@ -334,7 +335,9 @@ func createSessions(count int) {
                 WithRulesIDs(downlinkFarID, sessQerID, downlinkAppQerID).
                 WithPrecedence(100).
                 WithUEAddress(getNextUEAddress().String()).
-                Build(),
+                WithSDFFilter("permit out ip from any to assigned").
+                MarkAsDownlink().
+                BuildPDR(),
         }
 
         fars := []*ie.IE{
@@ -352,7 +355,7 @@ func createSessions(count int) {
                 WithMethod(session.Create).
                 WithTEID(downlinkTEID).
                 WithDownlinkIP(nodeBAddress.String()).
-                MarkDownlink().
+                MarkAsDownlink().
                 BuildFAR(),
         }
 
