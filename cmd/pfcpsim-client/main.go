@@ -253,7 +253,7 @@ func handleUserInput() {
 
 			case "create":
 				log.Tracef("Selected create sessions")
-				InitializeSessions(sessionCount)
+				createSessions(sessionCount)
 
 			case "delete":
 				log.Tracef("Selected delete sessions")
@@ -289,9 +289,9 @@ func getNextUEAddress() net.IP {
 	}
 }
 
-// InitializeSessions create 'count' sessions incrementally.
+// createSessions create 'count' sessions incrementally.
 // Once created, the sessions are established through PFCP client.
-func InitializeSessions(count int) {
+func createSessions(count int) {
 	baseID := globalPFCPSimClient.GetNumActiveSessions() + 1
 
 	for i := baseID; i < (uint64(count) + baseID); i++ {
