@@ -32,4 +32,4 @@ jobs:
 
       - name: Test docker build
         run: |
-          docker run --rm ${{ env.DOCKER_REPO }}:pfcpsim-client-${{ steps.get_version.outputs.content }} --help
+          docker run --rm ${{ env.DOCKER_REPO }}:pfcpsim-client-${{ steps.get_version.outputs.contents }} --help
