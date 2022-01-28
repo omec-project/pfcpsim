@@ -7,14 +7,28 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    env:
+      DOCKER_REPO: "opennetworking/pfcpsim"
     steps:
-      - name: Set up Go 1.16
-        uses: actions/setup-go@v1
+      - name: Checkout this repository
+        uses: actions/checkout@v2
+
+      - name: version to env variable
+        run: |
+          VER=$(cat VERSION)
+          echo "VERSION=$VER" >> $GITHUB_ENV
+
+      - name: Build and export to Docker for testing.
+        uses: docker/build-push-action@v2
         with:
-          go-version: 1.16
+          context: .
+          push: false
+          load: true # load the built image to local docker instance. Needed for testing step.
+          build-args: |
+            "PROTOBUF_VERSION=${{ matrix.PROTOBUF_VERSION }}"
+          tags: "${{ env.DOCKER_REPO }}:pfcpsim-client-${{ env.VERSION }}" # Local Runtime image
+          target: "pfcpsim-client"
 
-      - name: Check out repository
-        uses: actions/checkout@v1
-
-      - name: Build
-        run: go build cmd/pfcpsim-client/main.go
+        - name: Test docker build
+          run: |
+            docker run --rm ${{ env.DOCKER_REPO }}:pfcpsim-client-${{ env.VERSION }} pfcpsim-client --help
