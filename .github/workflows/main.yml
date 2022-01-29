@@ -22,7 +22,7 @@ jobs:
         with:
           path: ./VERSION
 
-      - name: Build and export to Docker for testing
+      - name: Build with Docker
         uses: docker/build-push-action@v2
         with:
           context: .
@@ -30,7 +30,3 @@ jobs:
           load: true # load the built image to local docker instance. Needed for testing step.
           tags: '${{ env.DOCKER_REPO }}:pfcpsim-client-${{ steps.get_version.outputs.contents }}' # Local Runtime image
           target: 'pfcpsim-client'
-
-      - name: Test docker build
-        run: |
-          docker run --rm ${{ env.DOCKER_REPO }}:pfcpsim-client-${{ steps.get_version.outputs.contents }} /bin/pfcpsim-client --help
