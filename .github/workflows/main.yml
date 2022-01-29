@@ -8,6 +8,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       DOCKER_REPO: 'opennetworking/pfcpsim'
 
@@ -32,4 +33,4 @@ jobs:
 
       - name: Test docker build
         run: |
-          docker run --rm ${{ env.DOCKER_REPO }}:pfcpsim-client-${{ steps.get_version.outputs.contents }} --help
+          docker run --rm ${{ env.DOCKER_REPO }}:pfcpsim-client-${{ steps.get_version.outputs.contents }} /bin/pfcpsim-client --help
