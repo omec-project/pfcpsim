@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
 	ieLib "github.com/wmnsk/go-pfcp/ie"
 	"github.com/wmnsk/go-pfcp/message"
 )
@@ -27,11 +28,8 @@ const (
 //   and enables send and receive of individual messages (e.g., SendAssociationSetupRequest(), PeekNextResponse())
 type PFCPClient struct {
 	// keeps the current number of active PFCP sessions
-	// it is also used as F-SEID
-	numSessions uint64
-
-	// Save remoteSEID for session deletion
-	remoteSEIDs []uint64
+	activeSessions map[uint64]*session.Session
+	lastFSEID      uint64 // keep track of last created FSEID
 
 	aliveLock           sync.Mutex
 	isAssociationActive bool
@@ -53,6 +51,7 @@ func NewPFCPClient(localAddr string) *PFCPClient {
 	client := &PFCPClient{
 		sequenceNumber: 0,
 		localAddr:      localAddr,
+		activeSessions: make(map[uint64]*session.Session),
 	}
 	client.ctx = context.Background()
 	client.heartbeatsChan = make(chan *message.HeartbeatResponse)
@@ -70,8 +69,8 @@ func (c *PFCPClient) getNextSequenceNumber() uint32 {
 }
 
 func (c *PFCPClient) getNextFSEID() uint64 {
-	c.numSessions++
-	return c.numSessions
+	c.lastFSEID++
+	return c.lastFSEID
 }
 
 func (c *PFCPClient) resetSequenceNumber() {
@@ -191,7 +190,7 @@ func (c *PFCPClient) SendHeartbeatRequest() error {
 	return c.sendMsg(hbReq)
 }
 
-func (c *PFCPClient) SendSessionEstablishmentRequest(pdrs []*ieLib.IE, fars []*ieLib.IE, qers []*ieLib.IE) error {
+func (c *PFCPClient) SendSessionEstablishmentRequest(sessionToEstablish *session.Session) error {
 	estReq := message.NewSessionEstablishmentRequest(
 		0,
 		0,
@@ -199,12 +198,17 @@ func (c *PFCPClient) SendSessionEstablishmentRequest(pdrs []*ieLib.IE, fars []*i
 		c.getNextSequenceNumber(),
 		0,
 		ieLib.NewNodeID(c.localAddr, "", ""),
-		ieLib.NewFSEID(c.getNextFSEID(), net.ParseIP(c.localAddr), nil),
+		ieLib.NewFSEID(sessionToEstablish.LocalSEID, net.ParseIP(c.localAddr), nil),
 		ieLib.NewPDNType(ieLib.PDNTypeIPv4),
 	)
-	estReq.CreatePDR = append(estReq.CreatePDR, pdrs...)
-	estReq.CreateFAR = append(estReq.CreateFAR, fars...)
-	estReq.CreateQER = append(estReq.CreateQER, qers...)
+
+	estReq.CreatePDR = append(estReq.CreatePDR, sessionToEstablish.UplinkPDRs...)
+	estReq.CreatePDR = append(estReq.CreatePDR, sessionToEstablish.DownlinkPDRs...)
+
+	estReq.CreateFAR = append(estReq.CreateFAR, sessionToEstablish.UplinkFARs...)
+	estReq.CreateFAR = append(estReq.CreateFAR, sessionToEstablish.DownlinkFARs...)
+
+	estReq.CreateQER = append(estReq.CreateQER, sessionToEstablish.QERs...)
 
 	return c.sendMsg(estReq)
 }
@@ -324,56 +328,55 @@ func (c *PFCPClient) TeardownAssociation() error {
 
 // EstablishSession sends PFCP Session Establishment Request and waits for PFCP Session Establishment Response.
 // Returns error if the process fails at any stage.
-func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers []*ieLib.IE) error {
+func (c *PFCPClient) EstablishSession(s *session.Session) error {
 	if !c.isAssociationActive {
 		return fmt.Errorf("PFCP association is not active")
 	}
 
-	err := c.SendSessionEstablishmentRequest(pdrs, fars, qers)
+	s.LocalSEID = c.getNextFSEID()
+
+	err := c.SendSessionEstablishmentRequest(s)
 	if err != nil {
 		return err
 	}
 
 	resp, err := c.PeekNextResponse(5)
 	if err != nil {
-		// delete FSEID if session was not established.
-		c.numSessions--
 		return err
 	}
 
 	estResp, ok := resp.(*message.SessionEstablishmentResponse)
 	if !ok {
-		c.numSessions--
 		return fmt.Errorf("invalid message received, expected session establishment response")
 	}
 
 	if cause, err := estResp.Cause.Cause(); err != nil || cause != ieLib.CauseRequestAccepted {
-		c.numSessions--
 		return fmt.Errorf("session establishment response returns invalid cause: %v", cause)
 	}
 
-	remoteUpfSEID, _ := estResp.UPFSEID.FSEID()
-	c.remoteSEIDs = append(c.remoteSEIDs, remoteUpfSEID.SEID)
+	remoteSEID, err := estResp.UPFSEID.FSEID()
+	if err != nil {
+		return err
+	}
+
+	s.PeerSEID = remoteSEID.SEID
+
+	c.activeSessions[c.lastFSEID] = s
 
 	return nil
 }
 
 // GetNumActiveSessions returns the number of active sessions.
-func (c *PFCPClient) GetNumActiveSessions() uint64 {
-	return c.numSessions
+func (c *PFCPClient) GetNumActiveSessions() int {
+	return len(c.activeSessions)
 }
 
 // DeleteAllSessions sends Session Deletion Request for each session and awaits for PFCP Session Deletion Response.
 // Returns error if the process fails at any stage.
 func (c *PFCPClient) DeleteAllSessions() error {
-	var remoteSEID uint64
+	for _, activeSession := range c.activeSessions {
 
-	for FSEID := c.numSessions; FSEID > 0; FSEID-- {
-
-		// pop remoteSEID from slice
-		remoteSEID, c.remoteSEIDs = c.remoteSEIDs[len(c.remoteSEIDs)-1], c.remoteSEIDs[:len(c.remoteSEIDs)-1]
-
-		err := c.SendSessionDeletionRequest(FSEID, remoteSEID)
+		err := c.SendSessionDeletionRequest(activeSession.LocalSEID, activeSession.PeerSEID)
 		if err != nil {
 			return err
 		}
@@ -391,9 +394,8 @@ func (c *PFCPClient) DeleteAllSessions() error {
 		if cause, err := delResp.Cause.Cause(); err != nil || cause != ieLib.CauseRequestAccepted {
 			return fmt.Errorf("session deletion response returns invalid cause: %v", cause)
 		}
-
-		// decrease number of active sessions (erase FSEID)
-		c.numSessions--
+		// remove session from active ones
+		delete(c.activeSessions, activeSession.LocalSEID)
 	}
 
 	return nil

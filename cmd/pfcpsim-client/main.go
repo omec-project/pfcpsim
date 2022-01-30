@@ -16,7 +16,6 @@ import (
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
 	"github.com/pborman/getopt/v2"
 	log "github.com/sirupsen/logrus"
-	"github.com/wmnsk/go-pfcp/ie"
 )
 
 var (
@@ -294,7 +293,7 @@ func getNextUEAddress() net.IP {
 func createSessions(count int) {
 	baseID := globalPFCPSimClient.GetNumActiveSessions() + 1
 
-	for i := baseID; i < (uint64(count) + baseID); i++ {
+	for i := baseID; i < ((count) + baseID); i++ {
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i + 10)
 		downlinkTEID := uint32(i + 11)
@@ -312,78 +311,76 @@ func createSessions(count int) {
 		uplinkAppQerID := appQerID
 		downlinkAppQerID := appQerID + 1
 
-		pdrs := []*ie.IE{
-			// UplinkPDR
-			session.NewPDRBuilder().
-				WithID(uplinkPdrID).
-				WithMEthod(session.Create).
-				WithTEID(uplinkTEID).
-				WithRulesIDs(uplinkFarID, sessQerID, uplinkAppQerID).
-				WithN3Address(upfAddress.String()).
-				WithSDFFilter("permit out ip from any to assigned").
-				BuildPDR(),
+		uplinkPDR := session.NewPDRBuilder().
+			WithID(uplinkPdrID).
+			WithMEthod(session.Create).
+			WithTEID(uplinkTEID).
+			WithRulesIDs(uplinkFarID, sessQerID, uplinkAppQerID).
+			WithN3Address(upfAddress.String()).
+			WithSDFFilter("permit out ip from any to assigned").
+			BuildPDR()
 
-			// DownlinkPDR
-			session.NewPDRBuilder().
-				WithID(dowlinkPdrID).
-				WithMEthod(session.Create).
-				WithRulesIDs(downlinkFarID, sessQerID, downlinkAppQerID).
-				WithPrecedence(100).
-				WithUEAddress(getNextUEAddress().String()).
-				WithSDFFilter("permit out ip from any to assigned").
-				MarkAsDownlink().
-				BuildPDR(),
-		}
+		DownlinkPDR := session.NewPDRBuilder().
+			WithID(dowlinkPdrID).
+			WithMEthod(session.Create).
+			WithRulesIDs(downlinkFarID, sessQerID, downlinkAppQerID).
+			WithPrecedence(100).
+			WithUEAddress(getNextUEAddress().String()).
+			WithSDFFilter("permit out ip from any to assigned").
+			MarkAsDownlink().
+			BuildPDR()
 
-		fars := []*ie.IE{
-			// UplinkFAR
-			session.NewFARBuilder().
-				WithID(uplinkFarID).
-				WithAction(session.ActionForward).
-				WithMethod(session.Create).
-				BuildFAR(),
+		uplinkFAR := session.NewFARBuilder().
+			WithID(uplinkFarID).
+			WithAction(session.ActionForward).
+			WithMethod(session.Create).
+			BuildFAR()
 
-			// DownlinkFAR
-			session.NewFARBuilder().
-				WithID(downlinkFarID).
-				WithAction(session.ActionDrop).
-				WithMethod(session.Create).
-				WithTEID(downlinkTEID).
-				WithDownlinkIP(nodeBAddress.String()).
-				MarkAsDownlink().
-				BuildFAR(),
-		}
+		downlinkFAR := session.NewFARBuilder().
+			WithID(downlinkFarID).
+			WithAction(session.ActionDrop).
+			WithMethod(session.Create).
+			WithTEID(downlinkTEID).
+			WithDownlinkIP(nodeBAddress.String()).
+			MarkAsDownlink().
+			BuildFAR()
 
-		qers := []*ie.IE{
-			// session QER
-			session.NewQERBuilder().
-				WithID(sessQerID).
-				WithMethod(session.Create).
-				WithQFI(0x09).
-				WithUplinkMBR(50000).
-				WithDownlinkMBR(50000).
-				Build(),
+		sessionQER := session.NewQERBuilder().
+			WithID(sessQerID).
+			WithMethod(session.Create).
+			WithQFI(0x09).
+			WithUplinkMBR(50000).
+			WithDownlinkMBR(50000).
+			Build()
 
-			// application QER
-			session.NewQERBuilder().
-				WithID(appQerID).
-				WithMethod(session.Create).
-				WithQFI(0x08).
-				WithUplinkMBR(50000).
-				WithUplinkGBR(50000).
-				WithDownlinkMBR(30000).
-				WithUplinkGBR(30000).
-				Build(),
-		}
+		appQER := session.NewQERBuilder().
+			WithID(appQerID).
+			WithMethod(session.Create).
+			WithQFI(0x08).
+			WithUplinkMBR(50000).
+			WithUplinkGBR(50000).
+			WithDownlinkMBR(30000).
+			WithUplinkGBR(30000).
+			Build()
 
-		err := globalPFCPSimClient.EstablishSession(pdrs, fars, qers)
+		sess := session.NewSession()
+		// add session rules to new session object
+		sess.UplinkPDRs = append(sess.UplinkPDRs, uplinkPDR)
+		sess.DownlinkPDRs = append(sess.DownlinkPDRs, DownlinkPDR)
+
+		sess.UplinkFARs = append(sess.UplinkFARs, uplinkFAR)
+		sess.DownlinkFARs = append(sess.DownlinkFARs, downlinkFAR)
+
+		sess.QERs = append(sess.QERs, sessionQER)
+		sess.QERs = append(sess.QERs, appQER)
+
+		err := globalPFCPSimClient.EstablishSession(sess)
 		if err != nil {
 			log.Errorf("Error while establishing sessions: %v", err)
 			return
 		}
 
-		// TODO show session's F-SEID
-		log.Infof("Created session")
+		log.Infof("Created session with SEID %v", sess.LocalSEID)
 	}
 
 }
