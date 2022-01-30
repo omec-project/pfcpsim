@@ -213,6 +213,20 @@ func (c *PFCPClient) SendSessionEstablishmentRequest(sessionToEstablish *session
 	return c.sendMsg(estReq)
 }
 
+func (c *PFCPClient) SendSessionModificationRequest(fars []*ieLib.IE, PeerSEID uint64) error {
+	// TODO verify if message structure is correct
+	modifyReq := message.NewSessionModificationRequest(
+		0,
+		0,
+		PeerSEID,
+		c.getNextSequenceNumber(),
+		0,
+		fars...,
+	)
+
+	return c.sendMsg(modifyReq)
+}
+
 func (c *PFCPClient) SendSessionDeletionRequest(localSEID uint64, remoteSEID uint64) error {
 	delReq := message.NewSessionDeletionRequest(
 		0,
@@ -362,6 +376,57 @@ func (c *PFCPClient) EstablishSession(s *session.Session) error {
 	s.PeerSEID = remoteSEID.SEID
 
 	c.activeSessions[c.lastFSEID] = s
+
+	return nil
+}
+
+// ModifySessions sends a PFCP Session Modification Request for each active session.
+func (c *PFCPClient) ModifySessions(notifyCPFlag bool, bufferFlag bool) error {
+	for _, activeSession := range c.activeSessions {
+		var FARs []*ieLib.IE
+
+		for _, far := range activeSession.UplinkFARs {
+			farid, err := far.FARID()
+			if err != nil {
+				return err
+			}
+
+			// TODO handle notifyCP and buffer flag
+			updateUplinkFAR := session.NewFARBuilder().
+				WithID(farid).
+				WithMethod(session.Update).
+				WithAction(session.ActionForward).
+				BuildFAR()
+
+			updateDownlinkFAR := session.NewFARBuilder().
+				WithID(farid).
+				WithMethod(session.Update).
+				WithAction(session.ActionForward).
+				MarkAsDownlink().
+				BuildFAR()
+
+			FARs = append(FARs, updateUplinkFAR)
+			FARs = append(FARs, updateDownlinkFAR)
+		}
+
+		err := c.SendSessionModificationRequest(FARs, activeSession.PeerSEID)
+		if err != nil {
+			return err
+		}
+
+		modRes, err := c.PeekNextResponse(5)
+		if err != nil {
+			return err
+		}
+
+		modRes, ok := modRes.(*message.SessionModificationResponse)
+		if !ok {
+			return fmt.Errorf("invalid message received, expected session modification response")
+		}
+
+		activeSession.UplinkFARs = append(activeSession.UplinkFARs, FARs[0])
+		activeSession.DownlinkFARs = append(activeSession.DownlinkFARs, FARs[1])
+	}
 
 	return nil
 }

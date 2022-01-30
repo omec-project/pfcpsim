@@ -29,6 +29,9 @@ var (
 	inputFile  string
 	outputFile string
 
+	bufferFlag   bool
+	notifyCPFlag bool
+
 	sessionCount int
 
 	// Emulates 5G SMF/ 4G SGW
@@ -118,9 +121,12 @@ func parseArgs() {
 	outputF := getopt.StringLong("output-file", 'o', "", "File in which copy from Stdout. Default uses only Stdout")
 	remotePeer := getopt.StringLong("remote-peer-address", 'r', "127.0.0.1", "Address or hostname of the remote peer (PFCP Agent)")
 	upfAddr := getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF (UP4)")
-	sessionCnt := getopt.IntLong("session-count", 'c', 1, "Set the amount of sessions to create, starting from 1 (included)")
 	ueAddrPool := getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")
 	NodeBAddr := getopt.StringLong("nodeb-address", 'g', defaultGNodeBAddress, "The IPv4 of (g/e)NodeBAddress")
+
+	sessionCount = *getopt.IntLong("session-count", 'c', 1, "Set the amount of sessions to create, starting from 1 (included)")
+	notifyCPFlag = *getopt.BoolLong("notify-cp", 'n', "If this argument is present, downlink FARs will have the notify CP flag set to true")
+	bufferFlag = *getopt.BoolLong("buffer", 'b', "If this argument is present, downlink FARs will have the buffering flag set to true")
 
 	optHelp := getopt.BoolLong("help", 0, "Help")
 
@@ -140,10 +146,9 @@ func parseArgs() {
 		inputFile = *inputF
 	}
 
-	if *sessionCnt <= 0 {
+	if sessionCount <= 0 {
 		log.Fatalf("Session count cannot be 0 or a negative number")
 	}
-	sessionCount = *sessionCnt
 
 	// IPs checks
 	nodeBAddress = net.ParseIP(*NodeBAddr)
@@ -221,6 +226,7 @@ func handleUserInput() {
 		fmt.Println("'disassociate': Teardown Association")
 		fmt.Println("'associate': Setup Association")
 		fmt.Println("'create': Create Sessions ")
+		fmt.Println("'modify': Modify Sessions ")
 		fmt.Println("'delete': Delete Sessions ")
 		fmt.Println("'exit': Exit ")
 		fmt.Print("Enter service: ")
@@ -251,6 +257,15 @@ func handleUserInput() {
 			case "create":
 				log.Info("Selected create sessions")
 				createSessions(sessionCount)
+
+			case "modify":
+				log.Info("Selected modify session")
+				err := globalPFCPSimClient.ModifySessions(notifyCPFlag, bufferFlag)
+				if err != nil {
+					log.Errorf("Error while modifying sessions: %v", err)
+				}
+
+				log.Info("Modified all sessions")
 
 			case "delete":
 				log.Info("Selected delete sessions")

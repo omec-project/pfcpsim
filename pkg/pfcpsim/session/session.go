@@ -6,7 +6,6 @@ import (
 
 type Session struct {
 	LocalSEID uint64
-
 	PeerSEID uint64
 
 	UplinkPDRs   []*ie.IE
