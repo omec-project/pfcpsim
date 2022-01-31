@@ -11,10 +11,10 @@ type pdrBuilder struct {
 	method     IEMethod
 	sdfFilter  string
 	id         uint16
-	teid       uint32
+	teid  uint32
+	farID uint32
 
 	qerIDs []*ie.IE
-	farIDs []*ie.IE
 
 	ueAddress string
 	n3Address string
@@ -25,7 +25,6 @@ type pdrBuilder struct {
 func NewPDRBuilder() *pdrBuilder {
 	return &pdrBuilder{
 		qerIDs: make([]*ie.IE, 0),
-		farIDs: make([]*ie.IE, 0),
 	}
 }
 
@@ -69,8 +68,8 @@ func (b *pdrBuilder) AddQERID(qerID uint32) *pdrBuilder {
 	return b
 }
 
-func (b *pdrBuilder) AddFARID(farID uint32) *pdrBuilder {
-	b.farIDs = append(b.farIDs, ie.NewFARID(farID))
+func (b *pdrBuilder) WithFARID(farID uint32) *pdrBuilder {
+	b.farID = farID
 	return b
 }
 
@@ -93,8 +92,8 @@ func (b *pdrBuilder) validate() {
 		panic("Tried building PDR without providing QER IDs")
 	}
 
-	if len(b.farIDs) == 0 {
-		panic("Tried building PDR without providing FAR IDs")
+	if b.farID == 0 {
+		panic("Tried building PDR without providing FAR ID")
 	}
 
 	if b.direction == downlink {
@@ -111,6 +110,10 @@ func (b *pdrBuilder) validate() {
 			panic("Tried building uplink PDR without setting the TEID")
 		}
 	}
+}
+
+func newRemovePDR(pdr *ie.IE) *ie.IE {
+	return ie.NewRemovePDR(pdr)
 }
 
 // BuildPDR returns by default an UplinkFAR.
@@ -132,10 +135,15 @@ func (b *pdrBuilder) BuildPDR() *ie.IE {
 				ie.NewUEIPAddress(0x2, b.ueAddress, "", 0, 0),
 				ie.NewSDFFilter(b.sdfFilter, "", "", "", 1),
 			),
+			ie.NewFARID(b.farID),
 		)
 
-		pdr.Add(b.farIDs...)
 		pdr.Add(b.qerIDs...)
+
+		if b.method == Delete {
+			return newRemovePDR(pdr)
+		}
+
 		return pdr
 	}
 
@@ -149,10 +157,14 @@ func (b *pdrBuilder) BuildPDR() *ie.IE {
 			ie.NewSDFFilter(b.sdfFilter, "", "", "", 1),
 		),
 		ie.NewOuterHeaderRemoval(0, 0),
+		ie.NewFARID(b.farID),
 	)
 
-	pdr.Add(b.farIDs...)
 	pdr.Add(b.qerIDs...)
+
+	if b.method == Delete {
+		newRemovePDR(pdr)
+	}
 
 	return pdr
 

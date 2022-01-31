@@ -59,11 +59,11 @@ func (b *farBuilder) validate() {
 	}
 }
 
-func (b *farBuilder) newRemoveFAR() *ie.IE {
-	return ie.NewRemoveFAR(b.BuildFAR())
+func newRemoveFAR(far *ie.IE) *ie.IE{
+	return ie.NewRemoveFAR(far)
 }
 
-// BuildFAR returns by default a downlinkFAR if MarkAsDownlink was invoked.
+// BuildFAR returns by default a downlinkFAR if MarkAsUplink was invoked.
 // Returns a DownlinkFAR if MarkAsDownlink was invoked.
 func (b *farBuilder) BuildFAR() *ie.IE {
 	b.validate()
@@ -72,12 +72,10 @@ func (b *farBuilder) BuildFAR() *ie.IE {
 	if b.method == Update {
 		createFunc = ie.NewUpdateFAR
 	}
-	if b.method == Delete {
-		return b.newRemoveFAR()
-	}
+
 
 	if b.direction == downlink {
-		return createFunc(
+		far := createFunc(
 			ie.NewFARID(b.farID),
 			ie.NewApplyAction(b.applyAction),
 			ie.NewUpdateForwardingParameters(
@@ -86,14 +84,25 @@ func (b *farBuilder) BuildFAR() *ie.IE {
 				ie.NewOuterHeaderCreation(0x100, b.teid, b.downlinkIP, "", 0, 0, 0),
 			),
 		)
+		if b.method == Delete {
+			return newRemoveFAR(far)
+		}
+
+		return far
 	}
 
 	// Uplink
-	return createFunc(
+	far := createFunc(
 		ie.NewFARID(b.farID),
 		ie.NewApplyAction(b.applyAction),
 		ie.NewForwardingParameters(
 			ie.NewDestinationInterface(ie.DstInterfaceCore),
 		),
 	)
+
+	if b.method == Delete {
+		return newRemoveFAR(far)
+	}
+
+	return far
 }
