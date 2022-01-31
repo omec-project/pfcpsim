@@ -9,10 +9,12 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 
 	"github.com/c-robinson/iplib"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
+	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
 	"github.com/pborman/getopt/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/wmnsk/go-pfcp/ie"
@@ -41,11 +43,6 @@ const (
 	defaultUeAddressPool = "17.0.0.0/24"
 
 	defaultUpfN3Address = "198.18.0.1"
-
-	ActionForward uint8 = 0x2
-	ActionDrop    uint8 = 0x1
-	ActionBuffer  uint8 = 0x4
-	ActionNotify  uint8 = 0x8
 )
 
 // copyOutputToLogfile reads from Stdout and Stderr to save in a persistent file,
@@ -87,10 +84,17 @@ func copyOutputToLogfile() func() {
 
 }
 
-// getLocalAddress discovers local IP by retrieving interface used for default gateway.
+// getLocalAddress discovers local IP by retrieving interface used for default gateway, using `route` tool.
 // Returns error if fail occurs at any stage.
 func getLocalAddress() (net.IP, error) {
+	// cmd to run for darwin platforms
 	cmd := "route -n get default | grep 'interface:' | grep -o '[^ ]*$'"
+
+	if runtime.GOOS != "darwin" {
+		// assuming linux platform
+		cmd = "route | grep '^default' | grep -o '[^ ]*$'"
+	}
+
 	cmdOutput, err := exec.Command("bash", "-c", cmd).Output()
 	if err != nil {
 		return nil, err
@@ -255,7 +259,7 @@ func handleUserInput() {
 
 			case "create":
 				log.Info("Selected create sessions")
-				InitializeSessions(sessionCount)
+				createSessions(sessionCount)
 
 			case "delete":
 				log.Info("Selected delete sessions")
@@ -293,9 +297,9 @@ func getNextUEAddress() net.IP {
 	return lastUEAddress
 }
 
-// InitializeSessions create 'count' sessions incrementally.
+// createSessions create 'count' sessions incrementally.
 // Once created, the sessions are established through PFCP client.
-func InitializeSessions(count int) {
+func createSessions(count int) {
 	baseID := globalPFCPSimClient.GetNumActiveSessions() + 1
 
 	for i := baseID; i < (uint64(count) + baseID); i++ {
@@ -317,20 +321,73 @@ func InitializeSessions(count int) {
 		downlinkAppQerID := appQerID + 1
 
 		pdrs := []*ie.IE{
-			pfcpsim.NewUplinkPDR(pfcpsim.Create, uplinkPdrID, uplinkTEID, upfAddress.String(), uplinkFarID, sessQerID, uplinkAppQerID),
-			pfcpsim.NewDownlinkPDR(pfcpsim.Create, dowlinkPdrID, getNextUEAddress().String(), downlinkFarID, sessQerID, downlinkAppQerID),
+			// UplinkPDR
+			session.NewPDRBuilder().
+				WithID(uplinkPdrID).
+				WithMethod(session.Create).
+				WithTEID(uplinkTEID).
+				WithFARID(uplinkFarID).
+				AddQERID(sessQerID).
+				AddQERID(uplinkAppQerID).
+				WithN3Address(upfAddress.String()).
+				WithSDFFilter("permit out ip from any to assigned").
+				MarkAsUplink().
+				BuildPDR(),
+
+			// DownlinkPDR
+			session.NewPDRBuilder().
+				WithID(dowlinkPdrID).
+				WithMethod(session.Create).
+				WithPrecedence(100).
+				WithUEAddress(getNextUEAddress().String()).
+				WithSDFFilter("permit out ip from any to assigned").
+				AddQERID(sessQerID).
+				AddQERID(downlinkAppQerID).
+				WithFARID(downlinkFarID).
+				MarkAsDownlink().
+				BuildPDR(),
 		}
 
 		fars := []*ie.IE{
-			pfcpsim.NewUplinkFAR(pfcpsim.Create, uplinkFarID, ActionForward),
-			pfcpsim.NewDownlinkFAR(pfcpsim.Create, downlinkFarID, ActionDrop, downlinkTEID, nodeBAddress.String()),
+			// UplinkFAR
+			session.NewFARBuilder().
+				WithID(uplinkFarID).
+				WithAction(session.ActionForward).
+				WithMethod(session.Create).
+				MarkAsUplink().
+				BuildFAR(),
+
+			// DownlinkFAR
+			session.NewFARBuilder().
+				WithID(downlinkFarID).
+				WithAction(session.ActionDrop).
+				WithMethod(session.Create).
+				WithTEID(downlinkTEID).
+				WithDownlinkIP(nodeBAddress.String()).
+				MarkAsDownlink().
+				BuildFAR(),
 		}
 
 		qers := []*ie.IE{
 			// session QER
-			pfcpsim.NewQER(pfcpsim.Create, sessQerID, 0x09, 500000, 500000, 0, 0),
+			session.NewQERBuilder().
+				WithID(sessQerID).
+				WithMethod(session.Create).
+				WithQFI(0x09).
+				WithUplinkMBR(50000).
+				WithDownlinkMBR(50000).
+				Build(),
+
 			// application QER
-			pfcpsim.NewQER(pfcpsim.Create, appQerID, 0x08, 50000, 50000, 30000, 30000),
+			session.NewQERBuilder().
+				WithID(appQerID).
+				WithMethod(session.Create).
+				WithQFI(0x08).
+				WithUplinkMBR(50000).
+				WithUplinkGBR(50000).
+				WithDownlinkMBR(30000).
+				WithUplinkGBR(30000).
+				Build(),
 		}
 
 		err := globalPFCPSimClient.EstablishSession(pdrs, fars, qers)
