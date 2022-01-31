@@ -11,8 +11,6 @@ type farBuilder struct {
 	teid          uint32
 	downlinkIP    string
 	direction     direction
-
-	pdrForRemoveFAR *ie.IE
 }
 
 // NewFARBuilder returns a farBuilder.
@@ -58,10 +56,6 @@ func (b *farBuilder) MarkAsUplink() *farBuilder {
 func (b *farBuilder) validate() {
 	if b.direction == notSet {
 		panic("Tried building a FAR without marking it as uplink or downlink")
-	}
-
-	if b.method == Delete && b.pdrForRemoveFAR == nil {
-		panic("Tried building a remove FAR without specifying PDR")
 	}
 }
 
