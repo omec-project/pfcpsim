@@ -46,6 +46,10 @@ func (b *qerBuilder) WithDownlinkGBR(dlGbr uint64) *qerBuilder {
 	return b
 }
 
+func newRemoveQER(qer *ie.IE) *ie.IE {
+	return ie.NewRemoveQER(qer)
+}
+
 func (b *qerBuilder) WithMethod(method IEMethod) *qerBuilder {
 	b.method = method
 	return b
@@ -57,7 +61,7 @@ func (b *qerBuilder) Build() *ie.IE {
 		createFunc = ie.NewUpdateQER
 	}
 
-	return createFunc(
+	qer := createFunc(
 		ie.NewQERID(b.qerID),
 		ie.NewQFI(b.qfi),
 		// FIXME: we don't support gating, always OPEN
@@ -65,4 +69,10 @@ func (b *qerBuilder) Build() *ie.IE {
 		ie.NewMBR(b.ulMbr, b.dlMbr),
 		ie.NewGBR(b.ulGbr, b.dlGbr),
 	)
+
+	if b.method == Delete {
+		return newRemoveQER(qer)
+	}
+
+	return qer
 }

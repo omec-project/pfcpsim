@@ -324,21 +324,26 @@ func createSessions(count int) {
 			// UplinkPDR
 			session.NewPDRBuilder().
 				WithID(uplinkPdrID).
-				WithMEthod(session.Create).
+				WithMethod(session.Create).
 				WithTEID(uplinkTEID).
-				WithRulesIDs(uplinkFarID, sessQerID, uplinkAppQerID).
+				WithFARID(uplinkFarID).
+				AddQERID(sessQerID).
+				AddQERID(uplinkAppQerID).
 				WithN3Address(upfAddress.String()).
 				WithSDFFilter("permit out ip from any to assigned").
+				MarkAsUplink().
 				BuildPDR(),
 
 			// DownlinkPDR
 			session.NewPDRBuilder().
 				WithID(dowlinkPdrID).
-				WithMEthod(session.Create).
-				WithRulesIDs(downlinkFarID, sessQerID, downlinkAppQerID).
+				WithMethod(session.Create).
 				WithPrecedence(100).
 				WithUEAddress(getNextUEAddress().String()).
 				WithSDFFilter("permit out ip from any to assigned").
+				AddQERID(sessQerID).
+				AddQERID(downlinkAppQerID).
+				WithFARID(downlinkFarID).
 				MarkAsDownlink().
 				BuildPDR(),
 		}
@@ -349,6 +354,7 @@ func createSessions(count int) {
 				WithID(uplinkFarID).
 				WithAction(session.ActionForward).
 				WithMethod(session.Create).
+				MarkAsUplink().
 				BuildFAR(),
 
 			// DownlinkFAR
