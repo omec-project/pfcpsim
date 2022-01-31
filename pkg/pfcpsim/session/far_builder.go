@@ -65,6 +65,10 @@ func (b *farBuilder) validate() {
 	}
 }
 
+func (b *farBuilder) newRemoveFAR() *ie.IE {
+	return ie.NewRemoveFAR(b.BuildFAR())
+}
+
 // BuildFAR returns by default a downlinkFAR if MarkAsDownlink was invoked.
 // Returns a DownlinkFAR if MarkAsDownlink was invoked.
 func (b *farBuilder) BuildFAR() *ie.IE {
@@ -75,8 +79,7 @@ func (b *farBuilder) BuildFAR() *ie.IE {
 		createFunc = ie.NewUpdateFAR
 	}
 	if b.method == Delete {
-		// TODO check if remove FAR structure is correct
-		return ie.NewRemoveFAR(b.pdrForRemoveFAR)
+		return b.newRemoveFAR()
 	}
 
 	if b.direction == downlink {
