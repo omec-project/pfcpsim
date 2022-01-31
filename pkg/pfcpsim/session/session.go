@@ -6,7 +6,9 @@ import (
 
 type Session struct {
 	LocalSEID uint64
-	PeerSEID uint64
+	PeerSEID  uint64
+	// eases the recover of TEID when creating updateFAR IE
+	DownlinkTEID uint32
 
 	UplinkPDRs   []*ie.IE
 	DownlinkPDRs []*ie.IE
@@ -17,6 +19,7 @@ type Session struct {
 	QERs []*ie.IE
 }
 
+// NewSession returns an initialized Session struct.
 func NewSession() *Session {
 	return &Session{
 		LocalSEID:    0, // Updated by PFCPClient when establishing session
@@ -38,5 +41,7 @@ func (s *Session) ClearSentRules() {
 }
 
 func (s *Session) IsActive() bool {
+	// assuming session is active by looking at PeerSEID,
+	// normally retrieved from session establishment response.
 	return s.PeerSEID != 0
 }

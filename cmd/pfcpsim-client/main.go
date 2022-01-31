@@ -34,6 +34,8 @@ var (
 
 	sessionCount int
 
+	mode string
+
 	// Emulates 5G SMF/ 4G SGW
 	globalPFCPSimClient *pfcpsim.PFCPClient
 )
@@ -123,6 +125,7 @@ func parseArgs() {
 	upfAddr := getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF (UP4)")
 	ueAddrPool := getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")
 	NodeBAddr := getopt.StringLong("nodeb-address", 'g', defaultGNodeBAddress, "The IPv4 of (g/e)NodeBAddress")
+	mode = *getopt.Enum('m', []string{"4G", "5G"}, "4G", "Set the execution mode of pfcpsim-client to 4G or 5G. Default is 4G")
 
 	sessionCount = *getopt.IntLong("session-count", 'c', 1, "Set the amount of sessions to create, starting from 1 (included)")
 	notifyCPFlag = *getopt.BoolLong("notify-cp", 'n', "If this argument is present, downlink FARs will have the notify CP flag set to true")
@@ -260,7 +263,7 @@ func handleUserInput() {
 
 			case "modify":
 				log.Info("Selected modify session")
-				err := globalPFCPSimClient.ModifySessions(notifyCPFlag, bufferFlag)
+				err := globalPFCPSimClient.ModifySessions(notifyCPFlag, bufferFlag, &nodeBAddress)
 				if err != nil {
 					log.Errorf("Error while modifying sessions: %v", err)
 				}
@@ -306,6 +309,7 @@ func getNextUEAddress() net.IP {
 // createSessions create 'count' sessions incrementally.
 // Once created, the sessions are established through PFCP client.
 func createSessions(count int) {
+	// SEIDs and TEIDs are generated based on number of active sessions
 	baseID := globalPFCPSimClient.GetNumActiveSessions() + 1
 
 	for i := baseID; i < ((count) + baseID); i++ {
@@ -380,6 +384,8 @@ func createSessions(count int) {
 
 		sess := session.NewSession()
 		// add session rules to new session object
+		sess.DownlinkTEID = downlinkTEID
+
 		sess.UplinkPDRs = append(sess.UplinkPDRs, uplinkPDR)
 		sess.DownlinkPDRs = append(sess.DownlinkPDRs, DownlinkPDR)
 

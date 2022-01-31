@@ -27,9 +27,10 @@ const (
 // - 2nd mode gives a user more control over PFCP sequence flow
 //   and enables send and receive of individual messages (e.g., SendAssociationSetupRequest(), PeekNextResponse())
 type PFCPClient struct {
-	// keeps the current number of active PFCP sessions
+	// keeps track of active PFCP sessions
 	activeSessions map[uint64]*session.Session
-	lastFSEID      uint64 // keep track of last created FSEID
+	// keeps track of last created FSEID
+	lastFSEID uint64
 
 	aliveLock           sync.Mutex
 	isAssociationActive bool
@@ -213,15 +214,15 @@ func (c *PFCPClient) SendSessionEstablishmentRequest(sessionToEstablish *session
 	return c.sendMsg(estReq)
 }
 
-func (c *PFCPClient) SendSessionModificationRequest(fars []*ieLib.IE, PeerSEID uint64) error {
-	// TODO verify if message structure is correct
+func (c *PFCPClient) SendSessionModificationRequest(far *ieLib.IE, PeerSEID uint64) error {
+	// TODO in 5G mode also update PDR shall be sent
 	modifyReq := message.NewSessionModificationRequest(
 		0,
 		0,
 		PeerSEID,
 		c.getNextSequenceNumber(),
 		0,
-		fars...,
+		far,
 	)
 
 	return c.sendMsg(modifyReq)
@@ -380,53 +381,65 @@ func (c *PFCPClient) EstablishSession(s *session.Session) error {
 	return nil
 }
 
-// ModifySessions sends a PFCP Session Modification Request for each active session.
-func (c *PFCPClient) ModifySessions(notifyCPFlag bool, bufferFlag bool) error {
+// ModifySessions sends a PFCP Session Modification Request for each active session,
+// updating each downlinkFAR with action session.ActionDrop to session.ActionForward.
+func (c *PFCPClient) ModifySessions(notifyCPFlag bool, bufferFlag bool, nodeBAddress *net.IP) error {
+	counter := 0
 	for _, activeSession := range c.activeSessions {
-		var FARs []*ieLib.IE
+		for _, far := range activeSession.DownlinkFARs {
+			action, err := far.ApplyAction()
+			if err != nil {
+				return err
+			}
 
-		for _, far := range activeSession.UplinkFARs {
+			if action != session.ActionDrop {
+				// TODO is it ok to look only at action?
+				// update only FARs with drop action
+				continue
+			}
+
+			// recover FARID for update FAR
 			farid, err := far.FARID()
 			if err != nil {
 				return err
 			}
 
 			// TODO handle notifyCP and buffer flag
-			updateUplinkFAR := session.NewFARBuilder().
-				WithID(farid).
-				WithMethod(session.Update).
-				WithAction(session.ActionForward).
-				BuildFAR()
-
 			updateDownlinkFAR := session.NewFARBuilder().
 				WithID(farid).
 				WithMethod(session.Update).
 				WithAction(session.ActionForward).
+				WithTEID(activeSession.DownlinkTEID).
+				WithDownlinkIP(nodeBAddress.String()).
 				MarkAsDownlink().
 				BuildFAR()
 
-			FARs = append(FARs, updateUplinkFAR)
-			FARs = append(FARs, updateDownlinkFAR)
-		}
+			err = c.SendSessionModificationRequest(updateDownlinkFAR, activeSession.PeerSEID)
+			if err != nil {
+				return err
+			}
 
-		err := c.SendSessionModificationRequest(FARs, activeSession.PeerSEID)
-		if err != nil {
-			return err
-		}
+			modRes, err := c.PeekNextResponse(5)
+			if err != nil {
+				return err
+			}
 
-		modRes, err := c.PeekNextResponse(5)
-		if err != nil {
-			return err
-		}
+			modRes, ok := modRes.(*message.SessionModificationResponse)
+			if !ok {
+				return fmt.Errorf("invalid message received, expected session modification response")
+			}
 
-		modRes, ok := modRes.(*message.SessionModificationResponse)
-		if !ok {
-			return fmt.Errorf("invalid message received, expected session modification response")
-		}
+			counter++
 
-		activeSession.UplinkFARs = append(activeSession.UplinkFARs, FARs[0])
-		activeSession.DownlinkFARs = append(activeSession.DownlinkFARs, FARs[1])
+			// Session was correctly modified -> save sent FAR in session's object
+			// FIXME is it ok to clear sent Downlink FARs to avoid sending updateFARs to already updated flows?
+			activeSession.DownlinkFARs = make([]*ieLib.IE, 2)
+
+			activeSession.DownlinkFARs = append(activeSession.DownlinkFARs, updateDownlinkFAR)
+		}
 	}
+
+	fmt.Printf("Sessions updated: %v\n", counter) // DEBUG remove
 
 	return nil
 }
