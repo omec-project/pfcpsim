@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
 	ieLib "github.com/wmnsk/go-pfcp/ie"
 	"github.com/wmnsk/go-pfcp/message"
 )
@@ -209,6 +210,22 @@ func (c *PFCPClient) SendSessionEstablishmentRequest(pdrs []*ieLib.IE, fars []*i
 	return c.sendMsg(estReq)
 }
 
+func (c *PFCPClient) SendSessionModificationRequest(PeerSEID uint64, pdrs []*ieLib.IE, qers []*ieLib.IE ,fars []*ieLib.IE) error {
+	modifyReq := message.NewSessionModificationRequest(
+		0,
+		0,
+		PeerSEID,
+		c.getNextSequenceNumber(),
+		0,
+	)
+
+	modifyReq.CreatePDR = append(modifyReq.CreatePDR, pdrs...)
+	modifyReq.CreateFAR = append(modifyReq.CreateFAR, fars...)
+	modifyReq.CreateQER = append(modifyReq.CreateQER, qers...)
+
+	return c.sendMsg(modifyReq)
+}
+
 func (c *PFCPClient) SendSessionDeletionRequest(localSEID uint64, remoteSEID uint64) error {
 	delReq := message.NewSessionDeletionRequest(
 		0,
@@ -323,39 +340,75 @@ func (c *PFCPClient) TeardownAssociation() error {
 }
 
 // EstablishSession sends PFCP Session Establishment Request and waits for PFCP Session Establishment Response.
-// Returns error if the process fails at any stage.
-func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers []*ieLib.IE) error {
+// Returns a pointer to new PFCPSession. Returns error if the process fails at any stage.
+func (c *PFCPClient) EstablishSession(sess *session.PFCPSession) (*session.PFCPSession, error) {
 	if !c.isAssociationActive {
-		return fmt.Errorf("PFCP association is not active")
+		return nil, fmt.Errorf("PFCP association is not active")
 	}
 
-	err := c.SendSessionEstablishmentRequest(pdrs, fars, qers)
+	err := c.SendSessionEstablishmentRequest(sess.PDRs, sess.FARs, sess.QERs)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	resp, err := c.PeekNextResponse(5)
 	if err != nil {
 		// delete FSEID if session was not established.
 		c.numSessions--
-		return err
+		return nil, err
 	}
 
 	estResp, ok := resp.(*message.SessionEstablishmentResponse)
 	if !ok {
 		c.numSessions--
-		return fmt.Errorf("invalid message received, expected session establishment response")
+		return nil, fmt.Errorf("invalid message received, expected session establishment response")
 	}
 
 	if cause, err := estResp.Cause.Cause(); err != nil || cause != ieLib.CauseRequestAccepted {
 		c.numSessions--
-		return fmt.Errorf("session establishment response returns invalid cause: %v", cause)
+		return nil, fmt.Errorf("session establishment response returns invalid cause: %v", cause)
 	}
 
-	remoteUpfSEID, _ := estResp.UPFSEID.FSEID()
-	c.remoteSEIDs = append(c.remoteSEIDs, remoteUpfSEID.SEID)
+	// retrieve PeerSEID
+	remoteSEID, _ := estResp.UPFSEID.FSEID()
+	c.remoteSEIDs = append(c.remoteSEIDs, remoteSEID.SEID)
+
+	// create new session to be returned
+	newSession := session.NewSession(c.numSessions, remoteSEID.SEID)
+
+	newSession.PDRs = append(newSession.PDRs, sess.PDRs...)
+	newSession.FARs = append(newSession.FARs, sess.FARs...)
+	newSession.QERs = append(newSession.QERs, sess.QERs...)
+
+	return newSession, nil
+}
+
+func (c *PFCPClient) ModifySession(
+	sess *session.PFCPSession,
+	pdrs []*ieLib.IE,
+	fars []*ieLib.IE,
+	qers []*ieLib.IE) error {
+	if !c.isAssociationActive {
+		return fmt.Errorf("PFCP association is not active")
+	}
+
+	err := c.SendSessionModificationRequest(sess.PeerSEID, pdrs, fars, qers)
+	if err != nil {
+		return err
+	}
+
+	modRes, err := c.PeekNextResponse(5)
+	if err != nil {
+		return err
+	}
+
+	modRes, ok := modRes.(*message.SessionModificationResponse)
+	if !ok {
+		return fmt.Errorf("invalid message received, expected session establishment response")
+	}
 
 	return nil
+
 }
 
 // GetNumActiveSessions returns the number of active sessions.
