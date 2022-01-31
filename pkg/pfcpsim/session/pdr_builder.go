@@ -19,7 +19,7 @@ type pdrBuilder struct {
 	ueAddress string
 	n3Address string
 
-	isDownlinkPDR bool
+	direction direction
 }
 
 func NewPDRBuilder() *pdrBuilder {
@@ -69,19 +69,47 @@ func (b *pdrBuilder) WithRulesIDs(farID uint32, sessionQERID uint32, appQERID ui
 }
 
 func (b *pdrBuilder) MarkAsDownlink() *pdrBuilder {
-	b.isDownlinkPDR = true
+	b.direction = downlink
 	return b
+}
+
+func (b *pdrBuilder) MarkAsUplink() *pdrBuilder {
+	b.direction = uplink
+	return b
+}
+
+func (b *pdrBuilder) validate() {
+	if b.direction == notSet {
+		panic("Tried building a PDR without marking it as uplink or downlink")
+	}
+
+	if b.direction == downlink {
+		if b.ueAddress == "" {
+			panic("Tried building downlink PDR without setting the UE IP address")
+		}
+	}
+
+	if b.direction == uplink {
+		if b.n3Address == "" {
+			panic("Tried building uplink PDR without setting the N3Address")
+		}
+		if b.teid == 0 {
+			panic("Tried building uplink PDR without setting the TEID")
+		}
+	}
 }
 
 // BuildPDR returns by default an UplinkFAR.
 // Returns a DownlinkFAR if MarkAsDownlink was invoked.
 func (b *pdrBuilder) BuildPDR() *ie.IE {
+	b.validate()
+
 	createFunc := ie.NewCreatePDR
 	if b.method == Update {
 		createFunc = ie.NewUpdatePDR
 	}
 
-	if b.isDownlinkPDR {
+	if b.direction == downlink {
 		return createFunc(
 			ie.NewPDRID(b.id),
 			ie.NewPrecedence(b.precedence),

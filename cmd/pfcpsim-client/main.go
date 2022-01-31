@@ -329,6 +329,7 @@ func createSessions(count int) {
 				WithRulesIDs(uplinkFarID, sessQerID, uplinkAppQerID).
 				WithN3Address(upfAddress.String()).
 				WithSDFFilter("permit out ip from any to assigned").
+				MarkAsUplink().
 				BuildPDR(),
 
 			// DownlinkPDR
@@ -349,6 +350,7 @@ func createSessions(count int) {
 				WithID(uplinkFarID).
 				WithAction(session.ActionForward).
 				WithMethod(session.Create).
+				MarkAsUplink().
 				BuildFAR(),
 
 			// DownlinkFAR

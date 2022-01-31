@@ -9,8 +9,8 @@ type farBuilder struct {
 	applyAction   uint8
 	method        IEMethod
 	teid          uint32
-	downlinkIP    string
-	isDownlinkFAR bool
+	downlinkIP string
+	direction  direction
 }
 
 // NewFARBuilder returns a farBuilder.
@@ -44,19 +44,32 @@ func (b *farBuilder) WithDownlinkIP(downlinkIP string) *farBuilder {
 }
 
 func (b *farBuilder) MarkAsDownlink() *farBuilder {
-	b.isDownlinkFAR = true
+	b.direction = downlink
 	return b
 }
 
-// BuildFAR returns by default an UplinkFAR.
+func (b *farBuilder) MarkAsUplink() *farBuilder {
+	b.direction = uplink
+	return b
+}
+
+func (b *farBuilder) validate() {
+	if b.direction == notSet {
+		panic("Tried building a FAR without marking it as uplink or downlink")
+	}
+}
+
+// BuildFAR returns by default a downlinkFAR if MarkAsDownlink was invoked.
 // Returns a DownlinkFAR if MarkAsDownlink was invoked.
 func (b *farBuilder) BuildFAR() *ie.IE {
+	b.validate()
+
 	createFunc := ie.NewCreateFAR
 	if b.method == Update {
 		createFunc = ie.NewUpdateFAR
 	}
 
-	if b.isDownlinkFAR {
+	if b.direction == downlink {
 		return createFunc(
 			ie.NewFARID(b.farID),
 			ie.NewApplyAction(b.applyAction),

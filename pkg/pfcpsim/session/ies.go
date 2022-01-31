@@ -7,6 +7,14 @@ type IEMethod uint8
 
 // Definitions for session rules
 
+type direction int
+
+const (
+	notSet direction = iota
+	uplink
+	downlink
+)
+
 const (
 	Create IEMethod = iota
 	Update
