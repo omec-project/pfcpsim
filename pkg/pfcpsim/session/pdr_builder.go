@@ -12,9 +12,9 @@ type pdrBuilder struct {
 	sdfFilter  string
 	id         uint16
 	teid       uint32
-	farID      uint32
-	sessQerID  uint32
-	appQerID   uint32
+
+	qerIDs []*ie.IE
+	farIDs []*ie.IE
 
 	ueAddress string
 	n3Address string
@@ -23,7 +23,10 @@ type pdrBuilder struct {
 }
 
 func NewPDRBuilder() *pdrBuilder {
-	return &pdrBuilder{}
+	return &pdrBuilder{
+		qerIDs: make([]*ie.IE, 0),
+		farIDs: make([]*ie.IE, 0),
+	}
 }
 
 func (b *pdrBuilder) WithPrecedence(precedence uint32) *pdrBuilder {
@@ -46,7 +49,7 @@ func (b *pdrBuilder) WithTEID(teid uint32) *pdrBuilder {
 	return b
 }
 
-func (b *pdrBuilder) WithMEthod(method IEMethod) *pdrBuilder {
+func (b *pdrBuilder) WithMethod(method IEMethod) *pdrBuilder {
 	b.method = method
 	return b
 }
@@ -61,10 +64,13 @@ func (b *pdrBuilder) WithUEAddress(ueAddress string) *pdrBuilder {
 	return b
 }
 
-func (b *pdrBuilder) WithRulesIDs(farID uint32, sessionQERID uint32, appQERID uint32) *pdrBuilder {
-	b.farID = farID
-	b.sessQerID = sessionQERID
-	b.appQerID = appQERID
+func (b *pdrBuilder) AddQERID(qerID uint32) *pdrBuilder {
+	b.qerIDs = append(b.qerIDs, ie.NewQERID(qerID))
+	return b
+}
+
+func (b *pdrBuilder) AddFARID(farID uint32) *pdrBuilder {
+	b.farIDs = append(b.farIDs, ie.NewFARID(farID))
 	return b
 }
 
@@ -81,6 +87,14 @@ func (b *pdrBuilder) MarkAsUplink() *pdrBuilder {
 func (b *pdrBuilder) validate() {
 	if b.direction == notSet {
 		panic("Tried building a PDR without marking it as uplink or downlink")
+	}
+
+	if len(b.qerIDs) == 0 {
+		panic("Tried building PDR without providing QER IDs")
+	}
+
+	if len(b.farIDs) == 0 {
+		panic("Tried building PDR without providing FAR IDs")
 	}
 
 	if b.direction == downlink {
@@ -110,7 +124,7 @@ func (b *pdrBuilder) BuildPDR() *ie.IE {
 	}
 
 	if b.direction == downlink {
-		return createFunc(
+		pdr := createFunc(
 			ie.NewPDRID(b.id),
 			ie.NewPrecedence(b.precedence),
 			ie.NewPDI(
@@ -118,14 +132,15 @@ func (b *pdrBuilder) BuildPDR() *ie.IE {
 				ie.NewUEIPAddress(0x2, b.ueAddress, "", 0, 0),
 				ie.NewSDFFilter(b.sdfFilter, "", "", "", 1),
 			),
-			ie.NewFARID(b.farID),
-			ie.NewQERID(b.sessQerID),
-			ie.NewQERID(b.appQerID),
 		)
+
+		pdr.Add(b.farIDs...)
+		pdr.Add(b.qerIDs...)
+		return pdr
 	}
 
 	// UplinkPDR
-	return createFunc(
+	pdr := createFunc(
 		ie.NewPDRID(b.id),
 		ie.NewPrecedence(b.precedence),
 		ie.NewPDI(
@@ -134,9 +149,11 @@ func (b *pdrBuilder) BuildPDR() *ie.IE {
 			ie.NewSDFFilter(b.sdfFilter, "", "", "", 1),
 		),
 		ie.NewOuterHeaderRemoval(0, 0),
-		ie.NewFARID(b.farID),
-		ie.NewQERID(b.sessQerID),
-		ie.NewQERID(b.appQerID),
 	)
+
+	pdr.Add(b.farIDs...)
+	pdr.Add(b.qerIDs...)
+
+	return pdr
 
 }
