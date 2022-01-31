@@ -9,8 +9,10 @@ type farBuilder struct {
 	applyAction   uint8
 	method        IEMethod
 	teid          uint32
-	downlinkIP string
-	direction  direction
+	downlinkIP    string
+	direction     direction
+
+	pdrForRemoveFAR *ie.IE
 }
 
 // NewFARBuilder returns a farBuilder.
@@ -57,6 +59,10 @@ func (b *farBuilder) validate() {
 	if b.direction == notSet {
 		panic("Tried building a FAR without marking it as uplink or downlink")
 	}
+
+	if b.method == Delete && b.pdrForRemoveFAR == nil {
+		panic("Tried building a remove FAR without specifying PDR")
+	}
 }
 
 // BuildFAR returns by default a downlinkFAR if MarkAsDownlink was invoked.
@@ -67,6 +73,10 @@ func (b *farBuilder) BuildFAR() *ie.IE {
 	createFunc := ie.NewCreateFAR
 	if b.method == Update {
 		createFunc = ie.NewUpdateFAR
+	}
+	if b.method == Delete {
+		// TODO check if remove FAR structure is correct
+		return ie.NewRemoveFAR(b.pdrForRemoveFAR)
 	}
 
 	if b.direction == downlink {
