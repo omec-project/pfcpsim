@@ -5,12 +5,12 @@ import (
 )
 
 type farBuilder struct {
-	farID       uint32
-	applyAction uint8
-	method      IEMethod
-	teid        uint32
-	downlinkIP  string
-	direction   direction
+	farID        uint32
+	applyAction  uint8
+	method       IEMethod
+	teid         uint32
+	downlinkIP   string
+	dstInterface uint8
 }
 
 // NewFARBuilder returns a farBuilder.
@@ -38,29 +38,24 @@ func (b *farBuilder) WithTEID(teid uint32) *farBuilder {
 	return b
 }
 
+func (b *farBuilder) WithDstInterface(iFace uint8) *farBuilder {
+	b.dstInterface = iFace
+	return b
+}
+
 func (b *farBuilder) WithDownlinkIP(downlinkIP string) *farBuilder {
 	b.downlinkIP = downlinkIP
 	return b
 }
 
-func (b *farBuilder) MarkAsDownlink() *farBuilder {
-	b.direction = downlink
-	return b
-}
-
-func (b *farBuilder) MarkAsUplink() *farBuilder {
-	b.direction = uplink
-	return b
-}
-
 func (b *farBuilder) validate() {
-	if b.direction == notSet {
-		panic("Tried building a FAR without marking it as uplink or downlink")
+	if b.farID == 0 {
+		panic("Tried building FAR without setting FAR ID")
 	}
-}
 
-func newRemoveFAR(far *ie.IE) *ie.IE {
-	return ie.NewRemoveFAR(far)
+	if b.downlinkIP != "" && b.teid == 0 || b.downlinkIP == "" && b.teid != 0 {
+		panic("Tried building FAR providing only partial parameters. Check downlink IP or TEID")
+	}
 }
 
 // BuildFAR returns by default a downlinkFAR if MarkAsUplink was invoked.
@@ -73,34 +68,24 @@ func (b *farBuilder) BuildFAR() *ie.IE {
 		createFunc = ie.NewUpdateFAR
 	}
 
-	if b.direction == downlink {
-		far := createFunc(
-			ie.NewFARID(b.farID),
-			ie.NewApplyAction(b.applyAction),
-			ie.NewUpdateForwardingParameters(
-				ie.NewDestinationInterface(ie.DstInterfaceAccess),
-				// FIXME desc 0x100?
-				ie.NewOuterHeaderCreation(0x100, b.teid, b.downlinkIP, "", 0, 0, 0),
-			),
-		)
-		if b.method == Delete {
-			return newRemoveFAR(far)
-		}
+	updateFwdParams := ie.NewForwardingParameters(
+		ie.NewDestinationInterface(b.dstInterface),
+	)
 
-		return far
+	if b.downlinkIP != "" && b.teid != 0 {
+		updateFwdParams.Add(
+			// FIXME desc 0x100?
+			ie.NewOuterHeaderCreation(0x100, b.teid, b.downlinkIP, "", 0, 0, 0),
+		)
 	}
 
-	// Uplink
 	far := createFunc(
 		ie.NewFARID(b.farID),
 		ie.NewApplyAction(b.applyAction),
-		ie.NewForwardingParameters(
-			ie.NewDestinationInterface(ie.DstInterfaceCore),
-		),
+		updateFwdParams,
 	)
-
 	if b.method == Delete {
-		return newRemoveFAR(far)
+		return ie.NewRemoveFAR(far)
 	}
 
 	return far

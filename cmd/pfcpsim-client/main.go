@@ -354,7 +354,6 @@ func createSessions(count int) {
 				WithID(uplinkFarID).
 				WithAction(session.ActionForward).
 				WithMethod(session.Create).
-				MarkAsUplink().
 				BuildFAR(),
 
 			// DownlinkFAR
@@ -364,7 +363,6 @@ func createSessions(count int) {
 				WithMethod(session.Create).
 				WithTEID(downlinkTEID).
 				WithDownlinkIP(nodeBAddress.String()).
-				MarkAsDownlink().
 				BuildFAR(),
 		}
 
