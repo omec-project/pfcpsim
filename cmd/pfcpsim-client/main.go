@@ -391,7 +391,7 @@ func createSessions(count int) {
 		}
 
 		// TODO keep track of new session
-		err := globalPFCPSimClient.EstablishSession(pdrs, fars, qers)
+		_, err := globalPFCPSimClient.EstablishSession(pdrs, fars, qers)
 		if err != nil {
 			log.Errorf("Error while establishing sessions: %v", err)
 			return
