@@ -10,6 +10,8 @@ type qerBuilder struct {
 	dlMbr  uint64
 	ulGbr  uint64
 	dlGbr  uint64
+
+	isIDSet bool
 }
 
 func NewQERBuilder() *qerBuilder {
@@ -17,7 +19,10 @@ func NewQERBuilder() *qerBuilder {
 }
 
 func (b *qerBuilder) WithID(id uint32) *qerBuilder {
+	// Used to avoid using 0 as default value. It makes sure that WithID was invoked.
+	b.isIDSet = true
 	b.qerID = id
+
 	return b
 }
 
@@ -46,8 +51,14 @@ func (b *qerBuilder) WithDownlinkGBR(dlGbr uint64) *qerBuilder {
 	return b
 }
 
-func newRemoveQER(qer *ie.IE) *ie.IE {
-	return ie.NewRemoveQER(qer)
+func (b *qerBuilder) validate() {
+	if !b.isIDSet {
+		panic("Tried to build a QER without setting the QER ID")
+	}
+
+	if b.qfi == 0 {
+		panic("Tried to create a QER with 0 as QFI")
+	}
 }
 
 func (b *qerBuilder) WithMethod(method IEMethod) *qerBuilder {
@@ -56,6 +67,8 @@ func (b *qerBuilder) WithMethod(method IEMethod) *qerBuilder {
 }
 
 func (b *qerBuilder) Build() *ie.IE {
+	b.validate()
+
 	createFunc := ie.NewCreateQER
 	if b.method == Update {
 		createFunc = ie.NewUpdateQER
@@ -71,7 +84,7 @@ func (b *qerBuilder) Build() *ie.IE {
 	)
 
 	if b.method == Delete {
-		return newRemoveQER(qer)
+		return ie.NewRemoveQER(qer)
 	}
 
 	return qer
