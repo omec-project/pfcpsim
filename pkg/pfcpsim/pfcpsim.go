@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	errorsPkg "github.com/omec-project/pfcpsim/utils/errors"
 	ieLib "github.com/wmnsk/go-pfcp/ie"
 	"github.com/wmnsk/go-pfcp/message"
 )
@@ -156,7 +155,7 @@ func (c *PFCPClient) PeekNextHeartbeatResponse(timeout time.Duration) (*message.
 	case msg := <-c.heartbeatsChan:
 		return msg, nil
 	case <-time.After(timeout * time.Second):
-		return nil, errorsPkg.TimeoutOccurredErr
+		return nil, TimeoutOccurredErr
 	}
 }
 
@@ -165,7 +164,7 @@ func (c *PFCPClient) PeekNextResponse(timeout time.Duration) (message.Message, e
 	case msg := <-c.recvChan:
 		return msg, nil
 	case <-time.After(timeout * time.Second):
-		return nil, errorsPkg.TimeoutOccurredErr
+		return nil, TimeoutOccurredErr
 	}
 }
 
@@ -271,7 +270,7 @@ func (c *PFCPClient) SetupAssociation() error {
 	}
 
 	if _, ok := resp.(*message.AssociationSetupResponse); !ok {
-		return errorsPkg.InvalidResponseErr
+		return InvalidResponseErr
 	}
 
 	ctx, cancelFunc := context.WithCancel(c.ctx)
@@ -295,7 +294,7 @@ func (c *PFCPClient) IsAssociationAlive() bool {
 // If called while no association is established, an error is returned
 func (c *PFCPClient) TeardownAssociation() error {
 	if !c.IsAssociationAlive() {
-		return errorsPkg.AssociationInactiveErr
+		return AssociationInactiveErr
 	}
 
 	ie1 := ieLib.NewNodeID(c.conn.RemoteAddr().String(), "", "")
@@ -315,7 +314,7 @@ func (c *PFCPClient) TeardownAssociation() error {
 	}
 
 	if _, ok := resp.(*message.AssociationReleaseResponse); !ok {
-		return errorsPkg.InvalidResponseErr
+		return InvalidResponseErr
 	}
 
 	if c.cancelHeartbeats != nil {
@@ -331,7 +330,7 @@ func (c *PFCPClient) TeardownAssociation() error {
 // Returns error if the process fails at any stage.
 func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers []*ieLib.IE) error {
 	if !c.isAssociationActive {
-		return errorsPkg.AssociationInactiveErr
+		return AssociationInactiveErr
 	}
 
 	err := c.SendSessionEstablishmentRequest(pdrs, fars, qers)
@@ -349,12 +348,12 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 	estResp, ok := resp.(*message.SessionEstablishmentResponse)
 	if !ok {
 		c.numSessions--
-		return errorsPkg.InvalidResponseErr
+		return InvalidResponseErr
 	}
 
 	if cause, err := estResp.Cause.Cause(); err != nil || cause != ieLib.CauseRequestAccepted {
 		c.numSessions--
-		return errorsPkg.InvalidCauseErr
+		return InvalidCauseErr
 	}
 
 	remoteUpfSEID, _ := estResp.UPFSEID.FSEID()
@@ -388,11 +387,11 @@ func (c *PFCPClient) DeleteAllSessions() error {
 
 		delResp, ok := resp.(*message.SessionDeletionResponse)
 		if !ok {
-			return errorsPkg.InvalidResponseErr
+			return InvalidResponseErr
 		}
 
 		if cause, err := delResp.Cause.Cause(); err != nil || cause != ieLib.CauseRequestAccepted {
-			return errorsPkg.InvalidCauseErr
+			return InvalidCauseErr
 		}
 
 		// decrease number of active sessions (erase FSEID)
