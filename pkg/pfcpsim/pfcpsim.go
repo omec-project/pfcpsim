@@ -372,7 +372,10 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 		return nil, InvalidCauseErr
 	}
 
-	remoteSEID, _ := estResp.UPFSEID.FSEID()
+	remoteSEID, err := estResp.UPFSEID.FSEID()
+	if err != nil {
+		return nil, err
+	}
 	// TODO remove remoteSEIDs slice when session are correctly handled through session struct
 	c.remoteSEIDs = append(c.remoteSEIDs, remoteSEID.SEID)
 
