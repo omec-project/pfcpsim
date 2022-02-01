@@ -27,6 +27,6 @@ jobs:
         with:
           context: .
           push: false
-          load: true # load the built image to local docker instance. Needed for testing step.
+          load: true
           tags: '${{ env.DOCKER_REPO }}:pfcpsim-client-${{ steps.get_version.outputs.contents }}' # Local Runtime image
           target: 'pfcpsim-client'
