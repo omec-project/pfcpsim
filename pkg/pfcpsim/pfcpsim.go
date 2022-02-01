@@ -218,9 +218,9 @@ func (c *PFCPClient) SendSessionModificationRequest(PeerSEID uint64, pdrs []*ieL
 		0,
 	)
 
-	modifyReq.CreatePDR = append(modifyReq.CreatePDR, pdrs...)
-	modifyReq.CreateFAR = append(modifyReq.CreateFAR, fars...)
-	modifyReq.CreateQER = append(modifyReq.CreateQER, qers...)
+	modifyReq.UpdatePDR = append(modifyReq.UpdatePDR, pdrs...)
+	modifyReq.UpdateFAR = append(modifyReq.UpdateFAR, fars...)
+	modifyReq.UpdateQER = append(modifyReq.UpdateQER, qers...)
 
 	return c.sendMsg(modifyReq)
 }
