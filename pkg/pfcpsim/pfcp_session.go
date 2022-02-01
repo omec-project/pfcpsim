@@ -1,4 +1,4 @@
-package session
+package pfcpsim
 
 import "github.com/wmnsk/go-pfcp/ie"
 
