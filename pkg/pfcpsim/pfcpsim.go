@@ -209,6 +209,22 @@ func (c *PFCPClient) SendSessionEstablishmentRequest(pdrs []*ieLib.IE, fars []*i
 	return c.sendMsg(estReq)
 }
 
+func (c *PFCPClient) SendSessionModificationRequest(PeerSEID uint64, pdrs []*ieLib.IE, qers []*ieLib.IE ,fars []*ieLib.IE) error {
+	modifyReq := message.NewSessionModificationRequest(
+		0,
+		0,
+		PeerSEID,
+		c.getNextSequenceNumber(),
+		0,
+	)
+
+	modifyReq.UpdatePDR = append(modifyReq.UpdatePDR, pdrs...)
+	modifyReq.UpdateFAR = append(modifyReq.UpdateFAR, fars...)
+	modifyReq.UpdateQER = append(modifyReq.UpdateQER, qers...)
+
+	return c.sendMsg(modifyReq)
+}
+
 func (c *PFCPClient) SendSessionDeletionRequest(localSEID uint64, remoteSEID uint64) error {
 	delReq := message.NewSessionDeletionRequest(
 		0,
@@ -357,7 +373,6 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 
 	return nil
 }
-
 // GetNumActiveSessions returns the number of active sessions.
 func (c *PFCPClient) GetNumActiveSessions() uint64 {
 	return c.numSessions
