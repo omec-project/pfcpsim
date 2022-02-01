@@ -7,7 +7,6 @@ import (
 )
 
 func TestFARBuilderShouldPanic(t *testing.T) {
-
 	assert.Panics(t, func() {
 		NewFARBuilder().
 			WithMethod(Create).
@@ -32,5 +31,4 @@ func TestFARBuilderShouldPanic(t *testing.T) {
 			WithTEID(100).
 			BuildFAR()
 	})
-
 }
