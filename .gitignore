@@ -2,6 +2,7 @@
 # Copyright 2022 Open Networking Foundation
 
 .idea/
+.coverage/
 output
 *.pyc
 *.swp
