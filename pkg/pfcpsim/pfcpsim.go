@@ -358,7 +358,7 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 	if err != nil {
 		// delete FSEID if session was not established.
 		c.numSessions--
-		return nil,  NewTimeoutExpiredError(err)
+		return nil, NewTimeoutExpiredError(err)
 	}
 
 	estResp, ok := resp.(*message.SessionEstablishmentResponse)
