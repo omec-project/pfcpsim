@@ -20,3 +20,10 @@ build-pfcpsim-client:
 
 golint:
 	@docker run --rm -v $(CURDIR):/app -w /app/pkg/pfcpsim golangci/golangci-lint:latest golangci-lint run -v --config /app/.golangci.yml
+
+.coverage:
+	rm -rf $(CURDIR)/.coverage
+	mkdir -p $(CURDIR)/.coverage
+
+test: .coverage
+	go test	-race -coverprofile=.coverage/coverage-unit.txt -covermode=atomic -v ./...
