@@ -63,14 +63,17 @@ func (b *farBuilder) validate() {
 func (b *farBuilder) BuildFAR() *ie.IE {
 	b.validate()
 
-	createFunc := ie.NewCreateFAR
-	if b.method == Update {
-		createFunc = ie.NewUpdateFAR
-	}
-
 	updateFwdParams := ie.NewForwardingParameters(
 		ie.NewDestinationInterface(b.dstInterface),
 	)
+
+	createFunc := ie.NewCreateFAR
+	if b.method == Update {
+		createFunc = ie.NewUpdateFAR
+		updateFwdParams = ie.NewUpdateForwardingParameters(
+			ie.NewDestinationInterface(b.dstInterface),
+		)
+	}
 
 	if b.downlinkIP != "" && b.teid != 0 {
 		updateFwdParams.Add(

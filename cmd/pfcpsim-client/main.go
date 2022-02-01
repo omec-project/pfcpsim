@@ -353,6 +353,7 @@ func createSessions(count int) {
 			session.NewFARBuilder().
 				WithID(uplinkFarID).
 				WithAction(session.ActionForward).
+				WithDstInterface(ie.DstInterfaceCore).
 				WithMethod(session.Create).
 				BuildFAR(),
 
@@ -361,6 +362,7 @@ func createSessions(count int) {
 				WithID(downlinkFarID).
 				WithAction(session.ActionDrop).
 				WithMethod(session.Create).
+				WithDstInterface(ie.DstInterfaceAccess).
 				WithTEID(downlinkTEID).
 				WithDownlinkIP(nodeBAddress.String()).
 				BuildFAR(),
