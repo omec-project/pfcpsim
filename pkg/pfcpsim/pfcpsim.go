@@ -5,7 +5,6 @@ package pfcpsim
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"sync"
@@ -54,9 +53,11 @@ func NewPFCPClient(localAddr string) *PFCPClient {
 		sequenceNumber: 0,
 		localAddr:      localAddr,
 	}
+
 	client.ctx = context.Background()
 	client.heartbeatsChan = make(chan *message.HeartbeatResponse)
 	client.recvChan = make(chan message.Message)
+
 	return client
 }
 
@@ -103,6 +104,7 @@ func (c *PFCPClient) sendMsg(msg message.Message) error {
 
 func (c *PFCPClient) receiveFromN4() {
 	buf := make([]byte, 1500)
+
 	for {
 		n, _, err := c.conn.ReadFrom(buf)
 		if err != nil {
@@ -144,6 +146,7 @@ func (c *PFCPClient) DisconnectN4() {
 	if c.cancelHeartbeats != nil {
 		c.cancelHeartbeats()
 	}
+
 	c.conn.Close()
 }
 
@@ -152,7 +155,7 @@ func (c *PFCPClient) PeekNextHeartbeatResponse(timeout time.Duration) (*message.
 	case msg := <-c.heartbeatsChan:
 		return msg, nil
 	case <-time.After(timeout * time.Second):
-		return nil, errors.New("timeout waiting for response")
+		return nil, TimeoutOccurredErr
 	}
 }
 
@@ -161,7 +164,7 @@ func (c *PFCPClient) PeekNextResponse(timeout time.Duration) (message.Message, e
 	case msg := <-c.recvChan:
 		return msg, nil
 	case <-time.After(timeout * time.Second):
-		return nil, errors.New("timeout waiting for response")
+		return nil, TimeoutOccurredErr
 	}
 }
 
@@ -174,9 +177,7 @@ func (c *PFCPClient) SendAssociationSetupRequest(ie ...*ieLib.IE) error {
 		ieLib.NewNodeID(c.localAddr, "", ""),
 	)
 
-	for _, value := range ie {
-		assocReq.IEs = append(assocReq.IEs, value)
-	}
+	assocReq.IEs = append(assocReq.IEs, ie...)
 
 	return c.sendMsg(assocReq)
 }
@@ -240,6 +241,7 @@ func (c *PFCPClient) SendSessionDeletionRequest(localSEID uint64, remoteSEID uin
 
 func (c *PFCPClient) StartHeartbeats(stopCtx context.Context) {
 	ticker := time.NewTicker(DefaultHeartbeatPeriod * time.Second)
+
 	for {
 		select {
 		case <-stopCtx.Done():
@@ -284,7 +286,7 @@ func (c *PFCPClient) SetupAssociation() error {
 	}
 
 	if _, ok := resp.(*message.AssociationSetupResponse); !ok {
-		return fmt.Errorf("invalid message received, expected association setup response")
+		return InvalidResponseErr
 	}
 
 	ctx, cancelFunc := context.WithCancel(c.ctx)
@@ -308,12 +310,13 @@ func (c *PFCPClient) IsAssociationAlive() bool {
 // If called while no association is established, an error is returned
 func (c *PFCPClient) TeardownAssociation() error {
 	if !c.IsAssociationAlive() {
-		return errors.New("association does not exist")
+		return AssociationInactiveErr
 	}
 
 	ie1 := ieLib.NewNodeID(c.conn.RemoteAddr().String(), "", "")
 
 	c.resetSequenceNumber()
+
 	msg := message.NewAssociationReleaseRequest(0, ie1)
 
 	err := c.sendMsg(msg)
@@ -327,12 +330,13 @@ func (c *PFCPClient) TeardownAssociation() error {
 	}
 
 	if _, ok := resp.(*message.AssociationReleaseResponse); !ok {
-		return errors.New(fmt.Sprintf("received unexpected message: %v", resp.MessageTypeName()))
+		return InvalidResponseErr
 	}
 
 	if c.cancelHeartbeats != nil {
 		c.cancelHeartbeats()
 	}
+
 	c.setAssociationStatus(false)
 
 	return nil
@@ -342,7 +346,7 @@ func (c *PFCPClient) TeardownAssociation() error {
 // Returns error if the process fails at any stage.
 func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers []*ieLib.IE) error {
 	if !c.isAssociationActive {
-		return fmt.Errorf("PFCP association is not active")
+		return AssociationInactiveErr
 	}
 
 	err := c.SendSessionEstablishmentRequest(pdrs, fars, qers)
@@ -360,12 +364,12 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 	estResp, ok := resp.(*message.SessionEstablishmentResponse)
 	if !ok {
 		c.numSessions--
-		return fmt.Errorf("invalid message received, expected session establishment response")
+		return InvalidResponseErr
 	}
 
 	if cause, err := estResp.Cause.Cause(); err != nil || cause != ieLib.CauseRequestAccepted {
 		c.numSessions--
-		return fmt.Errorf("session establishment response returns invalid cause: %v", cause)
+		return InvalidCauseErr
 	}
 
 	remoteUpfSEID, _ := estResp.UPFSEID.FSEID()
@@ -381,12 +385,10 @@ func (c *PFCPClient) GetNumActiveSessions() uint64 {
 // DeleteAllSessions sends Session Deletion Request for each session and awaits for PFCP Session Deletion Response.
 // Returns error if the process fails at any stage.
 func (c *PFCPClient) DeleteAllSessions() error {
-	var remoteSEID uint64
-
 	for FSEID := c.numSessions; FSEID > 0; FSEID-- {
-
 		// pop remoteSEID from slice
-		remoteSEID, c.remoteSEIDs = c.remoteSEIDs[len(c.remoteSEIDs)-1], c.remoteSEIDs[:len(c.remoteSEIDs)-1]
+		remoteSEID := c.remoteSEIDs[len(c.remoteSEIDs)-1]
+		c.remoteSEIDs = c.remoteSEIDs[:len(c.remoteSEIDs)-1]
 
 		err := c.SendSessionDeletionRequest(FSEID, remoteSEID)
 		if err != nil {
@@ -400,11 +402,11 @@ func (c *PFCPClient) DeleteAllSessions() error {
 
 		delResp, ok := resp.(*message.SessionDeletionResponse)
 		if !ok {
-			return fmt.Errorf("invalid message received, expected session deletion response")
+			return InvalidResponseErr
 		}
 
 		if cause, err := delResp.Cause.Cause(); err != nil || cause != ieLib.CauseRequestAccepted {
-			return fmt.Errorf("session deletion response returns invalid cause: %v", cause)
+			return InvalidCauseErr
 		}
 
 		// decrease number of active sessions (erase FSEID)

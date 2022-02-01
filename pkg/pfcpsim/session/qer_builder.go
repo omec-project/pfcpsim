@@ -46,7 +46,7 @@ func (b *qerBuilder) WithDownlinkGBR(dlGbr uint64) *qerBuilder {
 	return b
 }
 
-func  newRemoveQER(qer *ie.IE) *ie.IE {
+func newRemoveQER(qer *ie.IE) *ie.IE {
 	return ie.NewRemoveQER(qer)
 }
 

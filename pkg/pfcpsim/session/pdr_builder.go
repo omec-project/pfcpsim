@@ -11,14 +11,13 @@ type pdrBuilder struct {
 	method     IEMethod
 	sdfFilter  string
 	id         uint16
-	teid  uint32
-	farID uint32
+	teid       uint32
+	farID      uint32
 
 	qerIDs []*ie.IE
 
 	ueAddress string
 	n3Address string
-
 	direction direction
 }
 
@@ -106,6 +105,7 @@ func (b *pdrBuilder) validate() {
 		if b.n3Address == "" {
 			panic("Tried building uplink PDR without setting the N3Address")
 		}
+
 		if b.teid == 0 {
 			panic("Tried building uplink PDR without setting the TEID")
 		}
@@ -167,5 +167,4 @@ func (b *pdrBuilder) BuildPDR() *ie.IE {
 	}
 
 	return pdr
-
 }

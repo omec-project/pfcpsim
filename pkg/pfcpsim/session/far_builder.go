@@ -5,12 +5,12 @@ import (
 )
 
 type farBuilder struct {
-	farID         uint32
-	applyAction   uint8
-	method        IEMethod
-	teid          uint32
-	downlinkIP    string
-	direction     direction
+	farID       uint32
+	applyAction uint8
+	method      IEMethod
+	teid        uint32
+	downlinkIP  string
+	direction   direction
 }
 
 // NewFARBuilder returns a farBuilder.
@@ -59,7 +59,7 @@ func (b *farBuilder) validate() {
 	}
 }
 
-func newRemoveFAR(far *ie.IE) *ie.IE{
+func newRemoveFAR(far *ie.IE) *ie.IE {
 	return ie.NewRemoveFAR(far)
 }
 
@@ -72,7 +72,6 @@ func (b *farBuilder) BuildFAR() *ie.IE {
 	if b.method == Update {
 		createFunc = ie.NewUpdateFAR
 	}
-
 
 	if b.direction == downlink {
 		far := createFunc(
