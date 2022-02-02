@@ -26,6 +26,7 @@ const (
 //   and enables send and receive of individual messages (e.g., SendAssociationSetupRequest(), PeekNextResponse())
 type PFCPClient struct {
 	lastFSEID uint64
+	fseidLock sync.Mutex
 
 	aliveLock           sync.Mutex
 	isAssociationActive bool
@@ -66,8 +67,8 @@ func (c *PFCPClient) getNextSequenceNumber() uint32 {
 }
 
 func (c *PFCPClient) getNextFSEID() uint64 {
-	c.seqNumLock.Lock()
-	defer c.seqNumLock.Unlock()
+	c.fseidLock.Lock()
+	defer c.fseidLock.Unlock()
 
 	c.lastFSEID++
 
@@ -75,8 +76,8 @@ func (c *PFCPClient) getNextFSEID() uint64 {
 }
 
 func (c *PFCPClient) resetSequenceNumber() {
-	c.seqNumLock.Lock()
-	defer c.seqNumLock.Unlock()
+	c.globalLock.Lock()
+	defer c.globalLock.Unlock()
 
 	c.sequenceNumber = 0
 }

@@ -34,14 +34,14 @@ var (
 	remotePeerAddress net.IP
 	upfAddress        net.IP
 	nodeBAddress      net.IP
-	ueAddressPool     string
+	ueAddressPool     *string
 
 	lastUEAddress net.IP
 
-	inputFile  string
-	outputFile string
+	inputFile  *string
+	outputFile *string
 
-	sessionCount int
+	sessionCount *int
 
 	pfcpClientContexts []*PFCPClientContext
 
@@ -60,7 +60,7 @@ const (
 // copyOutputToLogfile reads from Stdout and Stderr to save in a persistent file,
 // provided through logfile parameter.
 func copyOutputToLogfile() func() {
-	f, _ := os.OpenFile(outputFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	f, _ := os.OpenFile(*outputFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 
 	out := os.Stdout
 	multiWriter := io.MultiWriter(out, f)
@@ -135,12 +135,12 @@ func getLocalAddress() (net.IP, error) {
 
 // parseArgs perform flag parsing and validation saving necessary data to global variables.
 func parseArgs() {
-	inputFile = *getopt.StringLong("input-file", 'f', "", "File to poll for input commands. Default is stdin")
-	outputFile = *getopt.StringLong("output-file", 'o', "", "File in which copy from Stdout. Default uses only Stdout")
+	inputFile = getopt.StringLong("input-file", 'f', "", "File to poll for input commands. Default is stdin")
+	outputFile = getopt.StringLong("output-file", 'o', "", "File in which copy from Stdout. Default uses only Stdout")
 	remotePeer := getopt.StringLong("remote-peer-address", 'r', "127.0.0.1", "Address or hostname of the remote peer (PFCP Agent)")
 	upfAddr := getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF")
-	sessionCount = *getopt.IntLong("session-count", 'c', 1, "Set the amount of sessions to create, starting from 1 (included)")
-	ueAddressPool = *getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")
+	sessionCount = getopt.IntLong("session-count", 'c', 1, "Set the amount of sessions to create, starting from 1 (included)")
+	ueAddressPool = getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")
 	NodeBAddr := getopt.StringLong("nodeb-address", 'g', defaultGNodeBAddress, "The IPv4 of (g/e)NodeBAddress")
 
 	optHelp := getopt.BoolLong("help", 0, "Help")
@@ -152,7 +152,7 @@ func parseArgs() {
 	}
 
 	// Flag checks and validations
-	if sessionCount <= 0 {
+	if *sessionCount <= 0 {
 		log.Fatalf("Session count cannot be 0 or a negative number")
 	}
 
@@ -176,7 +176,7 @@ func parseArgs() {
 		log.Fatalf("Error while parsing UPF address")
 	}
 
-	_, _, err := net.ParseCIDR(ueAddressPool)
+	_, _, err := net.ParseCIDR(*ueAddressPool)
 	if err != nil {
 		log.Fatalf("Could not parse ue address pool: %v", err)
 	}
@@ -184,7 +184,7 @@ func parseArgs() {
 
 // readInput will cycle through user's input. if inputFile was provided as a flag, Stdin redirection is performed.
 func readInput(input chan<- string) {
-	if inputFile != "" {
+	if *inputFile != "" {
 		// Set inputFile as stdIn
 
 		oldStdin := os.Stdin
@@ -193,7 +193,7 @@ func readInput(input chan<- string) {
 			os.Stdin = oldStdin
 		}()
 
-		f, err := os.Open(inputFile)
+		f, err := os.Open(*inputFile)
 		if err != nil {
 			log.Errorf("Error while reading inputFile: %v", err)
 		} else {
@@ -261,7 +261,7 @@ func handleUserInput() {
 
 			case "create":
 				log.Info("Selected create sessions")
-				createSessions(sessionCount)
+				createSessions(*sessionCount)
 
 			case "modify":
 				log.Info("Selected modify sessions")
@@ -275,14 +275,13 @@ func handleUserInput() {
 
 			case "delete":
 				log.Info("Selected delete sessions")
-				for i, ctx := range pfcpClientContexts {
-					err := globalPFCPSimClient.DeleteSession(ctx.session)
+				for i := len(pfcpClientContexts) - 1; i > 0; i-- {
+					err := globalPFCPSimClient.DeleteSession(pfcpClientContexts[i].session)
 					if err != nil {
 						log.Errorf("Error while deleting sessions: %v", err)
 						break
 					}
-
-					// Remove element in O(1). Don't care about ordering
+					// remove elements
 					pfcpClientContexts[i] = pfcpClientContexts[len(pfcpClientContexts)-1]
 					pfcpClientContexts[len(pfcpClientContexts)-1] = nil
 					pfcpClientContexts = pfcpClientContexts[:len(pfcpClientContexts)-1]
@@ -311,7 +310,7 @@ func getNextUEAddress() net.IP {
 	}
 
 	// TODO handle case net IP is full
-	ueIpFromPool, _, _ := net.ParseCIDR(ueAddressPool)
+	ueIpFromPool, _, _ := net.ParseCIDR(*ueAddressPool)
 	lastUEAddress = iplib.NextIP(ueIpFromPool)
 	return lastUEAddress
 }
@@ -480,7 +479,7 @@ func createSessions(count int) {
 func main() {
 	parseArgs()
 
-	if outputFile != "" {
+	if *outputFile != "" {
 		stopLogToFile := copyOutputToLogfile()
 		defer stopLogToFile()
 	}
