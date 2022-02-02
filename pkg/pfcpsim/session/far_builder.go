@@ -43,6 +43,7 @@ func (b *farBuilder) WithTEID(teid uint32) *farBuilder {
 func (b *farBuilder) WithDstInterface(iFace uint8) *farBuilder {
 	b.isInterfaceSet = true
 	b.dstInterface = iFace
+
 	return b
 }
 
