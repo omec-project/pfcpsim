@@ -41,6 +41,8 @@ var (
 
 	sessionCount int
 
+	activeSessions[]*PFCPClientContext
+
 	// Emulates 5G SMF/ 4G SGW
 	globalPFCPSimClient *pfcpsim.PFCPClient
 )
@@ -308,9 +310,9 @@ func getNextUEAddress() net.IP {
 // createSessions create 'count' sessions incrementally.
 // Once created, the sessions are established through PFCP client.
 func createSessions(count int) {
-	baseID := globalPFCPSimClient.GetNumActiveSessions() + 1
+	baseID := len(activeSessions) + 1
 
-	for i := baseID; i < (uint64(count) + baseID); i++ {
+	for i := baseID; i < (count + baseID); i++ {
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i + 10)
 		downlinkTEID := uint32(i + 11)
@@ -398,15 +400,21 @@ func createSessions(count int) {
 				Build(),
 		}
 
-		// TODO keep track of new PFCPClientContext
-		_, err := globalPFCPSimClient.EstablishSession(pdrs, fars, qers)
+		sess, err := globalPFCPSimClient.EstablishSession(pdrs, fars, qers)
 		if err != nil {
 			log.Errorf("Error while establishing sessions: %v", err)
 			return
 		}
 
-		// TODO show PFCPClientContext's F-SEID
-		log.Infof("Created PFCPClientContext")
+		activeSessions = append(activeSessions, &PFCPClientContext{
+				session: sess,
+				pdrs:    pdrs,
+				fars:    fars,
+				qers:    qers,
+			},
+		)
+
+		log.Infof("Created new PFCP session")
 	}
 
 }
