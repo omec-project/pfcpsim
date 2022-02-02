@@ -378,7 +378,34 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 	return sess, nil
 }
 
-// DeleteAllSessions sends Session Deletion Request for each session and awaits for PFCP Session Deletion Response.
+func (c *PFCPClient) ModifySession(sess *PFCPSession, pdrs []*ieLib.IE, fars []*ieLib.IE, qers []*ieLib.IE) error {
+	if !c.isAssociationActive {
+		return NewAssociationInactiveError()
+	}
+
+	err := c.SendSessionModificationRequest(sess.peerSEID, pdrs, fars, qers)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.PeekNextResponse(5)
+	if err != nil {
+		return NewTimeoutExpiredError(err)
+	}
+
+	modRes, ok := resp.(*message.SessionModificationResponse)
+	if !ok {
+		return NewInvalidResponseError(err)
+	}
+
+	if cause, err := modRes.Cause.Cause(); err != nil || cause != ieLib.CauseRequestAccepted {
+		return NewInvalidCauseError(err)
+	}
+
+	return nil
+}
+
+// DeleteSession sends Session Deletion Request for each session and awaits for PFCP Session Deletion Response.
 // Returns error if the process fails at any stage.
 func (c *PFCPClient) DeleteSession(sess *PFCPSession) error {
 	err := c.SendSessionDeletionRequest(sess.localSEID, sess.peerSEID)
