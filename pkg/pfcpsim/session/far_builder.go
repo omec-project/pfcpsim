@@ -11,6 +11,8 @@ type farBuilder struct {
 	teid         uint32
 	downlinkIP   string
 	dstInterface uint8
+
+	isInterfaceSet bool
 }
 
 // NewFARBuilder returns a farBuilder.
@@ -39,6 +41,7 @@ func (b *farBuilder) WithTEID(teid uint32) *farBuilder {
 }
 
 func (b *farBuilder) WithDstInterface(iFace uint8) *farBuilder {
+	b.isInterfaceSet = true
 	b.dstInterface = iFace
 	return b
 }
@@ -51,6 +54,10 @@ func (b *farBuilder) WithDownlinkIP(downlinkIP string) *farBuilder {
 func (b *farBuilder) validate() {
 	if b.farID == 0 {
 		panic("Tried building FAR without setting FAR ID")
+	}
+
+	if !b.isInterfaceSet {
+		panic("Tried building FAR without setting a destination interface")
 	}
 
 	if b.downlinkIP != "" && b.teid == 0 || b.downlinkIP == "" && b.teid != 0 {
