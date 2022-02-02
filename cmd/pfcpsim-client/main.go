@@ -379,7 +379,7 @@ func createSessions(count int) {
 		}
 
 		qers := []*ieLib.IE{
-			// PFCPClientContext QER
+			// session QER
 			session.NewQERBuilder().
 				WithID(sessQerID).
 				WithMethod(session.Create).
