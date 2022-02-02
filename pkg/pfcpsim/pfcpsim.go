@@ -25,8 +25,6 @@ const (
 // - 2nd mode gives a user more control over PFCP sequence flow
 //   and enables send and receive of individual messages (e.g., SendAssociationSetupRequest(), PeekNextResponse())
 type PFCPClient struct {
-	// keeps the current number of active PFCP sessions
-	// it is also used as F-SEID
 	lastFSEID uint64
 
 	aliveLock           sync.Mutex
@@ -68,6 +66,9 @@ func (c *PFCPClient) getNextSequenceNumber() uint32 {
 }
 
 func (c *PFCPClient) getNextFSEID() uint64 {
+	c.seqNumLock.Lock()
+	defer c.seqNumLock.Unlock()
+
 	c.lastFSEID++
 	return c.lastFSEID
 }

@@ -316,6 +316,7 @@ func getNextUEAddress() net.IP {
 	return lastUEAddress
 }
 
+// modifySessions modifies all active sessions
 func modifySessions() error {
 	if len(pfcpClientContexts) == 0 {
 		return pfcpsim.NewNoActiveSessionError()
@@ -344,11 +345,13 @@ func modifySessions() error {
 					WithID(oldFarID).
 					WithMethod(session.Update).
 					WithAction(session.ActionForward).
+					WithDstInterface(ieLib.DstInterfaceCore).
 					WithTEID(ctx.downlinkTEID).
 					WithDownlinkIP(nodeBAddress.String()).
 					BuildFAR(),
 			}
 
+			// TODO handle buffer and notifyCP flags
 			err = globalPFCPSimClient.ModifySession(ctx.session, nil, newFARs, nil)
 			if err != nil {
 				return err
