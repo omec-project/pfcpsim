@@ -133,12 +133,12 @@ func getLocalAddress() (net.IP, error) {
 
 // parseArgs perform flag parsing and validation saving necessary data to global variables.
 func parseArgs() {
-	inputF := getopt.StringLong("input-file", 'f', "", "File to poll for input commands. Default is stdin")
-	outputF := getopt.StringLong("output-file", 'o', "", "File in which copy from Stdout. Default uses only Stdout")
+	inputFile = *getopt.StringLong("input-file", 'f', "", "File to poll for input commands. Default is stdin")
+	outputFile = *getopt.StringLong("output-file", 'o', "", "File in which copy from Stdout. Default uses only Stdout")
 	remotePeer := getopt.StringLong("remote-peer-address", 'r', "127.0.0.1", "Address or hostname of the remote peer (PFCP Agent)")
-	upfAddr := getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF (UP4)")
-	sessionCnt := getopt.IntLong("session-count", 'c', 1, "Set the amount of sessions to create, starting from 1 (included)")
-	ueAddrPool := getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")
+	upfAddr := getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF")
+	sessionCount = *getopt.IntLong("session-count", 'c', 1, "Set the amount of sessions to create, starting from 1 (included)")
+	ueAddressPool = *getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")
 	NodeBAddr := getopt.StringLong("nodeb-address", 'g', defaultGNodeBAddress, "The IPv4 of (g/e)NodeBAddress")
 
 	optHelp := getopt.BoolLong("help", 0, "Help")
@@ -150,19 +150,9 @@ func parseArgs() {
 	}
 
 	// Flag checks and validations
-
-	if *outputF != "" {
-		outputFile = *outputF
-	}
-
-	if *inputF != "" {
-		inputFile = *inputF
-	}
-
-	if *sessionCnt <= 0 {
+	if sessionCount <= 0 {
 		log.Fatalf("Session count cannot be 0 or a negative number")
 	}
-	sessionCount = *sessionCnt
 
 	// IPs checks
 	nodeBAddress = net.ParseIP(*NodeBAddr)
@@ -184,11 +174,10 @@ func parseArgs() {
 		log.Fatalf("Error while parsing UPF address")
 	}
 
-	_, _, err := net.ParseCIDR(*ueAddrPool)
+	_, _, err := net.ParseCIDR(ueAddressPool)
 	if err != nil {
 		log.Fatalf("Could not parse ue address pool: %v", err)
 	}
-	ueAddressPool = *ueAddrPool
 }
 
 // readInput will cycle through user's input. if inputFile was provided as a flag, Stdin redirection is performed.
