@@ -41,7 +41,7 @@ var (
 
 	sessionCount int
 
-	activeSessions[]*PFCPClientContext
+	pfcpClientContexts []*PFCPClientContext
 
 	// Emulates 5G SMF/ 4G SGW
 	globalPFCPSimClient *pfcpsim.PFCPClient
@@ -273,10 +273,14 @@ func handleUserInput() {
 
 			case "delete":
 				log.Info("Selected delete sessions")
-				err := globalPFCPSimClient.DeleteAllSessions()
-				if err != nil {
-					log.Errorf("Error while deleting sessions: %v", err)
-					break
+				for i, ctx := range pfcpClientContexts {
+					err := globalPFCPSimClient.DeleteSession(ctx.session)
+					if err != nil {
+						log.Errorf("Error while deleting sessions: %v", err)
+						break
+					}
+
+					pfcpClientContexts[i] = nil // remove session
 				}
 
 				log.Infof("Deleted all sessions")
@@ -310,7 +314,7 @@ func getNextUEAddress() net.IP {
 // createSessions create 'count' sessions incrementally.
 // Once created, the sessions are established through PFCP client.
 func createSessions(count int) {
-	baseID := len(activeSessions) + 1
+	baseID := len(pfcpClientContexts) + 1
 
 	for i := baseID; i < (count + baseID); i++ {
 		// using variables to ease comprehension on how rules are linked together
@@ -406,12 +410,12 @@ func createSessions(count int) {
 			return
 		}
 
-		activeSessions = append(activeSessions, &PFCPClientContext{
-				session: sess,
-				pdrs:    pdrs,
-				fars:    fars,
-				qers:    qers,
-			},
+		pfcpClientContexts = append(pfcpClientContexts, &PFCPClientContext{
+			session: sess,
+			pdrs:    pdrs,
+			fars:    fars,
+			qers:    qers,
+		},
 		)
 
 		log.Infof("Created new PFCP session")
