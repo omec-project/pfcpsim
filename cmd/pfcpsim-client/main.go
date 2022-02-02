@@ -17,8 +17,16 @@ import (
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
 	"github.com/pborman/getopt/v2"
 	log "github.com/sirupsen/logrus"
-	"github.com/wmnsk/go-pfcp/ie"
+	ieLib "github.com/wmnsk/go-pfcp/ie"
 )
+
+type PFCPClientContext struct {
+	session *pfcpsim.PFCPSession
+
+	pdrs []*ieLib.IE
+	fars []*ieLib.IE
+	qers []*ieLib.IE
+}
 
 var (
 	remotePeerAddress net.IP
@@ -32,6 +40,8 @@ var (
 	outputFile string
 
 	sessionCount int
+
+	activeSessions []*PFCPClientContext
 
 	// Emulates 5G SMF/ 4G SGW
 	globalPFCPSimClient *pfcpsim.PFCPClient
@@ -300,9 +310,9 @@ func getNextUEAddress() net.IP {
 // createSessions create 'count' sessions incrementally.
 // Once created, the sessions are established through PFCP client.
 func createSessions(count int) {
-	baseID := globalPFCPSimClient.GetNumActiveSessions() + 1
+	baseID := len(activeSessions) + 1
 
-	for i := baseID; i < (uint64(count) + baseID); i++ {
+	for i := baseID; i < (count + baseID); i++ {
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i + 10)
 		downlinkTEID := uint32(i + 11)
@@ -320,7 +330,7 @@ func createSessions(count int) {
 		uplinkAppQerID := appQerID
 		downlinkAppQerID := appQerID + 1
 
-		pdrs := []*ie.IE{
+		pdrs := []*ieLib.IE{
 			// UplinkPDR
 			session.NewPDRBuilder().
 				WithID(uplinkPdrID).
@@ -348,12 +358,12 @@ func createSessions(count int) {
 				BuildPDR(),
 		}
 
-		fars := []*ie.IE{
+		fars := []*ieLib.IE{
 			// UplinkFAR
 			session.NewFARBuilder().
 				WithID(uplinkFarID).
 				WithAction(session.ActionForward).
-				WithDstInterface(ie.DstInterfaceCore).
+				WithDstInterface(ieLib.DstInterfaceCore).
 				WithMethod(session.Create).
 				BuildFAR(),
 
@@ -362,13 +372,13 @@ func createSessions(count int) {
 				WithID(downlinkFarID).
 				WithAction(session.ActionDrop).
 				WithMethod(session.Create).
-				WithDstInterface(ie.DstInterfaceAccess).
+				WithDstInterface(ieLib.DstInterfaceAccess).
 				WithTEID(downlinkTEID).
 				WithDownlinkIP(nodeBAddress.String()).
 				BuildFAR(),
 		}
 
-		qers := []*ie.IE{
+		qers := []*ieLib.IE{
 			// session QER
 			session.NewQERBuilder().
 				WithID(sessQerID).
@@ -390,15 +400,21 @@ func createSessions(count int) {
 				Build(),
 		}
 
-		// TODO keep track of new session
-		err := globalPFCPSimClient.EstablishSession(pdrs, fars, qers)
+		sess, err := globalPFCPSimClient.EstablishSession(pdrs, fars, qers)
 		if err != nil {
 			log.Errorf("Error while establishing sessions: %v", err)
 			return
 		}
 
-		// TODO show session's F-SEID
-		log.Infof("Created session")
+		activeSessions = append(activeSessions, &PFCPClientContext{
+			session: sess,
+			pdrs:    pdrs,
+			fars:    fars,
+			qers:    qers,
+		},
+		)
+
+		log.Infof("Created new PFCP session")
 	}
 
 }

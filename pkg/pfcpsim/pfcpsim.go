@@ -343,39 +343,48 @@ func (c *PFCPClient) TeardownAssociation() error {
 }
 
 // EstablishSession sends PFCP Session Establishment Request and waits for PFCP Session Establishment Response.
-// Returns error if the process fails at any stage.
-func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers []*ieLib.IE) error {
+// Returns a pointer to a new PFCPSession. Returns error if the process fails at any stage.
+func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers []*ieLib.IE) (*PFCPSession, error) {
 	if !c.isAssociationActive {
-		return NewAssociationInactiveError()
+		return nil, NewAssociationInactiveError()
 	}
 
 	err := c.SendSessionEstablishmentRequest(pdrs, fars, qers)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	resp, err := c.PeekNextResponse(5)
 	if err != nil {
 		// delete FSEID if session was not established.
 		c.numSessions--
-		return NewTimeoutExpiredError(err)
+		return nil, NewTimeoutExpiredError(err)
 	}
 
 	estResp, ok := resp.(*message.SessionEstablishmentResponse)
 	if !ok {
 		c.numSessions--
-		return NewInvalidResponseError(err)
+		return nil, NewInvalidResponseError(err)
 	}
 
 	if cause, err := estResp.Cause.Cause(); err != nil || cause != ieLib.CauseRequestAccepted {
 		c.numSessions--
-		return NewInvalidCauseError(err)
+		return nil, NewInvalidCauseError(err)
 	}
 
-	remoteUpfSEID, _ := estResp.UPFSEID.FSEID()
-	c.remoteSEIDs = append(c.remoteSEIDs, remoteUpfSEID.SEID)
+	remoteSEID, err := estResp.UPFSEID.FSEID()
+	if err != nil {
+		return nil, err
+	}
+	// TODO remove remoteSEIDs slice when session are correctly handled through session struct
+	c.remoteSEIDs = append(c.remoteSEIDs, remoteSEID.SEID)
 
-	return nil
+	sess := &PFCPSession{
+		localSEID: c.numSessions, // numSessions was used to create FSEID in SendSessionEstablishmentRequest
+		peerSEID:  remoteSEID.SEID,
+	}
+
+	return sess, nil
 }
 
 // GetNumActiveSessions returns the number of active sessions.
