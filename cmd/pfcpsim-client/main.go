@@ -26,6 +26,8 @@ type PFCPClientContext struct {
 	pdrs []*ieLib.IE
 	fars []*ieLib.IE
 	qers []*ieLib.IE
+
+	downlinkTEID uint32 // needed when updating FAR
 }
 
 var (
@@ -229,6 +231,7 @@ func handleUserInput() {
 		fmt.Println("'disassociate': Teardown Association")
 		fmt.Println("'associate': Setup Association")
 		fmt.Println("'create': Create Sessions ")
+		fmt.Println("'modify': Modify Sessions ")
 		fmt.Println("'delete': Delete Sessions ")
 		fmt.Println("'exit': Exit ")
 		fmt.Print("Enter service: ")
@@ -260,6 +263,16 @@ func handleUserInput() {
 				log.Info("Selected create sessions")
 				createSessions(sessionCount)
 
+			case "modify":
+				log.Info("Selected modify sessions")
+				err := modifySessions()
+				if err != nil {
+					log.Errorf("Error while modifying sessions: %v", err)
+					break
+				}
+
+				log.Infof("Modified all sessions")
+
 			case "delete":
 				log.Info("Selected delete sessions")
 				for i, ctx := range pfcpClientContexts {
@@ -269,7 +282,10 @@ func handleUserInput() {
 						break
 					}
 
-					pfcpClientContexts[i] = nil // remove session
+					// Remove element in O(1). Don't care about ordering
+					pfcpClientContexts[i] = pfcpClientContexts[len(pfcpClientContexts)-1]
+					pfcpClientContexts[len(pfcpClientContexts)-1] = nil
+					pfcpClientContexts = pfcpClientContexts[:len(pfcpClientContexts)-1]
 				}
 
 				log.Infof("Deleted all sessions")
@@ -298,6 +314,49 @@ func getNextUEAddress() net.IP {
 	ueIpFromPool, _, _ := net.ParseCIDR(ueAddressPool)
 	lastUEAddress = iplib.NextIP(ueIpFromPool)
 	return lastUEAddress
+}
+
+func modifySessions() error {
+	if len(pfcpClientContexts) == 0 {
+		return pfcpsim.NewNoActiveSessionError()
+	}
+
+	for _, ctx := range pfcpClientContexts {
+		for _, far := range ctx.fars {
+			action, err := far.ApplyAction()
+			if err != nil {
+				return err
+			}
+
+			if !(action == session.ActionDrop) {
+				// Updating only FARs with ActionDrop. TODO find a better condition
+				continue
+			}
+
+			oldFarID, err := far.FARID()
+			if err != nil {
+				return err
+			}
+
+			newFARs := []*ieLib.IE{
+				// Downlink FAR
+				session.NewFARBuilder().
+					WithID(oldFarID).
+					WithMethod(session.Update).
+					WithAction(session.ActionForward).
+					WithTEID(ctx.downlinkTEID).
+					WithDownlinkIP(nodeBAddress.String()).
+					BuildFAR(),
+			}
+
+			err = globalPFCPSimClient.ModifySession(ctx.session, nil, newFARs, nil)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // createSessions create 'count' sessions incrementally.
@@ -400,10 +459,11 @@ func createSessions(count int) {
 		}
 
 		pfcpClientContexts = append(pfcpClientContexts, &PFCPClientContext{
-			session: sess,
-			pdrs:    pdrs,
-			fars:    fars,
-			qers:    qers,
+			session:      sess,
+			pdrs:         pdrs,
+			fars:         fars,
+			qers:         qers,
+			downlinkTEID: downlinkTEID,
 		},
 		)
 

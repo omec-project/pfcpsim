@@ -395,7 +395,7 @@ func (c *PFCPClient) ModifySession(sess *PFCPSession, pdrs []*ieLib.IE, fars []*
 
 	modRes, ok := resp.(*message.SessionModificationResponse)
 	if !ok {
-		return NewInvalidResponseError(err)
+		return NewInvalidResponseError()
 	}
 
 	if cause, err := modRes.Cause.Cause(); err != nil || cause != ieLib.CauseRequestAccepted {
@@ -405,7 +405,7 @@ func (c *PFCPClient) ModifySession(sess *PFCPSession, pdrs []*ieLib.IE, fars []*
 	return nil
 }
 
-// DeleteAllSessions sends Session Deletion Request for each session and awaits for PFCP Session Deletion Response.
+// DeleteSession sends Session Deletion Request for each session and awaits for PFCP Session Deletion Response.
 // Returns error if the process fails at any stage.
 func (c *PFCPClient) DeleteSession(sess *PFCPSession) error {
 	err := c.SendSessionDeletionRequest(sess.localSEID, sess.peerSEID)

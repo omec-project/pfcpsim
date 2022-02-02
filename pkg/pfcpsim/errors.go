@@ -52,3 +52,10 @@ func NewInvalidResponseError(err ...error) *pfcpSimError {
 		error:   err,
 	}
 }
+
+func NewNoActiveSessionError(err ...error) *pfcpSimError {
+	return &pfcpSimError{
+		message: "No active session",
+		error:   err,
+	}
+}
