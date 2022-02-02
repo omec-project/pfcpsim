@@ -41,7 +41,7 @@ var (
 
 	sessionCount int
 
-	activeSessions[]*PFCPClientContext
+	activeSessions []*PFCPClientContext
 
 	// Emulates 5G SMF/ 4G SGW
 	globalPFCPSimClient *pfcpsim.PFCPClient
@@ -407,11 +407,11 @@ func createSessions(count int) {
 		}
 
 		activeSessions = append(activeSessions, &PFCPClientContext{
-				session: sess,
-				pdrs:    pdrs,
-				fars:    fars,
-				qers:    qers,
-			},
+			session: sess,
+			pdrs:    pdrs,
+			fars:    fars,
+			qers:    qers,
+		},
 		)
 
 		log.Infof("Created new PFCP session")
