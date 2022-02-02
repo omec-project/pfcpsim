@@ -17,8 +17,16 @@ import (
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
 	"github.com/pborman/getopt/v2"
 	log "github.com/sirupsen/logrus"
-	"github.com/wmnsk/go-pfcp/ie"
+	ieLib "github.com/wmnsk/go-pfcp/ie"
 )
+
+type PFCPClientContext struct {
+	session *pfcpsim.PFCPSession
+
+	pdrs []*ieLib.IE
+	fars []*ieLib.IE
+	qers []*ieLib.IE
+}
 
 var (
 	remotePeerAddress net.IP
@@ -127,7 +135,7 @@ func parseArgs() {
 	outputF := getopt.StringLong("output-file", 'o', "", "File in which copy from Stdout. Default uses only Stdout")
 	remotePeer := getopt.StringLong("remote-peer-address", 'r', "127.0.0.1", "Address or hostname of the remote peer (PFCP Agent)")
 	upfAddr := getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF (UP4)")
-	sessionCnt := getopt.IntLong("session-count", 'c', 1, "Set the amount of sessions to create, starting from 1 (included)")
+	sessionCnt := getopt.IntLong("PFCPClientContext-count", 'c', 1, "Set the amount of sessions to create, starting from 1 (included)")
 	ueAddrPool := getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")
 	NodeBAddr := getopt.StringLong("nodeb-address", 'g', defaultGNodeBAddress, "The IPv4 of (g/e)NodeBAddress")
 
@@ -320,7 +328,7 @@ func createSessions(count int) {
 		uplinkAppQerID := appQerID
 		downlinkAppQerID := appQerID + 1
 
-		pdrs := []*ie.IE{
+		pdrs := []*ieLib.IE{
 			// UplinkPDR
 			session.NewPDRBuilder().
 				WithID(uplinkPdrID).
@@ -348,12 +356,12 @@ func createSessions(count int) {
 				BuildPDR(),
 		}
 
-		fars := []*ie.IE{
+		fars := []*ieLib.IE{
 			// UplinkFAR
 			session.NewFARBuilder().
 				WithID(uplinkFarID).
 				WithAction(session.ActionForward).
-				WithDstInterface(ie.DstInterfaceCore).
+				WithDstInterface(ieLib.DstInterfaceCore).
 				WithMethod(session.Create).
 				BuildFAR(),
 
@@ -362,14 +370,14 @@ func createSessions(count int) {
 				WithID(downlinkFarID).
 				WithAction(session.ActionDrop).
 				WithMethod(session.Create).
-				WithDstInterface(ie.DstInterfaceAccess).
+				WithDstInterface(ieLib.DstInterfaceAccess).
 				WithTEID(downlinkTEID).
 				WithDownlinkIP(nodeBAddress.String()).
 				BuildFAR(),
 		}
 
-		qers := []*ie.IE{
-			// session QER
+		qers := []*ieLib.IE{
+			// PFCPClientContext QER
 			session.NewQERBuilder().
 				WithID(sessQerID).
 				WithMethod(session.Create).
@@ -390,15 +398,15 @@ func createSessions(count int) {
 				Build(),
 		}
 
-		// TODO keep track of new session
+		// TODO keep track of new PFCPClientContext
 		_, err := globalPFCPSimClient.EstablishSession(pdrs, fars, qers)
 		if err != nil {
 			log.Errorf("Error while establishing sessions: %v", err)
 			return
 		}
 
-		// TODO show session's F-SEID
-		log.Infof("Created session")
+		// TODO show PFCPClientContext's F-SEID
+		log.Infof("Created PFCPClientContext")
 	}
 
 }

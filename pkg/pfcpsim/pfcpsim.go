@@ -379,14 +379,10 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 	// TODO remove remoteSEIDs slice when session are correctly handled through session struct
 	c.remoteSEIDs = append(c.remoteSEIDs, remoteSEID.SEID)
 
-	sess := NewSession()
-	sess.LocalSEID = c.numSessions //FSEID was incremented in SendSessionEstablishmentRequest
-	sess.PeerSEID = remoteSEID.SEID
-
-	// Append sent session rules to new session
-	sess.PDRs = append(sess.PDRs, pdrs...)
-	sess.FARs = append(sess.FARs, fars...)
-	sess.QERs = append(sess.QERs, qers...)
+	sess := &PFCPSession{
+		localSEID: c.numSessions, // numSessions was used to create FSEID in SendSessionEstablishmentRequest
+		peerSEID:  remoteSEID.SEID,
+	}
 
 	return sess, nil
 }
