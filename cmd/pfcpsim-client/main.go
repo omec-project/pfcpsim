@@ -275,7 +275,7 @@ func handleUserInput() {
 
 			case "delete":
 				log.Info("Selected delete sessions")
-				for i := len(pfcpClientContexts) - 1; i > 0; i-- {
+				for i := len(pfcpClientContexts) - 1; i >= 0; i-- {
 					err := globalPFCPSimClient.DeleteSession(pfcpClientContexts[i].session)
 					if err != nil {
 						log.Errorf("Error while deleting sessions: %v", err)
