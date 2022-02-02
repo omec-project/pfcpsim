@@ -70,6 +70,7 @@ func (c *PFCPClient) getNextFSEID() uint64 {
 	defer c.seqNumLock.Unlock()
 
 	c.lastFSEID++
+
 	return c.lastFSEID
 }
 

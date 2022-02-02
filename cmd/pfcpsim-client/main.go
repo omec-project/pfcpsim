@@ -339,6 +339,7 @@ func modifySessions() error {
 				return err
 			}
 
+			// TODO handle buffer and notifyCP flags
 			newFARs := []*ieLib.IE{
 				// Downlink FAR
 				session.NewFARBuilder().
@@ -351,11 +352,12 @@ func modifySessions() error {
 					BuildFAR(),
 			}
 
-			// TODO handle buffer and notifyCP flags
 			err = globalPFCPSimClient.ModifySession(ctx.session, nil, newFARs, nil)
 			if err != nil {
 				return err
 			}
+
+			ctx.fars = append(ctx.fars, newFARs...) // save new sent FAR
 		}
 	}
 
