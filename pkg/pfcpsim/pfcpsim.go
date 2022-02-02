@@ -387,7 +387,7 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 	return sess, nil
 }
 
-func (c *PFCPClient) ModifySession(sess *PFCPSession, pdrs []*ieLib.IE, fars[]*ieLib.IE, qers []*ieLib.IE) error {
+func (c *PFCPClient) ModifySession(sess *PFCPSession, pdrs []*ieLib.IE, fars []*ieLib.IE, qers []*ieLib.IE) error {
 	if !c.isAssociationActive {
 		return NewAssociationInactiveError()
 	}
