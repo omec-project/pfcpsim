@@ -27,10 +27,7 @@ const (
 type PFCPClient struct {
 	// keeps the current number of active PFCP sessions
 	// it is also used as F-SEID
-	numSessions uint64
-
-	// Save remoteSEID for session deletion
-	remoteSEIDs []uint64
+	lastFSEID uint64
 
 	aliveLock           sync.Mutex
 	isAssociationActive bool
@@ -71,8 +68,8 @@ func (c *PFCPClient) getNextSequenceNumber() uint32 {
 }
 
 func (c *PFCPClient) getNextFSEID() uint64 {
-	c.numSessions++
-	return c.numSessions
+	c.lastFSEID++
+	return c.lastFSEID
 }
 
 func (c *PFCPClient) resetSequenceNumber() {
@@ -356,19 +353,15 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 
 	resp, err := c.PeekNextResponse(5)
 	if err != nil {
-		// delete FSEID if session was not established.
-		c.numSessions--
 		return nil, NewTimeoutExpiredError(err)
 	}
 
 	estResp, ok := resp.(*message.SessionEstablishmentResponse)
 	if !ok {
-		c.numSessions--
 		return nil, NewInvalidResponseError(err)
 	}
 
 	if cause, err := estResp.Cause.Cause(); err != nil || cause != ieLib.CauseRequestAccepted {
-		c.numSessions--
 		return nil, NewInvalidCauseError(err)
 	}
 
@@ -376,11 +369,9 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 	if err != nil {
 		return nil, err
 	}
-	// TODO remove remoteSEIDs slice when session are correctly handled through session struct
-	c.remoteSEIDs = append(c.remoteSEIDs, remoteSEID.SEID)
 
 	sess := &PFCPSession{
-		localSEID: c.numSessions, // numSessions was used to create FSEID in SendSessionEstablishmentRequest
+		localSEID: c.lastFSEID,
 		peerSEID:  remoteSEID.SEID,
 	}
 
@@ -414,40 +405,26 @@ func (c *PFCPClient) ModifySession(sess *PFCPSession, pdrs []*ieLib.IE, fars []*
 	return nil
 }
 
-// GetNumActiveSessions returns the number of active sessions.
-func (c *PFCPClient) GetNumActiveSessions() uint64 {
-	return c.numSessions
-}
-
-// DeleteAllSessions sends Session Deletion Request for each session and awaits for PFCP Session Deletion Response.
+// DeleteSession sends Session Deletion Request for each session and awaits for PFCP Session Deletion Response.
 // Returns error if the process fails at any stage.
-func (c *PFCPClient) DeleteAllSessions() error {
-	for FSEID := c.numSessions; FSEID > 0; FSEID-- {
-		// pop remoteSEID from slice
-		remoteSEID := c.remoteSEIDs[len(c.remoteSEIDs)-1]
-		c.remoteSEIDs = c.remoteSEIDs[:len(c.remoteSEIDs)-1]
+func (c *PFCPClient) DeleteSession(sess *PFCPSession) error {
+	err := c.SendSessionDeletionRequest(sess.localSEID, sess.peerSEID)
+	if err != nil {
+		return err
+	}
 
-		err := c.SendSessionDeletionRequest(FSEID, remoteSEID)
-		if err != nil {
-			return err
-		}
+	resp, err := c.PeekNextResponse(5)
+	if err != nil {
+		return err
+	}
 
-		resp, err := c.PeekNextResponse(5)
-		if err != nil {
-			return err
-		}
+	delResp, ok := resp.(*message.SessionDeletionResponse)
+	if !ok {
+		return NewInvalidResponseError()
+	}
 
-		delResp, ok := resp.(*message.SessionDeletionResponse)
-		if !ok {
-			return NewInvalidResponseError()
-		}
-
-		if cause, err := delResp.Cause.Cause(); err != nil || cause != ieLib.CauseRequestAccepted {
-			return NewInvalidCauseError(err)
-		}
-
-		// decrease number of active sessions (erase FSEID)
-		c.numSessions--
+	if cause, err := delResp.Cause.Cause(); err != nil || cause != ieLib.CauseRequestAccepted {
+		return NewInvalidCauseError(err)
 	}
 
 	return nil
