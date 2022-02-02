@@ -76,8 +76,8 @@ func (c *PFCPClient) getNextFSEID() uint64 {
 }
 
 func (c *PFCPClient) resetSequenceNumber() {
-	c.globalLock.Lock()
-	defer c.globalLock.Unlock()
+	c.seqNumLock.Lock()
+	defer c.seqNumLock.Unlock()
 
 	c.sequenceNumber = 0
 }
