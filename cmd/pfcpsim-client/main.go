@@ -4,6 +4,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net"
@@ -13,6 +14,8 @@ import (
 	"strings"
 
 	"github.com/c-robinson/iplib"
+	api "github.com/omec-project/pfcpsim/api"
+	"github.com/omec-project/pfcpsim/internal/client"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
 	"github.com/pborman/getopt/v2"
@@ -412,27 +415,91 @@ func createSessions(count int) {
 
 }
 
+//func main() {
+//	parseArgs()
+//
+//	if outputFile != "" {
+//		stopLogToFile := copyOutputToLogfile()
+//		defer stopLogToFile()
+//	}
+//
+//	localAddress, err := getLocalAddress()
+//	if err != nil {
+//		log.Fatalf("Error while retrieving local address: %v", err)
+//	}
+//
+//	globalPFCPSimClient = pfcpsim.NewPFCPClient(localAddress.String())
+//
+//	err = globalPFCPSimClient.ConnectN4(remotePeerAddress.String())
+//	if err != nil {
+//		log.Fatalf("Failed to connect to remote peer: %v", err)
+//	}
+//
+//	log.Infof("PFCP client is connected")
+//
+//	handleUserInput()
+//}
+
 func main() {
-	parseArgs()
+	helpMsg := "'disassociate': Teardown Association \n 'associate': Setup Association \n 'create': Create Sessions  \n 'delete': Delete Sessions \n 'exit': Exit gracefully \n"
+	cmd := getopt.StringLong("command", 'c', "", helpMsg)
 
-	if outputFile != "" {
-		stopLogToFile := copyOutputToLogfile()
-		defer stopLogToFile()
+	getopt.Parse()
+
+	simClient, conn := client.Connect()
+	defer conn.Close()
+
+	//Contact server and print out response
+	ctx, _ := context.WithTimeout(context.Background(), 5)
+
+	switch *cmd {
+	case "disassociate":
+		_, err := simClient.Disassociate(ctx, &api.Empty{})
+		if err != nil {
+			log.Errorf("Error while disassociating: %v", err)
+			break
+		}
+
+		log.Info("Disassociation completed")
+
+	case "associate":
+		_, err := simClient.Associate(ctx, &api.Empty{})
+		if err != nil {
+			log.Errorf("Error while associating: %v", err)
+			break
+		}
+
+		log.Info("Association completed")
+
+	case "create":
+		_, err := simClient.CreateSession(ctx, &api.Empty{})
+		if err != nil {
+			log.Errorf("Error while associating: %v", err)
+			break
+		}
+
+		log.Info("Sessions created")
+
+	case "modify":
+		_, err := simClient.ModifySession(ctx, &api.Empty{})
+		if err != nil {
+			log.Errorf("Error while associating: %v", err)
+			break
+		}
+
+		log.Info("Sessions modified")
+
+	case "delete":
+		_, err := simClient.DeleteSession(ctx, &api.Empty{})
+		if err != nil {
+			log.Errorf("Error while associating: %v", err)
+			break
+		}
+		log.Info("Sessions deleted")
+
+	default:
+		log.Error("Command not recognized")
+		break
+
 	}
-
-	localAddress, err := getLocalAddress()
-	if err != nil {
-		log.Fatalf("Error while retrieving local address: %v", err)
-	}
-
-	globalPFCPSimClient = pfcpsim.NewPFCPClient(localAddress.String())
-
-	err = globalPFCPSimClient.ConnectN4(remotePeerAddress.String())
-	if err != nil {
-		log.Fatalf("Failed to connect to remote peer: %v", err)
-	}
-
-	log.Infof("PFCP client is connected")
-
-	handleUserInput()
 }

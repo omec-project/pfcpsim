@@ -9,10 +9,26 @@ import (
 	"context"
 
 	pfcpsimctl "github.com/omec-project/pfcpsim/api"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type PFCPSimClient struct {
+}
+
+func Connect() (pfcpsimctl.PFCPSimClient, *grpc.ClientConn) {
+	serverAddress := ":9950" //TODO make this configurable
+
+	// Create an insecure gRPC Channel
+	conn, err := grpc.Dial(serverAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	if err != nil {
+		log.Fatalf("Could not connect to %v: %v", serverAddress, err)
+		return nil, conn
+	}
+
+	return pfcpsimctl.NewPFCPSimClient(conn), conn
 }
 
 func (P PFCPSimClient) SetLogLevel(ctx context.Context, in *pfcpsimctl.LogLevel, opts ...grpc.CallOption) (*pfcpsimctl.LogLevel, error) {
