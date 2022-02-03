@@ -7,6 +7,7 @@ package server
 
 import (
 	"context"
+	"net/http"
 
 	pfcpsimctl "github.com/omec-project/pfcpsim/api"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
@@ -26,14 +27,14 @@ var ()
 // PFCPSimServer implements the Protobuf methods and keeps a connection to a remote PFCP Agent peer.
 type PFCPSimServer struct {
 	// Emulates 5G SMF/ 4G SGW
-	Client *pfcpsim.PFCPClient
+	client *pfcpsim.PFCPClient
 
 	activeSessions []*pfcpClientContext
 }
 
 func NewPFCPSimServer(client *pfcpsim.PFCPClient) *PFCPSimServer {
 	return &PFCPSimServer{
-		Client:         client,
+		client:         client,
 		activeSessions: make([]*pfcpClientContext, 0),
 	}
 }
@@ -54,12 +55,30 @@ func (P PFCPSimServer) StartgRPCServer(ctx context.Context, empty *pfcpsimctl.Em
 }
 
 func (P PFCPSimServer) Associate(ctx context.Context, empty *pfcpsimctl.Empty) (*pfcpsimctl.Response, error) {
-	P.Client.ConnectN4()
+	err := P.client.SetupAssociation()
+	if err != nil {
+		return nil, err
+	}
+
+	return &pfcpsimctl.Response{
+		StatusCode: http.StatusOK,
+		Message:    "Success",
+	}, nil
 }
 
 func (P PFCPSimServer) Disassociate(ctx context.Context, empty *pfcpsimctl.Empty) (*pfcpsimctl.Response, error) {
-	//TODO implement me
-	panic("implement me")
+	err := P.client.TeardownAssociation()
+	if err != nil {
+		return &pfcpsimctl.Response{
+			StatusCode: http.StatusExpectationFailed,
+			Message:    "Could not teardown association",
+		}, nil
+	}
+
+	return &pfcpsimctl.Response{
+		StatusCode: http.StatusOK,
+		Message:    "Success",
+	}, nil
 }
 
 func (P PFCPSimServer) CreateSession(ctx context.Context, empty *pfcpsimctl.Empty) (*pfcpsimctl.Response, error) {

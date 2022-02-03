@@ -3,7 +3,7 @@
  * Copyright 2022 Open Networking Foundation
  */
 
-package pfcpsimctl_server
+package main
 
 import (
 	"fmt"
@@ -77,7 +77,8 @@ func getLocalAddress() (net.IP, error) {
 }
 
 func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
-	lis, err := net.Listen("tcp", "0.0.0.0:8989")
+	listAddr := "0.0.0.0:9950" //TODO make address configurable
+	lis, err := net.Listen("tcp", listAddr)
 	if err != nil {
 		log.Fatalf("APIServer failed to listen: %v", err)
 	}
@@ -103,6 +104,8 @@ func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 	reflection.Register(grpcServer)
 
 	go func() { _ = grpcServer.Serve(lis) }()
+
+	log.Infof("Server listening on %v", listAddr)
 
 	x := <-apiDoneChannel
 	if x {
