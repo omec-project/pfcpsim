@@ -4,6 +4,9 @@
 PROJECT_NAME             := pfcpsim
 VERSION                  ?= $(shell cat ./VERSION)
 
+# tool containers
+VOLTHA_TOOLS_VERSION ?= 2.3.1
+
 ## Docker related
 DOCKER_REGISTRY          ?=
 DOCKER_REPOSITORY        ?=
@@ -27,3 +30,8 @@ golint:
 
 test: .coverage
 	go test	-race -coverprofile=.coverage/coverage-unit.txt -covermode=atomic -v ./...
+
+build-proto:
+	@echo "Compiling proto files..."
+	 docker run --rm -v ${PWD}/api:/source diebietse/go-gw-protoc -I. --go_out=plugins=grpc:. --grpc-gateway_out=logtostderr=true:. pfcpsim.proto
+
