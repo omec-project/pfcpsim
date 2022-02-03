@@ -33,5 +33,9 @@ test: .coverage
 
 build-proto:
 	@echo "Compiling proto files..."
-	 docker run --rm -v ${PWD}/api:/source diebietse/go-gw-protoc -I. --go_out=plugins=grpc:. --grpc-gateway_out=logtostderr=true:. pfcpsim.proto
-
+	docker run --rm -v ${PWD}/api:/source diebietse/go-gw-protoc:latest \
+    -I./ \
+    -I/usr/local/include \
+    --go_out=paths=source_relative,plugins=grpc:./ \
+    --validate_out="lang=go:./" \
+    pfcpsimctl.proto

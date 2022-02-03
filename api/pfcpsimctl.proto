@@ -4,7 +4,7 @@
 syntax = "proto3";
 package api;
 
-option go_package = ".;pfcpsim";
+option go_package = ".;pfcpsimctl";
 
 // Inputs
 
@@ -39,10 +39,10 @@ service PFCPSim {
   rpc StopgRPCServer (Empty) returns (Response) {}
   rpc StartgRPCServer (Empty) returns (Response) {}
 
-  rpc Associate (AssociateRequest) returns (Response) {}
-  rpc Disassociate (DisassociateRequest) returns (Response) {}
+  rpc Associate (Empty) returns (Response) {}
+  rpc Disassociate (Empty) returns (Response) {}
 
-  rpc CreateSession (CreateSessionRequest) returns (Response) {}
-  rpc ModifySession (ModifySessionRequest) returns (Response) {}
-  rpc DeleteSession (DeleteSessionRequest) returns (Response) {}
+  rpc CreateSession (Empty) returns (Response) {}
+  rpc ModifySession (Empty) returns (Response) {}
+  rpc DeleteSession (Empty) returns (Response) {}
 }
