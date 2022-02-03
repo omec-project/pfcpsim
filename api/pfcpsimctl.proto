@@ -6,8 +6,6 @@ package api;
 
 option go_package = ".;pfcpsimctl";
 
-// Inputs
-
 message LogLevel {
   string level = 1;
   bool caller = 2;

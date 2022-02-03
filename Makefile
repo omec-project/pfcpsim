@@ -4,9 +4,6 @@
 PROJECT_NAME             := pfcpsim
 VERSION                  ?= $(shell cat ./VERSION)
 
-# tool containers
-VOLTHA_TOOLS_VERSION ?= 2.3.1
-
 ## Docker related
 DOCKER_REGISTRY          ?=
 DOCKER_REPOSITORY        ?=
