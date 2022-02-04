@@ -14,13 +14,13 @@ import (
 	"strings"
 
 	"github.com/c-robinson/iplib"
-	api "github.com/omec-project/pfcpsim/api"
-	"github.com/omec-project/pfcpsim/internal/client"
+	pb "github.com/omec-project/pfcpsim/api"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
 	"github.com/pborman/getopt/v2"
 	log "github.com/sirupsen/logrus"
 	ieLib "github.com/wmnsk/go-pfcp/ie"
+	"google.golang.org/grpc"
 )
 
 type PFCPClientContext struct {
@@ -440,21 +440,32 @@ func createSessions(count int) {
 //	handleUserInput()
 //}
 
+func connect() (pb.PFCPSimClient, *grpc.ClientConn) {
+	serverAddress := ":54321" //TODO make this configurable
+
+	// Create an insecure gRPC Channel
+	conn, err := grpc.Dial(serverAddress, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Error dialing %v: %v", serverAddress, err)
+	}
+
+	//log.Infof("Connected to gRPC Server :%v", serverAddress)
+
+	return pb.NewPFCPSimClient(conn), conn
+}
+
 func main() {
 	helpMsg := "'disassociate': Teardown Association \n 'associate': Setup Association \n 'create': Create Sessions  \n 'delete': Delete Sessions \n 'exit': Exit gracefully \n"
 	cmd := getopt.StringLong("command", 'c', "", helpMsg)
 
 	getopt.Parse()
 
-	simClient, conn := client.Connect()
+	simClient, conn := connect()
 	defer conn.Close()
-
-	//Contact server and print out response
-	ctx, _ := context.WithTimeout(context.Background(), 5)
 
 	switch *cmd {
 	case "disassociate":
-		_, err := simClient.Disassociate(ctx, &api.Empty{})
+		_, err := simClient.Disassociate(context.Background(), &pb.EmptyRequest{})
 		if err != nil {
 			log.Errorf("Error while disassociating: %v", err)
 			break
@@ -463,7 +474,7 @@ func main() {
 		log.Info("Disassociation completed")
 
 	case "associate":
-		_, err := simClient.Associate(ctx, &api.Empty{})
+		_, err := simClient.Associate(context.Background(), &pb.EmptyRequest{})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
 			break
@@ -472,7 +483,7 @@ func main() {
 		log.Info("Association completed")
 
 	case "create":
-		_, err := simClient.CreateSession(ctx, &api.Empty{})
+		_, err := simClient.CreateSession(context.Background(), &pb.EmptyRequest{})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
 			break
@@ -481,7 +492,7 @@ func main() {
 		log.Info("Sessions created")
 
 	case "modify":
-		_, err := simClient.ModifySession(ctx, &api.Empty{})
+		_, err := simClient.ModifySession(context.Background(), &pb.EmptyRequest{})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
 			break
@@ -490,7 +501,7 @@ func main() {
 		log.Info("Sessions modified")
 
 	case "delete":
-		_, err := simClient.DeleteSession(ctx, &api.Empty{})
+		_, err := simClient.DeleteSession(context.Background(), &pb.EmptyRequest{})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
 			break

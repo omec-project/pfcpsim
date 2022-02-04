@@ -11,19 +11,7 @@ message LogLevel {
   bool caller = 2;
 }
 
-message AssociateRequest {}
-
-message DisassociateRequest {}
-
-message CreateSessionRequest {}
-
-message ModifySessionRequest {}
-
-message DeleteSessionRequest {}
-
-message InterruptRequest {}
-
-message Empty {}
+message EmptyRequest {}
 
 message Response {
   int32 status_code = 1;
@@ -34,13 +22,10 @@ service PFCPSim {
   // Set PFCPSim log level
   rpc SetLogLevel (LogLevel) returns (LogLevel) {}
 
-  rpc StopgRPCServer (Empty) returns (Response) {}
-  rpc StartgRPCServer (Empty) returns (Response) {}
+  rpc Associate (EmptyRequest) returns (Response) {}
+  rpc Disassociate (EmptyRequest) returns (Response) {}
 
-  rpc Associate (Empty) returns (Response) {}
-  rpc Disassociate (Empty) returns (Response) {}
-
-  rpc CreateSession (Empty) returns (Response) {}
-  rpc ModifySession (Empty) returns (Response) {}
-  rpc DeleteSession (Empty) returns (Response) {}
+  rpc CreateSession (EmptyRequest) returns (Response) {}
+  rpc ModifySession (EmptyRequest) returns (Response) {}
+  rpc DeleteSession (EmptyRequest) returns (Response) {}
 }

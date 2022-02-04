@@ -104,10 +104,10 @@ var _ interface {
 	ErrorName() string
 } = LogLevelValidationError{}
 
-// Validate checks the field values on AssociateRequest with the rules defined
-// in the proto definition for this message. If any rules are violated, an
-// error is returned.
-func (m *AssociateRequest) Validate() error {
+// Validate checks the field values on EmptyRequest with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *EmptyRequest) Validate() error {
 	if m == nil {
 		return nil
 	}
@@ -115,9 +115,9 @@ func (m *AssociateRequest) Validate() error {
 	return nil
 }
 
-// AssociateRequestValidationError is the validation error returned by
-// AssociateRequest.Validate if the designated constraints aren't met.
-type AssociateRequestValidationError struct {
+// EmptyRequestValidationError is the validation error returned by
+// EmptyRequest.Validate if the designated constraints aren't met.
+type EmptyRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -125,22 +125,22 @@ type AssociateRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e AssociateRequestValidationError) Field() string { return e.field }
+func (e EmptyRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e AssociateRequestValidationError) Reason() string { return e.reason }
+func (e EmptyRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e AssociateRequestValidationError) Cause() error { return e.cause }
+func (e EmptyRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e AssociateRequestValidationError) Key() bool { return e.key }
+func (e EmptyRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e AssociateRequestValidationError) ErrorName() string { return "AssociateRequestValidationError" }
+func (e EmptyRequestValidationError) ErrorName() string { return "EmptyRequestValidationError" }
 
 // Error satisfies the builtin error interface
-func (e AssociateRequestValidationError) Error() string {
+func (e EmptyRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -152,14 +152,14 @@ func (e AssociateRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sAssociateRequest.%s: %s%s",
+		"invalid %sEmptyRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = AssociateRequestValidationError{}
+var _ error = EmptyRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -167,404 +167,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = AssociateRequestValidationError{}
-
-// Validate checks the field values on DisassociateRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
-func (m *DisassociateRequest) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	return nil
-}
-
-// DisassociateRequestValidationError is the validation error returned by
-// DisassociateRequest.Validate if the designated constraints aren't met.
-type DisassociateRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e DisassociateRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e DisassociateRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e DisassociateRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e DisassociateRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e DisassociateRequestValidationError) ErrorName() string {
-	return "DisassociateRequestValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e DisassociateRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sDisassociateRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = DisassociateRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = DisassociateRequestValidationError{}
-
-// Validate checks the field values on CreateSessionRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
-func (m *CreateSessionRequest) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	return nil
-}
-
-// CreateSessionRequestValidationError is the validation error returned by
-// CreateSessionRequest.Validate if the designated constraints aren't met.
-type CreateSessionRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e CreateSessionRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e CreateSessionRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e CreateSessionRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e CreateSessionRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e CreateSessionRequestValidationError) ErrorName() string {
-	return "CreateSessionRequestValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e CreateSessionRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sCreateSessionRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = CreateSessionRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = CreateSessionRequestValidationError{}
-
-// Validate checks the field values on ModifySessionRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
-func (m *ModifySessionRequest) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	return nil
-}
-
-// ModifySessionRequestValidationError is the validation error returned by
-// ModifySessionRequest.Validate if the designated constraints aren't met.
-type ModifySessionRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ModifySessionRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ModifySessionRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ModifySessionRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ModifySessionRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ModifySessionRequestValidationError) ErrorName() string {
-	return "ModifySessionRequestValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e ModifySessionRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sModifySessionRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ModifySessionRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ModifySessionRequestValidationError{}
-
-// Validate checks the field values on DeleteSessionRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
-func (m *DeleteSessionRequest) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	return nil
-}
-
-// DeleteSessionRequestValidationError is the validation error returned by
-// DeleteSessionRequest.Validate if the designated constraints aren't met.
-type DeleteSessionRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e DeleteSessionRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e DeleteSessionRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e DeleteSessionRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e DeleteSessionRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e DeleteSessionRequestValidationError) ErrorName() string {
-	return "DeleteSessionRequestValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e DeleteSessionRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sDeleteSessionRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = DeleteSessionRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = DeleteSessionRequestValidationError{}
-
-// Validate checks the field values on InterruptRequest with the rules defined
-// in the proto definition for this message. If any rules are violated, an
-// error is returned.
-func (m *InterruptRequest) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	return nil
-}
-
-// InterruptRequestValidationError is the validation error returned by
-// InterruptRequest.Validate if the designated constraints aren't met.
-type InterruptRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e InterruptRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e InterruptRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e InterruptRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e InterruptRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e InterruptRequestValidationError) ErrorName() string { return "InterruptRequestValidationError" }
-
-// Error satisfies the builtin error interface
-func (e InterruptRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sInterruptRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = InterruptRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = InterruptRequestValidationError{}
-
-// Validate checks the field values on Empty with the rules defined in the
-// proto definition for this message. If any rules are violated, an error is returned.
-func (m *Empty) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	return nil
-}
-
-// EmptyValidationError is the validation error returned by Empty.Validate if
-// the designated constraints aren't met.
-type EmptyValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e EmptyValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e EmptyValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e EmptyValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e EmptyValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e EmptyValidationError) ErrorName() string { return "EmptyValidationError" }
-
-// Error satisfies the builtin error interface
-func (e EmptyValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sEmpty.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = EmptyValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = EmptyValidationError{}
+} = EmptyRequestValidationError{}
 
 // Validate checks the field values on Response with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.

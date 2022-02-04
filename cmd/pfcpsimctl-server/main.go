@@ -16,9 +16,8 @@ import (
 	"sync"
 	"syscall"
 
-	pfcpsimctl "github.com/omec-project/pfcpsim/api"
+	pb "github.com/omec-project/pfcpsim/api"
 	"github.com/omec-project/pfcpsim/internal/server"
-	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
 	"github.com/pborman/getopt/v2"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -31,6 +30,8 @@ const (
 	defaultUeAddressPool = "17.0.0.0/24"
 
 	defaultUpfN3Address = "198.18.0.1"
+
+	listenAddress = "0.0.0.0:54321" //TODO make address configurable
 )
 
 var (
@@ -77,8 +78,7 @@ func getLocalAddress() (net.IP, error) {
 }
 
 func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
-	listAddr := "0.0.0.0:9950" //TODO make address configurable
-	lis, err := net.Listen("tcp", listAddr)
+	lis, err := net.Listen("tcp", listenAddress)
 	if err != nil {
 		log.Fatalf("APIServer failed to listen: %v", err)
 	}
@@ -88,24 +88,24 @@ func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 		log.Fatalf("Could not retrieve local address: %v", err)
 	}
 
-	//Start PFCPClient instance
-	// TODO review code architecture, PFCPClient should be handled directly by PFCPSimServer, not passed over
-
-	pfcpClient := pfcpsim.NewPFCPClient(lAddr.String())
-	err = pfcpClient.ConnectN4(net.ParseIP(*remotePeerAddress).String())
-	if err != nil {
-		return
-	}
-
 	grpcServer := grpc.NewServer()
 	// Initialize server
-	pfcpsimctl.RegisterPFCPSimServer(grpcServer, server.NewPFCPSimServer(pfcpClient))
+	pfcpServer, err := server.NewPFCPSimServer(lAddr, net.ParseIP(*remotePeerAddress))
+	if err != nil {
+		log.Fatalf("Could not create PFCPSimServer: %v", err)
+	}
+
+	pb.RegisterPFCPSimServer(grpcServer, pfcpServer)
 
 	reflection.Register(grpcServer)
 
-	go func() { _ = grpcServer.Serve(lis) }()
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("Failed to listed: %v", err)
+		}
+	}()
 
-	log.Infof("Server listening on %v", listAddr)
+	log.Infof("Server listening on %v", listenAddress)
 
 	x := <-apiDoneChannel
 	if x {
