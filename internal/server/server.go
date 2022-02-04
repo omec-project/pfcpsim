@@ -14,7 +14,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/c-robinson/iplib"
 	pb "github.com/omec-project/pfcpsim/api"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
@@ -31,9 +30,6 @@ type pfcpSimServer struct {
 	nodeBAddress  string
 	ueAddressPool string
 }
-
-// Keeps track of 'leased' IPs to UEs from ip pool
-var lastUEAddress net.IP
 
 // getLocalAddress retrieves local address to use when establishing a connection with PFCP agent
 func getLocalAddress() (net.IP, error) {
@@ -89,24 +85,6 @@ func NewPFCPSimServer(remotePeerAddr string, upfAddress string, nodeBAddress str
 		nodeBAddress:  nodeBAddress,
 		ueAddressPool: ueAddressPool,
 	}, nil
-}
-
-// getNextUEAddress retrieves the next available IP address from ueAddressPool
-func getNextUEAddress(addressPool string) net.IP {
-	if lastUEAddress != nil {
-		lastUEAddress = iplib.NextIP(lastUEAddress)
-		return lastUEAddress
-	}
-
-	// TODO handle case net IP is full
-	ueIpFromPool, _, _ := net.ParseCIDR(addressPool)
-	lastUEAddress = iplib.NextIP(ueIpFromPool)
-	return lastUEAddress
-}
-
-func (P pfcpSimServer) SetLogLevel(ctx context.Context, level *pb.LogLevel) (*pb.LogLevel, error) {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (P pfcpSimServer) Associate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {

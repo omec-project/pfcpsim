@@ -34,5 +34,4 @@ build-proto:
     -I./ \
     -I/usr/local/include \
     --go_out=paths=source_relative,plugins=grpc:./ \
-    --validate_out="lang=go:./" \
     pfcpsimctl.proto

@@ -6,11 +6,6 @@ package api;
 
 option go_package = ".;api";
 
-message LogLevel {
-  string level = 1;
-  bool caller = 2;
-}
-
 message CreateSessionRequest {
   int32 count = 1;
 }
@@ -31,9 +26,6 @@ message Response {
 }
 
 service PFCPSim {
-  // Set PFCPSim log level
-  rpc SetLogLevel (LogLevel) returns (LogLevel) {}
-
   rpc Associate (EmptyRequest) returns (Response) {}
   rpc Disassociate (EmptyRequest) returns (Response) {}
 

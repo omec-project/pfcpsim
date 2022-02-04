@@ -37,22 +37,22 @@ func main() {
 
 	switch *cmd {
 	case "disassociate":
-		_, err := simClient.Disassociate(context.Background(), &pb.EmptyRequest{})
+		res, err := simClient.Disassociate(context.Background(), &pb.EmptyRequest{})
 		if err != nil {
 			log.Errorf("Error while disassociating: %v", err)
 			break
 		}
 
-		log.Info("Disassociation completed")
+		log.Info(res.Message)
 
 	case "associate":
-		_, err := simClient.Associate(context.Background(), &pb.EmptyRequest{})
+		res, err := simClient.Associate(context.Background(), &pb.EmptyRequest{})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
 			break
 		}
 
-		log.Info("Association completed")
+		log.Info(res.Message)
 
 	case "create":
 		res, err := simClient.CreateSession(context.Background(), &pb.CreateSessionRequest{
