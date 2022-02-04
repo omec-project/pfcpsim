@@ -17,7 +17,6 @@ import (
 	"github.com/pborman/getopt/v2"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 const (
@@ -38,7 +37,7 @@ var (
 	ueAddressPool *string
 )
 
-func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
+func startServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 	lis, err := net.Listen("tcp", listenAddress)
 	if err != nil {
 		log.Fatalf("APIServer failed to listen: %v", err)
@@ -52,8 +51,6 @@ func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 	}
 
 	pb.RegisterPFCPSimServer(grpcServer, pfcpServer)
-
-	reflection.Register(grpcServer)
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
@@ -74,7 +71,7 @@ func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 }
 
 func main() {
-	// TODO make a config file instead of flag (?)
+	// TODO make a config file instead of flags (?)
 
 	remotePeerAddress = getopt.StringLong("remote-peer-address", 'r', "127.0.0.1", "Address or hostname of the remote peer (PFCP Agent)")
 	upfAddress = getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF")
@@ -125,7 +122,7 @@ func main() {
 	wg := sync.WaitGroup{}
 	wg.Add(4)
 
-	go startApiServer(apiDoneChannel, &wg)
+	go startServer(apiDoneChannel, &wg)
 	log.Debugf("Started APIService")
 
 	wg.Wait()

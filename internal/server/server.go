@@ -22,28 +22,20 @@ import (
 	ieLib "github.com/wmnsk/go-pfcp/ie"
 )
 
-type pfcpClientContext struct {
-	session *pfcpsim.PFCPSession
-
-	pdrs []*ieLib.IE
-	fars []*ieLib.IE
-	qers []*ieLib.IE
-}
-
 // pfcpSimServer implements the Protobuf methods and keeps a connection to a remote PFCP Agent peer.
 type pfcpSimServer struct {
 	// Emulates 5G SMF/ 4G SGW
-	client *pfcpsim.PFCPClient
-
-	activeSessions []*pfcpClientContext
+	pfcpSim *pfcpsim.PFCPClient
 
 	upfAddress    string
 	nodeBAddress  string
 	ueAddressPool string
-
-	lastUEAddress net.IP
 }
 
+// Keeps track of 'leased' IPs to UEs from ip pool
+var lastUEAddress net.IP
+
+// getLocalAddress retrieves local address to use when establishing a connection with PFCP agent
 func getLocalAddress() (net.IP, error) {
 	// cmd to run for darwin platforms
 	cmd := "route -n get default | grep 'interface:' | grep -o '[^ ]*$'"
@@ -92,31 +84,24 @@ func NewPFCPSimServer(remotePeerAddr string, upfAddress string, nodeBAddress str
 	}
 
 	return &pfcpSimServer{
-		client:         cl,
-		upfAddress:     upfAddress,
-		nodeBAddress:   nodeBAddress,
-		ueAddressPool:  ueAddressPool,
-		activeSessions: make([]*pfcpClientContext, 0),
+		pfcpSim:       cl,
+		upfAddress:    upfAddress,
+		nodeBAddress:  nodeBAddress,
+		ueAddressPool: ueAddressPool,
 	}, nil
 }
 
 // getNextUEAddress retrieves the next available IP address from ueAddressPool
-func (P *pfcpSimServer) getNextUEAddress() net.IP {
-	if P.lastUEAddress != nil {
-		P.lastUEAddress = iplib.NextIP(P.lastUEAddress)
-		return P.lastUEAddress
+func getNextUEAddress(addressPool string) net.IP {
+	if lastUEAddress != nil {
+		lastUEAddress = iplib.NextIP(lastUEAddress)
+		return lastUEAddress
 	}
 
 	// TODO handle case net IP is full
-	ueIpFromPool, _, _ := net.ParseCIDR(P.ueAddressPool)
-	P.lastUEAddress = iplib.NextIP(ueIpFromPool)
-	return P.lastUEAddress
-}
-
-// createSessions create 'count' sessions incrementally.
-// Once created, the sessions are established through PFCP client.
-func (P *pfcpSimServer) createSessions(count int) {
-
+	ueIpFromPool, _, _ := net.ParseCIDR(addressPool)
+	lastUEAddress = iplib.NextIP(ueIpFromPool)
+	return lastUEAddress
 }
 
 func (P pfcpSimServer) SetLogLevel(ctx context.Context, level *pb.LogLevel) (*pb.LogLevel, error) {
@@ -125,7 +110,7 @@ func (P pfcpSimServer) SetLogLevel(ctx context.Context, level *pb.LogLevel) (*pb
 }
 
 func (P pfcpSimServer) Associate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
-	err := P.client.SetupAssociation()
+	err := P.pfcpSim.SetupAssociation()
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +122,7 @@ func (P pfcpSimServer) Associate(ctx context.Context, empty *pb.EmptyRequest) (*
 }
 
 func (P pfcpSimServer) Disassociate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
-	err := P.client.TeardownAssociation()
+	err := P.pfcpSim.TeardownAssociation()
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +134,9 @@ func (P pfcpSimServer) Disassociate(ctx context.Context, empty *pb.EmptyRequest)
 }
 
 func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSessionRequest) (*pb.Response, error) {
-	baseID := len(P.activeSessions) + 1
+	sessions := getActiveSessions()
+
+	baseID := len(*sessions) + 1
 	count := int(request.Count) // cast int32 to int
 
 	for i := baseID; i < (count + baseID); i++ {
@@ -189,7 +176,7 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 				WithID(dowlinkPdrID).
 				WithMethod(session.Create).
 				WithPrecedence(100).
-				WithUEAddress(P.getNextUEAddress().String()).
+				WithUEAddress(getNextUEAddress(P.ueAddressPool).String()).
 				WithSDFFilter("permit out ip from any to assigned").
 				AddQERID(sessQerID).
 				AddQERID(downlinkAppQerID).
@@ -240,35 +227,103 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 				Build(),
 		}
 
-		sess, err := P.client.EstablishSession(pdrs, fars, qers)
+		sess, err := P.pfcpSim.EstablishSession(pdrs, fars, qers)
 		if err != nil {
 			log.Errorf("Error while establishing sessions: %v", err)
 			return nil, err
 		}
 
-		P.activeSessions = append(P.activeSessions, &pfcpClientContext{
-			session: sess,
-			pdrs:    pdrs,
-			fars:    fars,
-			qers:    qers,
-		},
-		)
+		ctx := &pfcpClientContext{
+			session:      sess,
+			pdrs:         pdrs,
+			fars:         fars,
+			qers:         qers,
+			downlinkTEID: downlinkTEID,
+		}
 
-		log.Infof("Created new PFCP session")
+		addSessionContext(ctx)
 	}
 
 	return &pb.Response{
 		StatusCode: http.StatusOK,
-		Message:    "Created Session",
+		Message:    fmt.Sprintf("%v sessions were established", count),
 	}, nil
 }
 
 func (P pfcpSimServer) ModifySession(ctx context.Context, request *pb.ModifySessionRequest) (*pb.Response, error) {
-	//TODO implement me
-	panic("implement me")
+	sessions := getActiveSessions()
+
+	count := int(request.Count)
+
+	if len(*sessions) < count {
+		return nil, pfcpsim.NewNotEnoughSessionsError()
+	}
+
+	for i, ctx := range *sessions {
+		if i >= count {
+			// Modify only 'count' sessions
+			break
+		}
+
+		for _, far := range ctx.fars {
+			action, err := far.ApplyAction()
+			if err != nil {
+				return nil, err
+			}
+
+			if !(action == session.ActionDrop) {
+				// Updating only FARs with ActionDrop.
+				continue
+			}
+
+			oldFarID, err := far.FARID()
+			if err != nil {
+				return nil, err
+			}
+
+			// TODO handle buffer and notifyCP flags and 5G as well
+			newFARs := []*ieLib.IE{
+				// Downlink FAR
+				session.NewFARBuilder().
+					WithID(oldFarID).
+					WithMethod(session.Update).
+					WithAction(session.ActionForward).
+					WithDstInterface(ieLib.DstInterfaceCore).
+					WithTEID(ctx.downlinkTEID).
+					WithDownlinkIP(P.nodeBAddress).
+					BuildFAR(),
+			}
+
+			err = P.pfcpSim.ModifySession(ctx.session, nil, newFARs, nil)
+			if err != nil {
+				return nil, err
+			}
+
+			ctx.fars = append(ctx.fars, newFARs...) // save new sent FAR // FIXME should old FARs be replaced?
+		}
+	}
+
+	return &pb.Response{
+		StatusCode: http.StatusOK,
+		Message:    fmt.Sprintf("%v sessions correctly modified", count),
+	}, nil
 }
 
 func (P pfcpSimServer) DeleteSession(ctx context.Context, request *pb.DeleteSessionRequest) (*pb.Response, error) {
-	//TODO implement me
-	panic("implement me")
+	sessions := getActiveSessions()
+
+	count := int(request.Count)
+
+	if len(*sessions) < count {
+		return nil, pfcpsim.NewNotEnoughSessionsError()
+	}
+
+	for i := count; i > 0; i-- {
+		deleteSessionContext()
+	}
+
+	return &pb.Response{
+		StatusCode: http.StatusOK,
+		Message:    fmt.Sprintf("%v sessions deleted", count),
+	}, nil
 }

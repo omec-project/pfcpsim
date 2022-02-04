@@ -32,6 +32,13 @@ func NewInvalidCauseError(err ...error) *pfcpSimError {
 	}
 }
 
+func NewNotEnoughSessionsError(err ...error) *pfcpSimError {
+	return &pfcpSimError{
+		message: "Not enough active sessions",
+		error:   err,
+	}
+}
+
 func NewAssociationInactiveError(err ...error) *pfcpSimError {
 	return &pfcpSimError{
 		message: "Could not complete operation: Association is not active",

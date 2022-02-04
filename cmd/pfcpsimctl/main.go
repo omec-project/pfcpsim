@@ -28,6 +28,7 @@ func connect() (pb.PFCPSimClient, *grpc.ClientConn) {
 func main() {
 	helpMsg := "'disassociate': Teardown Association \n 'associate': Setup Association \n 'create': Create Sessions  \n 'delete': Delete Sessions \n 'exit': Exit gracefully \n"
 	cmd := getopt.StringLong("command", 'c', "", helpMsg)
+	count := getopt.IntLong("count", 'n', 1, "The number of sessions to create/modify/delete")
 
 	getopt.Parse()
 
@@ -54,33 +55,37 @@ func main() {
 		log.Info("Association completed")
 
 	case "create":
-		_, err := simClient.CreateSession(context.Background(), &pb.CreateSessionRequest{
-			Count: 1, //FIXME parse this from flags
+		res, err := simClient.CreateSession(context.Background(), &pb.CreateSessionRequest{
+			Count: int32(*count),
 		})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
 			break
 		}
 
-		log.Info("Sessions created")
+		log.Info(res.Message)
 
 	case "modify":
-		_, err := simClient.ModifySession(context.Background(), &pb.ModifySessionRequest{})
+		res, err := simClient.ModifySession(context.Background(), &pb.ModifySessionRequest{
+			Count: int32(*count),
+		})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
 			break
 		}
 
-		log.Info("Sessions modified")
+		log.Info(res.Message)
 
 	case "delete":
-		_, err := simClient.DeleteSession(context.Background(), &pb.DeleteSessionRequest{})
+		res, err := simClient.DeleteSession(context.Background(), &pb.DeleteSessionRequest{
+			Count: int32(*count),
+		})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
 			break
 		}
 
-		log.Info("Sessions deleted")
+		log.Info(res.Message)
 
 	default:
 		log.Error("Command not recognized")
