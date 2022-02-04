@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	pb "github.com/omec-project/pfcpsim/api"
 	"github.com/pborman/getopt/v2"
@@ -26,11 +27,17 @@ func connect() (pb.PFCPSimClient, *grpc.ClientConn) {
 }
 
 func main() {
-	helpMsg := "'disassociate': Teardown Association \n 'associate': Setup Association \n 'create': Create Sessions  \n 'delete': Delete Sessions \n 'exit': Exit gracefully \n"
+	helpMsg := "'disassociate': Teardown Association \n 'associate': Setup Association \n 'create': Create Sessions  \n 'delete': Delete Sessions \n 'interrupt': Emulates a crash \n"
 	cmd := getopt.StringLong("command", 'c', "", helpMsg)
 	count := getopt.IntLong("count", 'n', 1, "The number of sessions to create/modify/delete")
 
+	optHelp := getopt.BoolLong("help", 0, "Help")
+
 	getopt.Parse()
+	if *optHelp {
+		getopt.Usage()
+		os.Exit(0)
+	}
 
 	simClient, conn := connect()
 	defer conn.Close()
@@ -80,6 +87,15 @@ func main() {
 		res, err := simClient.DeleteSession(context.Background(), &pb.DeleteSessionRequest{
 			Count: int32(*count),
 		})
+		if err != nil {
+			log.Errorf("Error while associating: %v", err)
+			break
+		}
+
+		log.Info(res.Message)
+
+	case "interrupt":
+		res, err := simClient.Interrupt(context.Background(), &pb.EmptyRequest{})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
 			break

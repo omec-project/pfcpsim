@@ -33,7 +33,7 @@ func (P pfcpSimServer) Recover(ctx context.Context, empty *pb.EmptyRequest) (*pb
 }
 
 func (P pfcpSimServer) Interrupt(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
-	sim.DisconnectN4() // FIXME do not simply disconnect. Teardown the entire process.
+	sim.DisconnectN4()
 
 	return &pb.Response{
 		StatusCode: http.StatusOK,

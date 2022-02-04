@@ -47,7 +47,10 @@ var (
 )
 
 func connectPFCPSim() error {
-	sim = pfcpsim.NewPFCPClient(localAddress)
+	if sim == nil {
+		sim = pfcpsim.NewPFCPClient(localAddress)
+	}
+
 	err := sim.ConnectN4(remotePeerAddress)
 	if err != nil {
 		return err
