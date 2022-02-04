@@ -6,13 +6,9 @@
 package main
 
 import (
-	"fmt"
 	"net"
 	"os"
-	"os/exec"
 	"os/signal"
-	"runtime"
-	"strings"
 	"sync"
 	"syscall"
 
@@ -42,57 +38,17 @@ var (
 	ueAddressPool *string
 )
 
-func getLocalAddress() (net.IP, error) {
-	// cmd to run for darwin platforms
-	cmd := "route -n get default | grep 'interface:' | grep -o '[^ ]*$'"
-
-	if runtime.GOOS != "darwin" {
-		// assuming linux platform
-		cmd = "route | grep '^default' | grep -o '[^ ]*$'"
-	}
-
-	cmdOutput, err := exec.Command("bash", "-c", cmd).Output()
-	if err != nil {
-		return nil, err
-	}
-
-	interfaceName := strings.TrimSuffix(string(cmdOutput[:]), "\n")
-
-	itf, _ := net.InterfaceByName(interfaceName)
-	item, _ := itf.Addrs()
-	var ip net.IP
-	for _, addr := range item {
-		switch v := addr.(type) {
-		case *net.IPNet:
-			if v.IP.To4() != nil { //Verify if IP is IPV4
-				ip = v.IP
-			}
-		}
-	}
-
-	if ip != nil {
-		return ip, nil
-	}
-
-	return nil, fmt.Errorf("could not find interface: %v", interfaceName)
-}
-
 func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 	lis, err := net.Listen("tcp", listenAddress)
 	if err != nil {
 		log.Fatalf("APIServer failed to listen: %v", err)
 	}
 
-	lAddr, err := getLocalAddress()
-	if err != nil {
-		log.Fatalf("Could not retrieve local address: %v", err)
-	}
-
 	grpcServer := grpc.NewServer()
 	// Initialize server
-	pfcpServer, err := server.NewPFCPSimServer(lAddr, net.ParseIP(*remotePeerAddress))
+	pfcpServer, err := server.NewPFCPSimServer(*remotePeerAddress, *upfAddress, *nodeBAddress, *ueAddressPool)
 	if err != nil {
-		log.Fatalf("Could not create PFCPSimServer: %v", err)
+		log.Fatalf("Could not create pfcpSimServer: %v", err)
 	}
 
 	pb.RegisterPFCPSimServer(grpcServer, pfcpServer)
@@ -123,7 +79,7 @@ func main() {
 	remotePeerAddress = getopt.StringLong("remote-peer-address", 'r', "127.0.0.1", "Address or hostname of the remote peer (PFCP Agent)")
 	upfAddress = getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF")
 	ueAddressPool = getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")
-	NodeBAddr := getopt.StringLong("nodeb-address", 'g', defaultGNodeBAddress, "The IPv4 of (g/e)NodeBAddress")
+	nodeBAddress = getopt.StringLong("nodeb-address", 'g', defaultGNodeBAddress, "The IPv4 of (g/e)NodeBAddress")
 
 	optHelp := getopt.BoolLong("help", 0, "Help")
 
@@ -134,7 +90,7 @@ func main() {
 	}
 
 	// Flag checks and validations
-	if net.ParseIP(*NodeBAddr) == nil {
+	if net.ParseIP(*nodeBAddress) == nil {
 		log.Fatalf("Could not retrieve IP address of (g/e)NodeB")
 	}
 

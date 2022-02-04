@@ -104,6 +104,213 @@ var _ interface {
 	ErrorName() string
 } = LogLevelValidationError{}
 
+// Validate checks the field values on CreateSessionRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateSessionRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Count
+
+	return nil
+}
+
+// CreateSessionRequestValidationError is the validation error returned by
+// CreateSessionRequest.Validate if the designated constraints aren't met.
+type CreateSessionRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateSessionRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateSessionRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateSessionRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateSessionRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateSessionRequestValidationError) ErrorName() string {
+	return "CreateSessionRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateSessionRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateSessionRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateSessionRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateSessionRequestValidationError{}
+
+// Validate checks the field values on ModifySessionRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ModifySessionRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Count
+
+	return nil
+}
+
+// ModifySessionRequestValidationError is the validation error returned by
+// ModifySessionRequest.Validate if the designated constraints aren't met.
+type ModifySessionRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ModifySessionRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ModifySessionRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ModifySessionRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ModifySessionRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ModifySessionRequestValidationError) ErrorName() string {
+	return "ModifySessionRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ModifySessionRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sModifySessionRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ModifySessionRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ModifySessionRequestValidationError{}
+
+// Validate checks the field values on DeleteSessionRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteSessionRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Count
+
+	return nil
+}
+
+// DeleteSessionRequestValidationError is the validation error returned by
+// DeleteSessionRequest.Validate if the designated constraints aren't met.
+type DeleteSessionRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteSessionRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteSessionRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteSessionRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteSessionRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteSessionRequestValidationError) ErrorName() string {
+	return "DeleteSessionRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteSessionRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteSessionRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteSessionRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteSessionRequestValidationError{}
+
 // Validate checks the field values on EmptyRequest with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
 // is returned.

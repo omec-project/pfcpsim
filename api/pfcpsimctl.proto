@@ -11,6 +11,18 @@ message LogLevel {
   bool caller = 2;
 }
 
+message CreateSessionRequest {
+  int32 count = 1;
+}
+
+message ModifySessionRequest {
+  int32 count = 1;
+}
+
+message DeleteSessionRequest {
+  int32 count = 1;
+}
+
 message EmptyRequest {}
 
 message Response {
@@ -25,7 +37,7 @@ service PFCPSim {
   rpc Associate (EmptyRequest) returns (Response) {}
   rpc Disassociate (EmptyRequest) returns (Response) {}
 
-  rpc CreateSession (EmptyRequest) returns (Response) {}
-  rpc ModifySession (EmptyRequest) returns (Response) {}
-  rpc DeleteSession (EmptyRequest) returns (Response) {}
+  rpc CreateSession (CreateSessionRequest) returns (Response) {}
+  rpc ModifySession (ModifySessionRequest) returns (Response) {}
+  rpc DeleteSession (DeleteSessionRequest) returns (Response) {}
 }
