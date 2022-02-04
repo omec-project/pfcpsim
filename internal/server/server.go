@@ -90,7 +90,7 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 	sessions := getActiveSessions()
 
 	baseID := len(*sessions) + 1
-	count := int(request.Count) // cast int32 to int
+	count := int(request.Count)
 
 	for i := baseID; i < (count + baseID); i++ {
 		// using variables to ease comprehension on how rules are linked together
@@ -185,15 +185,13 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 			return nil, err
 		}
 
-		ctx := &pfcpClientContext{
+		addSessionContext(&pfcpClientContext{
 			session:      sess,
 			pdrs:         pdrs,
 			fars:         fars,
 			qers:         qers,
 			downlinkTEID: downlinkTEID,
-		}
-
-		addSessionContext(ctx)
+		})
 	}
 
 	return &pb.Response{
