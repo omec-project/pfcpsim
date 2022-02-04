@@ -8,11 +8,7 @@ package server
 import (
 	"context"
 	"fmt"
-	"net"
 	"net/http"
-	"os/exec"
-	"runtime"
-	"strings"
 
 	pb "github.com/omec-project/pfcpsim/api"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
@@ -21,71 +17,53 @@ import (
 )
 
 // pfcpSimServer implements the Protobuf methods and keeps a connection to a remote PFCP Agent peer.
-// It stores only 'static' values. Its state is handled in internal/server/state.go
-type pfcpSimServer struct {
-	upfAddress    string
-	nodeBAddress  string
-	ueAddressPool string
-}
+// Its state is handled in internal/server/state.go
+type pfcpSimServer struct{}
 
-// getLocalAddress retrieves local address to use when establishing a connection with PFCP agent
-func getLocalAddress() (net.IP, error) {
-	// cmd to run for darwin platforms
-	cmd := "route -n get default | grep 'interface:' | grep -o '[^ ]*$'"
-
-	if runtime.GOOS != "darwin" {
-		// assuming linux platform
-		cmd = "route | grep '^default' | grep -o '[^ ]*$'"
-	}
-
-	cmdOutput, err := exec.Command("bash", "-c", cmd).Output()
+func (P pfcpSimServer) Recover(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
+	err := connectPFCPSim()
 	if err != nil {
 		return nil, err
 	}
 
-	interfaceName := strings.TrimSuffix(string(cmdOutput[:]), "\n")
-
-	itf, _ := net.InterfaceByName(interfaceName)
-	item, _ := itf.Addrs()
-	var ip net.IP
-	for _, addr := range item {
-		switch v := addr.(type) {
-		case *net.IPNet:
-			if v.IP.To4() != nil { //Verify if IP is IPV4
-				ip = v.IP
-			}
-		}
-	}
-
-	if ip != nil {
-		return ip, nil
-	}
-
-	return nil, fmt.Errorf("could not find interface: %v", interfaceName)
-}
-
-func NewPFCPSimServer(remotePeerAddr string, upfAddress string, nodeBAddress string, ueAddressPool string) (*pfcpSimServer, error) {
-	lAddr, err := getLocalAddress()
-	if err != nil {
-		return nil, err
-	}
-
-	// Connect internal pfcpSim to remote Peer
-	pfcpSim = pfcpsim.NewPFCPClient(lAddr.String())
-	err = pfcpSim.ConnectN4(remotePeerAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pfcpSimServer{
-		upfAddress:    upfAddress,
-		nodeBAddress:  nodeBAddress,
-		ueAddressPool: ueAddressPool,
+	return &pb.Response{
+		StatusCode: http.StatusOK,
+		Message:    "Emulating Crash",
 	}, nil
 }
 
+func (P pfcpSimServer) Interrupt(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
+	sim.DisconnectN4() // FIXME do not simply disconnect. Teardown the entire process.
+
+	return &pb.Response{
+		StatusCode: http.StatusOK,
+		Message:    "Emulating Crash",
+	}, nil
+}
+
+func NewPFCPSimServer(remotePeerAddr string, upfAddr string, nodeBAddr string, ueAddrPool string) (*pfcpSimServer, error) {
+	var err error
+	localAddress, err = getLocalAddress()
+	if err != nil {
+		return nil, err
+	}
+
+	remotePeerAddress = remotePeerAddr
+	upfAddress = upfAddr
+	nodeBAddress = nodeBAddr
+	ueAddressPool = ueAddrPool
+
+	// Connect internal PFCPSim to remote Peer
+	err = connectPFCPSim()
+	if err != nil {
+		return nil, err
+	}
+
+	return &pfcpSimServer{}, nil
+}
+
 func (P pfcpSimServer) Associate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
-	err := pfcpSim.SetupAssociation()
+	err := sim.SetupAssociation()
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +75,7 @@ func (P pfcpSimServer) Associate(ctx context.Context, empty *pb.EmptyRequest) (*
 }
 
 func (P pfcpSimServer) Disassociate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
-	err := pfcpSim.TeardownAssociation()
+	err := sim.TeardownAssociation()
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +119,7 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 				WithFARID(uplinkFarID).
 				AddQERID(sessQerID).
 				AddQERID(uplinkAppQerID).
-				WithN3Address(P.upfAddress).
+				WithN3Address(upfAddress).
 				WithSDFFilter("permit out ip from any to assigned").
 				MarkAsUplink().
 				BuildPDR(),
@@ -151,7 +129,7 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 				WithID(dowlinkPdrID).
 				WithMethod(session.Create).
 				WithPrecedence(100).
-				WithUEAddress(getNextUEAddress(P.ueAddressPool).String()).
+				WithUEAddress(getNextUEAddress(ueAddressPool).String()).
 				WithSDFFilter("permit out ip from any to assigned").
 				AddQERID(sessQerID).
 				AddQERID(downlinkAppQerID).
@@ -176,7 +154,7 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 				WithMethod(session.Create).
 				WithDstInterface(ieLib.DstInterfaceAccess).
 				WithTEID(downlinkTEID).
-				WithDownlinkIP(P.nodeBAddress).
+				WithDownlinkIP(nodeBAddress).
 				BuildFAR(),
 		}
 
@@ -202,7 +180,7 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 				Build(),
 		}
 
-		sess, err := pfcpSim.EstablishSession(pdrs, fars, qers)
+		sess, err := sim.EstablishSession(pdrs, fars, qers)
 		if err != nil {
 			return nil, err
 		}
@@ -264,11 +242,11 @@ func (P pfcpSimServer) ModifySession(ctx context.Context, request *pb.ModifySess
 					WithAction(session.ActionForward).
 					WithDstInterface(ieLib.DstInterfaceCore).
 					WithTEID(ctx.downlinkTEID).
-					WithDownlinkIP(P.nodeBAddress).
+					WithDownlinkIP(nodeBAddress).
 					BuildFAR(),
 			}
 
-			err = pfcpSim.ModifySession(ctx.session, nil, newFARs, nil)
+			err = sim.ModifySession(ctx.session, nil, newFARs, nil)
 			if err != nil {
 				return nil, err
 			}

@@ -32,4 +32,8 @@ service PFCPSim {
   rpc CreateSession (CreateSessionRequest) returns (Response) {}
   rpc ModifySession (ModifySessionRequest) returns (Response) {}
   rpc DeleteSession (DeleteSessionRequest) returns (Response) {}
+  // Interrupt emulates pfcpsim crash
+  rpc Interrupt(EmptyRequest) returns (Response) {}
+  // Re-establish connection (can be used after Interrupt to reconnect to remote Peer)
+  rpc Recover(EmptyRequest) returns (Response) {}
 }

@@ -279,7 +279,7 @@ var file_pfcpsimctl_proto_rawDesc = []byte{
 	0x0b, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x5f, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x05, 0x52, 0x0a, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x43, 0x6f, 0x64, 0x65, 0x12, 0x18,
 	0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x32, 0xa5, 0x02, 0x0a, 0x07, 0x50, 0x46, 0x43,
+	0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x32, 0x85, 0x03, 0x0a, 0x07, 0x50, 0x46, 0x43,
 	0x50, 0x53, 0x69, 0x6d, 0x12, 0x2f, 0x0a, 0x09, 0x41, 0x73, 0x73, 0x6f, 0x63, 0x69, 0x61, 0x74,
 	0x65, 0x12, 0x11, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x71,
 	0x75, 0x65, 0x73, 0x74, 0x1a, 0x0d, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f,
@@ -297,6 +297,12 @@ var file_pfcpsimctl_proto_rawDesc = []byte{
 	0x65, 0x22, 0x00, 0x12, 0x3b, 0x0a, 0x0d, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x53, 0x65, 0x73,
 	0x73, 0x69, 0x6f, 0x6e, 0x12, 0x19, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74,
 	0x65, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x0d, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
+	0x12, 0x2f, 0x0a, 0x09, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x72, 0x75, 0x70, 0x74, 0x12, 0x11, 0x2e,
+	0x61, 0x70, 0x69, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x0d, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x00, 0x12, 0x2d, 0x0a, 0x07, 0x52, 0x65, 0x63, 0x6f, 0x76, 0x65, 0x72, 0x12, 0x11, 0x2e, 0x61,
+	0x70, 0x69, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
 	0x0d, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
 	0x42, 0x07, 0x5a, 0x05, 0x2e, 0x3b, 0x61, 0x70, 0x69, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x33,
@@ -328,13 +334,17 @@ var file_pfcpsimctl_proto_depIdxs = []int32{
 	0, // 2: api.PFCPSim.CreateSession:input_type -> api.CreateSessionRequest
 	1, // 3: api.PFCPSim.ModifySession:input_type -> api.ModifySessionRequest
 	2, // 4: api.PFCPSim.DeleteSession:input_type -> api.DeleteSessionRequest
-	4, // 5: api.PFCPSim.Associate:output_type -> api.Response
-	4, // 6: api.PFCPSim.Disassociate:output_type -> api.Response
-	4, // 7: api.PFCPSim.CreateSession:output_type -> api.Response
-	4, // 8: api.PFCPSim.ModifySession:output_type -> api.Response
-	4, // 9: api.PFCPSim.DeleteSession:output_type -> api.Response
-	5, // [5:10] is the sub-list for method output_type
-	0, // [0:5] is the sub-list for method input_type
+	3, // 5: api.PFCPSim.Interrupt:input_type -> api.EmptyRequest
+	3, // 6: api.PFCPSim.Recover:input_type -> api.EmptyRequest
+	4, // 7: api.PFCPSim.Associate:output_type -> api.Response
+	4, // 8: api.PFCPSim.Disassociate:output_type -> api.Response
+	4, // 9: api.PFCPSim.CreateSession:output_type -> api.Response
+	4, // 10: api.PFCPSim.ModifySession:output_type -> api.Response
+	4, // 11: api.PFCPSim.DeleteSession:output_type -> api.Response
+	4, // 12: api.PFCPSim.Interrupt:output_type -> api.Response
+	4, // 13: api.PFCPSim.Recover:output_type -> api.Response
+	7, // [7:14] is the sub-list for method output_type
+	0, // [0:7] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -444,6 +454,10 @@ type PFCPSimClient interface {
 	CreateSession(ctx context.Context, in *CreateSessionRequest, opts ...grpc.CallOption) (*Response, error)
 	ModifySession(ctx context.Context, in *ModifySessionRequest, opts ...grpc.CallOption) (*Response, error)
 	DeleteSession(ctx context.Context, in *DeleteSessionRequest, opts ...grpc.CallOption) (*Response, error)
+	// Interrupt emulates pfcpsim crash
+	Interrupt(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Response, error)
+	// Re-establish connection (can be used after Interrupt to reconnect to remote Peer)
+	Recover(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Response, error)
 }
 
 type pFCPSimClient struct {
@@ -499,6 +513,24 @@ func (c *pFCPSimClient) DeleteSession(ctx context.Context, in *DeleteSessionRequ
 	return out, nil
 }
 
+func (c *pFCPSimClient) Interrupt(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/api.PFCPSim/Interrupt", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *pFCPSimClient) Recover(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/api.PFCPSim/Recover", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PFCPSimServer is the server API for PFCPSim service.
 type PFCPSimServer interface {
 	Associate(context.Context, *EmptyRequest) (*Response, error)
@@ -506,6 +538,10 @@ type PFCPSimServer interface {
 	CreateSession(context.Context, *CreateSessionRequest) (*Response, error)
 	ModifySession(context.Context, *ModifySessionRequest) (*Response, error)
 	DeleteSession(context.Context, *DeleteSessionRequest) (*Response, error)
+	// Interrupt emulates pfcpsim crash
+	Interrupt(context.Context, *EmptyRequest) (*Response, error)
+	// Re-establish connection (can be used after Interrupt to reconnect to remote Peer)
+	Recover(context.Context, *EmptyRequest) (*Response, error)
 }
 
 // UnimplementedPFCPSimServer can be embedded to have forward compatible implementations.
@@ -526,6 +562,12 @@ func (*UnimplementedPFCPSimServer) ModifySession(context.Context, *ModifySession
 }
 func (*UnimplementedPFCPSimServer) DeleteSession(context.Context, *DeleteSessionRequest) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteSession not implemented")
+}
+func (*UnimplementedPFCPSimServer) Interrupt(context.Context, *EmptyRequest) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Interrupt not implemented")
+}
+func (*UnimplementedPFCPSimServer) Recover(context.Context, *EmptyRequest) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Recover not implemented")
 }
 
 func RegisterPFCPSimServer(s *grpc.Server, srv PFCPSimServer) {
@@ -622,6 +664,42 @@ func _PFCPSim_DeleteSession_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PFCPSim_Interrupt_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EmptyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PFCPSimServer).Interrupt(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.PFCPSim/Interrupt",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PFCPSimServer).Interrupt(ctx, req.(*EmptyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PFCPSim_Recover_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EmptyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PFCPSimServer).Recover(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.PFCPSim/Recover",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PFCPSimServer).Recover(ctx, req.(*EmptyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _PFCPSim_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "api.PFCPSim",
 	HandlerType: (*PFCPSimServer)(nil),
@@ -645,6 +723,14 @@ var _PFCPSim_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteSession",
 			Handler:    _PFCPSim_DeleteSession_Handler,
+		},
+		{
+			MethodName: "Interrupt",
+			Handler:    _PFCPSim_Interrupt_Handler,
+		},
+		{
+			MethodName: "Recover",
+			Handler:    _PFCPSim_Recover_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
