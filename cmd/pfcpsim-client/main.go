@@ -345,7 +345,7 @@ func modifySessions() error {
 					WithID(oldFarID).
 					WithMethod(session.Update).
 					WithAction(session.ActionForward).
-					WithDstInterface(ieLib.DstInterfaceCore).
+					WithDstInterface(ieLib.DstInterfaceAccess).
 					WithTEID(ctx.downlinkTEID).
 					WithDownlinkIP(nodeBAddress.String()).
 					BuildFAR(),
