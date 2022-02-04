@@ -6,6 +6,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -26,7 +27,7 @@ const (
 
 	defaultUpfN3Address = "198.18.0.1"
 
-	listenAddress = "0.0.0.0:54321" //TODO make address configurable
+	defaultListenPort = "54321"
 )
 
 var (
@@ -37,8 +38,8 @@ var (
 	ueAddressPool *string
 )
 
-func startServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
-	lis, err := net.Listen("tcp", listenAddress)
+func startServer(apiDoneChannel chan bool, port string, group *sync.WaitGroup) {
+	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%v", port))
 	if err != nil {
 		log.Fatalf("APIServer failed to listen: %v", err)
 	}
@@ -58,7 +59,7 @@ func startServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 		}
 	}()
 
-	log.Infof("Server listening on %v", listenAddress)
+	log.Infof("Server listening on port %v", port)
 
 	x := <-apiDoneChannel
 	if x {
@@ -75,6 +76,8 @@ func main() {
 	upfAddress = getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF")
 	ueAddressPool = getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")
 	nodeBAddress = getopt.StringLong("nodeb-address", 'g', defaultGNodeBAddress, "The IPv4 of (g/e)NodeBAddress")
+
+	port := getopt.StringLong("server", 's', defaultListenPort, "the gRPC Server port to listen")
 
 	optHelp := getopt.BoolLong("help", 0, "Help")
 
@@ -120,7 +123,7 @@ func main() {
 	wg := sync.WaitGroup{}
 	wg.Add(4)
 
-	go startServer(apiDoneChannel, &wg)
+	go startServer(apiDoneChannel, *port, &wg)
 	log.Debugf("Started APIService")
 
 	wg.Wait()

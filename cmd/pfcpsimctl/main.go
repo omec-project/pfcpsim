@@ -14,13 +14,15 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func connect() (pb.PFCPSimClient, *grpc.ClientConn) {
-	serverAddress := ":54321" //TODO make this configurable
+const (
+	defaultAddress = ":54321"
+)
 
+func connect(serverAddr string) (pb.PFCPSimClient, *grpc.ClientConn) {
 	// Create an insecure gRPC Channel
-	conn, err := grpc.Dial(serverAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("Error dialing %v: %v", serverAddress, err)
+		log.Fatalf("Error dialing %v: %v", serverAddr, err)
 	}
 
 	return pb.NewPFCPSimClient(conn), conn
@@ -30,6 +32,7 @@ func main() {
 	helpMsg := "'disassociate': Teardown Association \n 'associate': Setup Association \n 'create': Create Sessions  \n 'delete': Delete Sessions \n 'interrupt': Emulates a crash \n"
 	cmd := getopt.StringLong("command", 'c', "", helpMsg)
 	count := getopt.IntLong("count", 'n', 1, "The number of sessions to create/modify/delete")
+	srvAddr := getopt.StringLong("server", 's', defaultAddress, "the gRPC Server address")
 
 	optHelp := getopt.BoolLong("help", 0, "Help")
 
@@ -39,7 +42,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	simClient, conn := connect()
+	simClient, conn := connect(*srvAddr)
 	defer conn.Close()
 
 	switch *cmd {
