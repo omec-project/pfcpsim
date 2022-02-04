@@ -17,15 +17,12 @@ import (
 	pb "github.com/omec-project/pfcpsim/api"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
-	log "github.com/sirupsen/logrus"
 	ieLib "github.com/wmnsk/go-pfcp/ie"
 )
 
 // pfcpSimServer implements the Protobuf methods and keeps a connection to a remote PFCP Agent peer.
+// It stores only 'static' values. Its state is handled in internal/server/state.go
 type pfcpSimServer struct {
-	// Emulates 5G SMF/ 4G SGW
-	pfcpSim *pfcpsim.PFCPClient
-
 	upfAddress    string
 	nodeBAddress  string
 	ueAddressPool string
@@ -73,14 +70,14 @@ func NewPFCPSimServer(remotePeerAddr string, upfAddress string, nodeBAddress str
 		return nil, err
 	}
 
-	cl := pfcpsim.NewPFCPClient(lAddr.String())
-	err = cl.ConnectN4(remotePeerAddr)
+	// Connect internal pfcpSim to remote Peer
+	pfcpSim = pfcpsim.NewPFCPClient(lAddr.String())
+	err = pfcpSim.ConnectN4(remotePeerAddr)
 	if err != nil {
 		return nil, err
 	}
 
 	return &pfcpSimServer{
-		pfcpSim:       cl,
 		upfAddress:    upfAddress,
 		nodeBAddress:  nodeBAddress,
 		ueAddressPool: ueAddressPool,
@@ -88,7 +85,7 @@ func NewPFCPSimServer(remotePeerAddr string, upfAddress string, nodeBAddress str
 }
 
 func (P pfcpSimServer) Associate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
-	err := P.pfcpSim.SetupAssociation()
+	err := pfcpSim.SetupAssociation()
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +97,7 @@ func (P pfcpSimServer) Associate(ctx context.Context, empty *pb.EmptyRequest) (*
 }
 
 func (P pfcpSimServer) Disassociate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
-	err := P.pfcpSim.TeardownAssociation()
+	err := pfcpSim.TeardownAssociation()
 	if err != nil {
 		return nil, err
 	}
@@ -205,9 +202,8 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 				Build(),
 		}
 
-		sess, err := P.pfcpSim.EstablishSession(pdrs, fars, qers)
+		sess, err := pfcpSim.EstablishSession(pdrs, fars, qers)
 		if err != nil {
-			log.Errorf("Error while establishing sessions: %v", err)
 			return nil, err
 		}
 
@@ -272,7 +268,7 @@ func (P pfcpSimServer) ModifySession(ctx context.Context, request *pb.ModifySess
 					BuildFAR(),
 			}
 
-			err = P.pfcpSim.ModifySession(ctx.session, nil, newFARs, nil)
+			err = pfcpSim.ModifySession(ctx.session, nil, newFARs, nil)
 			if err != nil {
 				return nil, err
 			}

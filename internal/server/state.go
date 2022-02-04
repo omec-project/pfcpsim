@@ -31,6 +31,9 @@ var (
 	// Keeps track of 'leased' IPs to UEs from ip pool
 	lastUEAddress net.IP
 	addrLock      = new(sync.Mutex)
+
+	// Emulates 5G SMF/ 4G SGW
+	pfcpSim *pfcpsim.PFCPClient
 )
 
 func getActiveSessions() *[]*pfcpClientContext {
