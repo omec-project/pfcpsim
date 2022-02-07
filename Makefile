@@ -11,7 +11,7 @@ DOCKER_TAG               ?= ${VERSION}
 DOCKER_IMAGENAME         := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}${PROJECT_NAME}:${DOCKER_TAG}
 DOCKER_BUILDKIT          ?= 1
 
-DOCKER_TARGETS           ?= pfcpsim-client pfcpsim-server
+DOCKER_TARGETS           ?= pfcpsim pfcpsimctl
 
 build-pfcpsim:
 	for target in $(DOCKER_TARGETS); do \

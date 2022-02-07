@@ -28,15 +28,5 @@ jobs:
           context: .
           push: false
           load: true
-          tags: '${{ env.DOCKER_REPO }}:pfcpsimctl-${{ steps.get_version.outputs.contents }}' # Local Runtime image
-          target: 'pfcpsimctl'
-
-      #FIXME build also pfcpsim container. Incorrect workflow
-      - name: Build pfcpsim server
-          uses: docker/build-push-action@v2
-          with:
-            context: .
-            push: false
-            load: true
-            tags: '${{ env.DOCKER_REPO }}:pfcpsim-${{ steps.get_version.outputs.contents }}' # Local Runtime image
-            target: 'pfcpsim'
+          tags: '${{ env.DOCKER_REPO }}:pfcpsim-${{ steps.get_version.outputs.contents }}'
+          target: 'pfcpsim'
