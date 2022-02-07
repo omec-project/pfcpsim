@@ -8,12 +8,12 @@ package server
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	pb "github.com/omec-project/pfcpsim/api"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
 	ieLib "github.com/wmnsk/go-pfcp/ie"
+	"google.golang.org/grpc/codes"
 )
 
 // pfcpSimServer implements the Protobuf methods and keeps a connection to a remote PFCP Agent peer.
@@ -21,13 +21,14 @@ import (
 type pfcpSimServer struct{}
 
 func (P pfcpSimServer) Recover(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
+
 	err := connectPFCPSim()
 	if err != nil {
 		return nil, err
 	}
 
 	return &pb.Response{
-		StatusCode: http.StatusOK,
+		StatusCode: int32(codes.OK),
 		Message:    "Emulating Crash",
 	}, nil
 }
@@ -36,7 +37,7 @@ func (P pfcpSimServer) Interrupt(ctx context.Context, empty *pb.EmptyRequest) (*
 	sim.DisconnectN4()
 
 	return &pb.Response{
-		StatusCode: http.StatusOK,
+		StatusCode: int32(codes.OK),
 		Message:    "Emulating Crash",
 	}, nil
 }
@@ -69,7 +70,7 @@ func (P pfcpSimServer) Associate(ctx context.Context, empty *pb.EmptyRequest) (*
 	}
 
 	return &pb.Response{
-		StatusCode: http.StatusOK,
+		StatusCode: int32(codes.OK),
 		Message:    "Association completed",
 	}, nil
 }
@@ -81,7 +82,7 @@ func (P pfcpSimServer) Disassociate(ctx context.Context, empty *pb.EmptyRequest)
 	}
 
 	return &pb.Response{
-		StatusCode: http.StatusOK,
+		StatusCode: int32(codes.OK),
 		Message:    "Association teardown completed",
 	}, nil
 }
@@ -195,7 +196,7 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 	}
 
 	return &pb.Response{
-		StatusCode: http.StatusOK,
+		StatusCode: int32(codes.OK),
 		Message:    fmt.Sprintf("%v sessions were established", count),
 	}, nil
 }
@@ -254,7 +255,7 @@ func (P pfcpSimServer) ModifySession(ctx context.Context, request *pb.ModifySess
 	}
 
 	return &pb.Response{
-		StatusCode: http.StatusOK,
+		StatusCode: int32(codes.OK),
 		Message:    fmt.Sprintf("%v sessions correctly modified", count),
 	}, nil
 }
@@ -273,7 +274,7 @@ func (P pfcpSimServer) DeleteSession(ctx context.Context, request *pb.DeleteSess
 	}
 
 	return &pb.Response{
-		StatusCode: http.StatusOK,
+		StatusCode: int32(codes.OK),
 		Message:    fmt.Sprintf("%v sessions deleted", count),
 	}, nil
 }
