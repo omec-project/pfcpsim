@@ -95,11 +95,11 @@ func getLocalAddress() (string, error) {
 	return "", fmt.Errorf("could not find interface: %v", interfaceName)
 }
 
-func getActiveSessions() *[]*pfcpClientContext {
+func getActiveSessions() []*pfcpClientContext {
 	sessionsLock.Lock()
 	defer sessionsLock.Unlock()
 
-	return &activeSessions
+	return activeSessions
 }
 
 func deleteSessionContext() {

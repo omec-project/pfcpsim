@@ -90,7 +90,7 @@ func (P pfcpSimServer) Disassociate(ctx context.Context, empty *pb.EmptyRequest)
 func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSessionRequest) (*pb.Response, error) {
 	sessions := getActiveSessions()
 
-	baseID := len(*sessions) + 1
+	baseID := len(sessions) + 1
 	count := int(request.Count)
 
 	for i := baseID; i < (count + baseID); i++ {
@@ -206,11 +206,11 @@ func (P pfcpSimServer) ModifySession(ctx context.Context, request *pb.ModifySess
 
 	count := int(request.Count)
 
-	if len(*sessions) < count {
+	if len(sessions) < count {
 		return nil, pfcpsim.NewNotEnoughSessionsError()
 	}
 
-	for i, ctx := range *sessions {
+	for i, ctx := range sessions {
 		if i >= count {
 			// Modify only 'count' sessions
 			break
@@ -265,7 +265,7 @@ func (P pfcpSimServer) DeleteSession(ctx context.Context, request *pb.DeleteSess
 
 	count := int(request.Count)
 
-	if len(*sessions) < count {
+	if len(sessions) < count {
 		return nil, pfcpsim.NewNotEnoughSessionsError()
 	}
 
