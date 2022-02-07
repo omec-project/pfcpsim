@@ -27,7 +27,7 @@ const (
 
 	defaultUpfN3Address = "198.18.0.1"
 
-	defaultListenPort = "54321"
+	defaultgRPCServerPort = "54321"
 )
 
 var (
@@ -41,7 +41,7 @@ var (
 func startServer(apiDoneChannel chan bool, port string, group *sync.WaitGroup) {
 	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%v", port))
 	if err != nil {
-		log.Fatalf("APIServer failed to listen: %v", err)
+		log.Fatalf("API gRPC Server failed to listen: %v", err)
 	}
 
 	grpcServer := grpc.NewServer()
@@ -77,7 +77,7 @@ func main() {
 	ueAddressPool = getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")
 	nodeBAddress = getopt.StringLong("nodeb-address", 'g', defaultGNodeBAddress, "The IPv4 of (g/e)NodeBAddress")
 
-	port := getopt.StringLong("server", 's', defaultListenPort, "the gRPC Server port to listen")
+	port := getopt.StringLong("port", 'p', defaultgRPCServerPort, "the gRPC Server port to listen")
 
 	optHelp := getopt.BoolLong("help", 0, "Help")
 
@@ -109,7 +109,7 @@ func main() {
 	}
 
 	// control channels, they are only closed when the goroutine needs to be terminated
-	apiDoneChannel := make(chan bool)
+	doneChannel := make(chan bool)
 
 	sigs := make(chan os.Signal, 1)
 	// stop API servers on SIGTERM
@@ -117,14 +117,14 @@ func main() {
 
 	go func() {
 		<-sigs
-		close(apiDoneChannel)
+		close(doneChannel)
 	}()
 
 	wg := sync.WaitGroup{}
 	wg.Add(4)
 
-	go startServer(apiDoneChannel, *port, &wg)
-	log.Debugf("Started APIService")
+	go startServer(doneChannel, *port, &wg)
+	log.Debugf("Started API gRPC Service")
 
 	wg.Wait()
 
