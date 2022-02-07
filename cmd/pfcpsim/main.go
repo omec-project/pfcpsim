@@ -93,10 +93,13 @@ func main() {
 	}
 
 	if net.ParseIP(*remotePeerAddress) == nil {
-		_, err := net.LookupHost(*remotePeerAddress)
+		// Try to resolve hostname
+		nameIP, err := net.LookupHost(*remotePeerAddress)
 		if err != nil {
 			log.Fatalf("Could not retrieve hostname or address for remote peer: %s", *remotePeerAddress)
 		}
+
+		*remotePeerAddress = nameIP[0]
 	}
 
 	if net.ParseIP(*upfAddress) == nil {
