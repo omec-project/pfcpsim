@@ -23,7 +23,7 @@ ENTRYPOINT [ "/bin/pfcpsimctl" ]
 # Stage pfcpsim: runtime image of pfcpsim server
 FROM golang:alpine AS pfcpsim
 
-RUN apk update && apk add net-tools
+RUN apk update && apk add net-tools && apk add --no-cache bash
 
 COPY --from=builder /bin/pfcpsim /bin
 ENTRYPOINT [ "/bin/pfcpsim" ]
