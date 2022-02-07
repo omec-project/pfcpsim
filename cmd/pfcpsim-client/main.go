@@ -370,8 +370,8 @@ func createSessions(count int) {
 
 	for i := baseID; i < (count + baseID); i++ {
 		// using variables to ease comprehension on how rules are linked together
-		uplinkTEID := uint32(i + 10)
-		downlinkTEID := uint32(i + 11)
+		uplinkTEID := uint32(i)
+		downlinkTEID := uint32(i + 1)
 
 		uplinkFarID := uint32(i)
 		downlinkFarID := uint32(i + 1)
@@ -396,7 +396,7 @@ func createSessions(count int) {
 				AddQERID(sessQerID).
 				AddQERID(uplinkAppQerID).
 				WithN3Address(upfAddress.String()).
-				WithSDFFilter("permit out ip from any to assigned").
+				WithSDFFilter("permit out ip from 0.0.0.0/0 to assigned").
 				MarkAsUplink().
 				BuildPDR(),
 
@@ -406,7 +406,7 @@ func createSessions(count int) {
 				WithMethod(session.Create).
 				WithPrecedence(100).
 				WithUEAddress(getNextUEAddress().String()).
-				WithSDFFilter("permit out ip from any to assigned").
+				WithSDFFilter("permit out ip from 0.0.0.0/0 to assigned").
 				AddQERID(sessQerID).
 				AddQERID(downlinkAppQerID).
 				WithFARID(downlinkFarID).
