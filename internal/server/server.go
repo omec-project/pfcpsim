@@ -94,8 +94,8 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 
 	for i := baseID; i < (count + baseID); i++ {
 		// using variables to ease comprehension on how rules are linked together
-		uplinkTEID := uint32(i + 10)
-		downlinkTEID := uint32(i + 11)
+		uplinkTEID := uint32(i)
+		downlinkTEID := uint32(i + 1)
 
 		uplinkFarID := uint32(i)
 		downlinkFarID := uint32(i + 1)
@@ -120,7 +120,7 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 				AddQERID(sessQerID).
 				AddQERID(uplinkAppQerID).
 				WithN3Address(upfAddress).
-				WithSDFFilter("permit out ip from any to assigned").
+				WithSDFFilter("permit out ip from 0.0.0.0/0 to assigned").
 				MarkAsUplink().
 				BuildPDR(),
 
@@ -130,7 +130,7 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 				WithMethod(session.Create).
 				WithPrecedence(100).
 				WithUEAddress(getNextUEAddress(ueAddressPool).String()).
-				WithSDFFilter("permit out ip from any to assigned").
+				WithSDFFilter("permit out ip from 0.0.0.0/0 to assigned").
 				AddQERID(sessQerID).
 				AddQERID(downlinkAppQerID).
 				WithFARID(downlinkFarID).
