@@ -2,7 +2,7 @@
 # Copyright 2022 Open Networking Foundation
 
 # Stage pfcpsim-build: builds the pfcpsim docker image
-FROM golang AS pfcpsim-build
+FROM golang:alpine AS builder
 WORKDIR /pfcpsimctl
 
 COPY go.mod ./go.mod
@@ -15,15 +15,15 @@ RUN CGO_ENABLED=0 go build -o /bin/pfcpsimctl cmd/pfcpsimctl/main.go
 RUN CGO_ENABLED=0 go build -o /bin/pfcpsim cmd/pfcpsim/main.go
 
 # Stage pfcpsimctl: runtime image of pfcpsimctl (client)
-FROM golang AS pfcpsimctl
+FROM golang:alpine AS pfcpsimctl
 
-COPY --from=pfcpsim-build /bin/pfcpsimctl /bin
+COPY --from=builder /bin/pfcpsimctl /bin
 ENTRYPOINT [ "/bin/pfcpsimctl" ]
 
 # Stage pfcpsim: runtime image of pfcpsim server
-FROM golang AS pfcpsim
+FROM golang:alpine AS pfcpsim
 
-RUN apt-get update && apt-get install -y net-tools
+RUN apk update && apk add net-tools
 
-COPY --from=pfcpsim-build /bin/pfcpsim /bin
+COPY --from=builder /bin/pfcpsim /bin
 ENTRYPOINT [ "/bin/pfcpsim" ]
