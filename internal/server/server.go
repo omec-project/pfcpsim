@@ -239,7 +239,7 @@ func (P pfcpSimServer) ModifySession(ctx context.Context, request *pb.ModifySess
 					WithID(oldFarID).
 					WithMethod(session.Update).
 					WithAction(session.ActionForward).
-					WithDstInterface(ieLib.DstInterfaceCore).
+					WithDstInterface(ieLib.DstInterfaceAccess).
 					WithTEID(ctx.downlinkTEID).
 					WithDownlinkIP(nodeBAddress).
 					BuildFAR(),
