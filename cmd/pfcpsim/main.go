@@ -46,6 +46,7 @@ func startServer(apiDoneChannel chan bool, port string, group *sync.WaitGroup) {
 
 	grpcServer := grpc.NewServer()
 	// Initialize server
+	log.Infof("RemotePeer: %v, UPFAddress: %v, NodeBAddress: %v, UEAddressPool: %v", *remotePeerAddress, *upfAddress, *nodeBAddress, *ueAddressPool)
 	pfcpServer, err := server.NewPFCPSimServer(*remotePeerAddress, *upfAddress, *nodeBAddress, *ueAddressPool)
 	if err != nil {
 		log.Fatalf("Could not create pfcpSimServer: %v", err)
