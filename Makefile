@@ -34,4 +34,4 @@ build-proto:
     -I./ \
     -I/usr/local/include \
     --go_out=paths=source_relative,plugins=grpc:./ \
-    pfcpsimctl.proto
+    pfcpsim.proto

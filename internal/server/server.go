@@ -20,8 +20,7 @@ import (
 // Its state is handled in internal/server/state.go
 type pfcpSimServer struct{}
 
-func (P pfcpSimServer) Recover(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
-
+func (P pfcpSimServer) ConnectToRemotePeer(ctx context.Context, request *pb.EmptyRequest) (*pb.Response, error) {
 	err := connectPFCPSim()
 	if err != nil {
 		return nil, err

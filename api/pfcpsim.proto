@@ -34,6 +34,6 @@ service PFCPSim {
   rpc DeleteSession (DeleteSessionRequest) returns (Response) {}
   // Interrupt emulates pfcpsim crash
   rpc Interrupt(EmptyRequest) returns (Response) {}
-  // Re-establish connection (can be used after Interrupt to reconnect to remote Peer)
-  rpc Recover(EmptyRequest) returns (Response) {}
+  // Establish connection to remote peer (e.g. remote PFCP agent)
+  rpc ConnectToRemotePeer(EmptyRequest) returns (Response) {}
 }
