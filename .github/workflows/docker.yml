@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2022 Open Networking Foundation
+
+name: Docker publish
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    env:
+      DOCKER_REGISTRY: "ghcr.io/omec-project/"
+      DOCKER_REPOSITORY: "pfcpsim/"
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout and build
+      - uses: actions/checkout@v2.4.0
+      - uses: docker/login-action@v1.12.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+      - name: Build and push Docker image
+        # FIXME implement commands
+        run: |
+          make docker-build 
+          make docker-push
