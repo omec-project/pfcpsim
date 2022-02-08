@@ -23,7 +23,6 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.CR_PAT }}
       - name: Build and push Docker image
-        # FIXME implement commands
         run: |
           make docker-build 
           make docker-push
