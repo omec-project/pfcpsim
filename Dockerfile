@@ -9,6 +9,8 @@ COPY go.mod ./go.mod
 COPY go.sum ./go.sum
 
 RUN go mod download
+# exploit local cache
+VOLUME $(go env GOCACHE):/root/.cache/go-build
 
 COPY . ./
 RUN CGO_ENABLED=0 go build -o /bin/pfcpsimctl cmd/pfcpsimctl/main.go

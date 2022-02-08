@@ -15,8 +15,9 @@ DOCKER_TARGET           ?= pfcpsim
 
 build-pfcpsim:
 	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build -f Dockerfile . \
-    		--target $(DOCKER_TARGET) \
-    		--tag ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}$(DOCKER_TARGET):${DOCKER_TAG}
+    	--target $(DOCKER_TARGET) \
+    	--cache-from ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}$(DOCKER_TARGET):${DOCKER_TAG} \
+    	--tag ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}$(DOCKER_TARGET):${DOCKER_TAG}
 
 golint:
 	@docker run --rm -v $(CURDIR):/app -w /app/pkg/pfcpsim golangci/golangci-lint:latest golangci-lint run -v --config /app/.golangci.yml
