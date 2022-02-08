@@ -73,6 +73,7 @@ func startServer(apiDoneChannel chan bool, port string, group *sync.WaitGroup) {
 }
 
 func main() {
+	// TODO make server configuration possible through RPC instead of using flags
 	remotePeerAddress = getopt.StringLong("remote-peer-address", 'r', "127.0.0.1", "Address or hostname of the remote peer (PFCP Agent)")
 	upfAddress = getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF")
 	ueAddressPool = getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")

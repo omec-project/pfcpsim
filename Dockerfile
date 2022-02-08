@@ -14,16 +14,9 @@ COPY . ./
 RUN CGO_ENABLED=0 go build -o /bin/pfcpsimctl cmd/pfcpsimctl/main.go
 RUN CGO_ENABLED=0 go build -o /bin/pfcpsim cmd/pfcpsim/main.go
 
-# Stage pfcpsimctl: runtime image of pfcpsimctl (client)
-FROM golang:alpine AS pfcpsimctl
-
-COPY --from=builder /bin/pfcpsimctl /bin
-ENTRYPOINT [ "/bin/pfcpsimctl" ]
-
-# Stage pfcpsim: runtime image of pfcpsim server
+# Stage pfcpsimctl: runtime image of pfcpsim, containing also pfcpsimctl
 FROM golang:alpine AS pfcpsim
 
-RUN apk update && apk add net-tools && apk add --no-cache bash
-
+COPY --from=builder /bin/pfcpsimctl /bin
 COPY --from=builder /bin/pfcpsim /bin
 ENTRYPOINT [ "/bin/pfcpsim" ]
