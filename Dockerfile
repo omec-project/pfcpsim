@@ -19,6 +19,8 @@ RUN CGO_ENABLED=0 go build -o /bin/pfcpsim cmd/pfcpsim/main.go
 # Stage pfcpsimctl: runtime image of pfcpsim, containing also pfcpsimctl
 FROM golang:alpine AS pfcpsim
 
+RUN apk update && apk add net-tools && apk add --no-cache bash
+
 COPY --from=builder /bin/pfcpsimctl /bin
 COPY --from=builder /bin/pfcpsim /bin
 ENTRYPOINT [ "/bin/pfcpsim" ]
