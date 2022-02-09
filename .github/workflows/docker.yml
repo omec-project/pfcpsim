@@ -11,8 +11,7 @@ on:
 jobs:
   build:
     env:
-      DOCKER_REGISTRY: "ghcr.io/omec-project/"
-      DOCKER_REPOSITORY: "pfcpsim/"
+      DOCKER_REPOSITORY: "pfcpsim"
     runs-on: ubuntu-latest
     steps:
       # Checkout and login
@@ -30,4 +29,4 @@ jobs:
           push: true
           target: "pfcpsim-client"
           tags: |
-            latest, ${GITHUB_SHA::7}
+            ${{ env.DOCKER_REPOSITORY }}:latest, ${{ env.DOCKER_REPOSITORY }}:${GITHUB_SHA::7}
