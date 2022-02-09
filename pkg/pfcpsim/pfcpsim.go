@@ -95,8 +95,6 @@ func (c *PFCPClient) sendMsg(msg message.Message) error {
 	}
 
 	if c.remoteAddr != "" {
-		// Connection does not contain remote address when established using ListenN4.
-		// remoteAddr was set when receiving
 		rAddr, err := net.ResolveUDPAddr("udp", c.remoteAddr)
 		if err != nil {
 			return err
@@ -164,7 +162,7 @@ func (c *PFCPClient) ListenN4() error {
 		return NewInvalidRequestError()
 	}
 
-	// Save remote address when connection was established while listening
+	// Save remote address when connection is established while listening
 	c.remoteAddr = remoteAddr.String()
 	c.conn = conn
 
@@ -174,12 +172,6 @@ func (c *PFCPClient) ListenN4() error {
 		c.conn = nil
 		return err
 	}
-
-	// Remove deadline before starting receiveFromN4's goroutine
-	//err = c.conn.SetDeadline(time.Time{})
-	//if err != nil {
-	//	return err
-	//}
 
 	ctx, cancelFunc := context.WithCancel(c.ctx)
 	c.cancelHeartbeats = cancelFunc
@@ -428,7 +420,6 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 	if !c.isAssociationActive {
 		return nil, NewAssociationInactiveError()
 	}
-
 	err := c.SendSessionEstablishmentRequest(pdrs, fars, qers)
 	if err != nil {
 		return nil, err
