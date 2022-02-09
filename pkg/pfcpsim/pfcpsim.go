@@ -121,6 +121,20 @@ func (c *PFCPClient) receiveFromN4() {
 	}
 }
 
+// ListenN4 allows for UP initiated PFCP associations.
+func (c *PFCPClient) ListenN4() error {
+	conn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: PFCPStandardPort})
+	if err != nil {
+		return err
+	}
+
+	c.conn = conn
+
+	go c.receiveFromN4()
+
+	return nil
+}
+
 func (c *PFCPClient) ConnectN4(remoteAddr string) error {
 	raddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", remoteAddr, PFCPStandardPort))
 	if err != nil {
