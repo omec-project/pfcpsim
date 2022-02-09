@@ -29,4 +29,5 @@ jobs:
           push: true
           target: "pfcpsim-client"
           tags: |
-            ${{ env.DOCKER_REPOSITORY }}:latest, ${{ env.DOCKER_REPOSITORY }}:${GITHUB_SHA::7}
+            ${{ env.DOCKER_REPOSITORY }}:latest
+            ${{ env.DOCKER_REPOSITORY }}:${GITHUB_SHA::7}
