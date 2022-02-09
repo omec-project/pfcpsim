@@ -1,6 +1,3 @@
-//go:build !race || ignore
-// +build !race ignore
-
 /*
  * SPDX-License-Identifier: Apache-2.0
  * Copyright 2022 Open Networking Foundation
@@ -31,23 +28,38 @@ func Test_ListenN4(t *testing.T) {
 
 		err := CPSim.ListenN4()
 		require.NoError(t, err)
+		// Once association is set up, ListenN4 returns
+		// Now let CP try to establish a fake session
+		_, err = CPSim.EstablishSession(nil, nil, nil)
+		require.NoError(t, err)
 	}(wg)
 
 	// wait for CPSim to start listening
 	time.Sleep(time.Millisecond * 50)
 
-	// emulate UPF starting a PFCP association
-	upfDial, err := net.Dial("udp", fmt.Sprintf(":%v", PFCPStandardPort))
-	require.NoError(t, err)
-
+	// Start mockUPF
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
-		// function that mocks a UPF that answers to a session establishment request
-		buf := make([]byte, 1500)
 
+		mockUPFConn, err := net.Dial("udp", fmt.Sprintf(":%v", PFCPStandardPort))
+		require.NoError(t, err)
+
+		assocReq := message.NewAssociationSetupRequest(
+			1,
+			ieLib.NewRecoveryTimeStamp(time.Now()),
+			ieLib.NewNodeID("127.0.0.1", "", ""),
+		)
+
+		marshal, _ := assocReq.Marshal()
+
+		_, err = mockUPFConn.Write(marshal)
+		require.NoError(t, err)
+
+		buf := make([]byte, 1500)
+		// Keep reading until a session establish request is received
 		for {
-			n, err := upfDial.Read(buf)
+			n, err := mockUPFConn.Read(buf)
 			require.NoError(t, err)
 
 			msg, err := message.Parse(buf[:n])
@@ -65,31 +77,13 @@ func Test_ListenN4(t *testing.T) {
 				)
 
 				b, _ := mockResponse.Marshal()
-
-				_, err = upfDial.Write(b)
+				_, err = mockUPFConn.Write(b)
 				require.NoError(t, err)
 
 				return
 			}
 		}
 	}(wg)
-
-	assocReq := message.NewAssociationSetupRequest(
-		1,
-		ieLib.NewRecoveryTimeStamp(time.Now()),
-		ieLib.NewNodeID("127.0.0.1", "", ""),
-	)
-
-	marshal, _ := assocReq.Marshal()
-
-	_, err = upfDial.Write(marshal)
-	require.NoError(t, err)
-
-	// Let CPSim process the association request
-	time.Sleep(time.Millisecond * 50)
-	// CP Establish a fake session.
-	_, err = CPSim.EstablishSession(nil, nil, nil)
-	require.NoError(t, err)
 
 	wg.Wait()
 }
