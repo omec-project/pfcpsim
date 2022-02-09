@@ -191,6 +191,14 @@ func (c *PFCPClient) ConnectN4(remoteAddr string) error {
 		return err
 	}
 
+	if host, port, err := net.SplitHostPort(remoteAddr); err == nil {
+		// remoteAddr contains also a port. Use provided port instead of PFCPStandardPort
+		raddr, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%s", host, port))
+		if err != nil {
+			return err
+		}
+	}
+
 	conn, err := net.DialUDP("udp", nil, raddr)
 	if err != nil {
 		return err
