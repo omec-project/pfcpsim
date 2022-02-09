@@ -13,7 +13,7 @@ DOCKER_BUILDKIT          ?= 1
 
 DOCKER_TARGET           ?= pfcpsim-client
 
-docker-build:
+build-pfcpsim-client:
 	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build -f Dockerfile . \
 	--target ${DOCKER_TARGET} \
 	--tag ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}${DOCKER_TARGET}:${DOCKER_TAG}
