@@ -15,14 +15,19 @@ jobs:
       DOCKER_REPOSITORY: "pfcpsim/"
     runs-on: ubuntu-latest
     steps:
-      # Checkout and build
+      # Checkout and login
       - uses: actions/checkout@v2.4.0
       - uses: docker/login-action@v1.12.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.CR_PAT }}
-      - name: Build and push Docker image
-        run: |
-          make docker-build 
-          make docker-push
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          target: "pfcpsim-client"
+          tags: |
+            latest, ${GITHUB_SHA::7}
