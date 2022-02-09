@@ -3,7 +3,7 @@
  * Copyright 2022 Open Networking Foundation
  */
 
-package server
+package pfcpsim
 
 import (
 	"fmt"

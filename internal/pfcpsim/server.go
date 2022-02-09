@@ -3,7 +3,7 @@
  * Copyright 2022 Open Networking Foundation
  */
 
-package server
+package pfcpsim
 
 import (
 	"context"
@@ -17,7 +17,7 @@ import (
 )
 
 // pfcpSimServer implements the Protobuf methods and keeps a connection to a remote PFCP Agent peer.
-// Its state is handled in internal/server/state.go
+// Its state is handled in internal/pfcpsim/state.go
 type pfcpSimServer struct{}
 
 func (P pfcpSimServer) ConnectToRemotePeer(ctx context.Context, request *pb.EmptyRequest) (*pb.Response, error) {

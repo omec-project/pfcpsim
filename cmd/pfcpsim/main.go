@@ -14,7 +14,7 @@ import (
 	"syscall"
 
 	pb "github.com/omec-project/pfcpsim/api"
-	"github.com/omec-project/pfcpsim/internal/server"
+	"github.com/omec-project/pfcpsim/internal/pfcpsim"
 	"github.com/pborman/getopt/v2"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -46,7 +46,7 @@ func startServer(apiDoneChannel chan bool, port string, group *sync.WaitGroup) {
 
 	grpcServer := grpc.NewServer()
 	// Initialize server
-	pfcpServer, err := server.NewPFCPSimServer(*remotePeerAddress, *upfAddress, *nodeBAddress, *ueAddressPool)
+	pfcpServer, err := pfcpsim.NewPFCPSimServer(*remotePeerAddress, *upfAddress, *nodeBAddress, *ueAddressPool)
 	if err != nil {
 		log.Fatalf("Could not create pfcpSimServer: %v", err)
 	}
@@ -63,16 +63,16 @@ func startServer(apiDoneChannel chan bool, port string, group *sync.WaitGroup) {
 
 	x := <-apiDoneChannel
 	if x {
-		// if the API channel is closed, stop the gRPC server
+		// if the API channel is closed, stop the gRPC pfcpsim
 		grpcServer.Stop()
-		log.Warnf("Stopping API gRPC server")
+		log.Warnf("Stopping API gRPC pfcpsim")
 	}
 
 	group.Done()
 }
 
 func main() {
-	// TODO make server configuration possible through RPC instead of using flags
+	// TODO make pfcpsim configuration possible through RPC instead of using flags
 	remotePeerAddress = getopt.StringLong("remote-peer-address", 'r', "127.0.0.1", "Address or hostname of the remote peer (PFCP Agent)")
 	upfAddress = getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF")
 	ueAddressPool = getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")
