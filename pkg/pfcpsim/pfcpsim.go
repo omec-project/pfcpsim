@@ -127,7 +127,7 @@ func (c *PFCPClient) ListenN4() error {
 	if err != nil {
 		return err
 	}
-	// Expect a request in 10 seconds, otherwise close connection.
+	// Expect a request in 10 seconds.
 	if err = conn.SetDeadline(time.Now().Add(10 * time.Second)); err != nil {
 		return err
 	}
