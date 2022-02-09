@@ -42,7 +42,9 @@ type PFCPClient struct {
 	seqNumLock     sync.Mutex
 
 	localAddr string
-	conn      *net.UDPConn
+	// remoteAddr is needed when Association is performed by the UP
+	remoteAddr string
+	conn       *net.UDPConn
 }
 
 func NewPFCPClient(localAddr string) *PFCPClient {
@@ -92,6 +94,20 @@ func (c *PFCPClient) sendMsg(msg message.Message) error {
 		return err
 	}
 
+	if c.remoteAddr != "" {
+		// Connection does not contain remote address when established using ListenN4.
+		// remoteAddr was set when receiving
+		rAddr, err := net.ResolveUDPAddr("udp", c.remoteAddr)
+		if err != nil {
+			return err
+		}
+		if _, err := c.conn.WriteToUDP(b, rAddr); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
 	if _, err := c.conn.Write(b); err != nil {
 		return err
 	}
@@ -127,13 +143,9 @@ func (c *PFCPClient) ListenN4() error {
 	if err != nil {
 		return err
 	}
-	// Expect a request in 10 seconds.
-	if err = conn.SetDeadline(time.Now().Add(10 * time.Second)); err != nil {
-		return err
-	}
 
 	buf := make([]byte, 1500)
-	n, _, err := conn.ReadFrom(buf)
+	n, remoteAddr, err := conn.ReadFromUDP(buf)
 
 	if err != nil {
 		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
@@ -152,7 +164,8 @@ func (c *PFCPClient) ListenN4() error {
 		return NewInvalidRequestError()
 	}
 
-	// use local connection to send response
+	// Save remote address when connection was established while listening
+	c.remoteAddr = remoteAddr.String()
 	c.conn = conn
 
 	err = c.SendAssociationSetupResponse()
@@ -161,8 +174,20 @@ func (c *PFCPClient) ListenN4() error {
 		c.conn = nil
 		return err
 	}
-	// Assuming UP received the response, association is now complete.
+
+	// Remove deadline before starting receiveFromN4's goroutine
+	//err = c.conn.SetDeadline(time.Time{})
+	//if err != nil {
+	//	return err
+	//}
+
+	ctx, cancelFunc := context.WithCancel(c.ctx)
+	c.cancelHeartbeats = cancelFunc
+
+	c.setAssociationStatus(true)
+
 	go c.receiveFromN4()
+	go c.StartHeartbeats(ctx)
 
 	return nil
 }
