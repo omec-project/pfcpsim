@@ -147,10 +147,6 @@ func (c *PFCPClient) ListenN4() error {
 	n, remoteAddr, err := conn.ReadFromUDP(buf)
 
 	if err != nil {
-		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-			return NewTimeoutExpiredError(netErr)
-		}
-
 		return err
 	}
 
