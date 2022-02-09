@@ -127,11 +127,19 @@ func (c *PFCPClient) ListenN4() error {
 	if err != nil {
 		return err
 	}
+	// Expect a request in 10 seconds, otherwise close connection.
+	if err = conn.SetDeadline(time.Now().Add(10 * time.Second)); err != nil {
+		return err
+	}
 
 	buf := make([]byte, 1500)
-	// read directly from connection and expect an Association Setup Request
 	n, _, err := conn.ReadFrom(buf)
+
 	if err != nil {
+		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+			return NewTimeoutExpiredError(netErr)
+		}
+
 		return err
 	}
 
