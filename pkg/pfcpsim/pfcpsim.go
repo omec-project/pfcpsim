@@ -121,16 +121,31 @@ func (c *PFCPClient) receiveFromN4() {
 	}
 }
 
-// ListenN4 allows for UP initiated PFCP associations.
+// ListenN4 allows for UP initiated PFCP associations. It waits for a connection and for an association request from UP.
 func (c *PFCPClient) ListenN4() error {
 	conn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: PFCPStandardPort})
 	if err != nil {
 		return err
 	}
 
-	c.conn = conn
+	buf := make([]byte, 1500)
+	// read directly from connection and expect an Association Setup Request
+	n, _, err := conn.ReadFrom(buf)
+	msg, err := message.Parse(buf[:n])
 
+	if _, ok := msg.(*message.AssociationSetupRequest); !ok {
+		return NewInvalidRequestError()
+	}
+
+	err = c.SendAssociationSetupResponse()
+	if err != nil {
+		return err
+	}
+
+	// Assuming UP received the response, association is now complete.
 	go c.receiveFromN4()
+
+	c.conn = conn
 
 	return nil
 }
@@ -191,6 +206,18 @@ func (c *PFCPClient) SendAssociationSetupRequest(ie ...*ieLib.IE) error {
 	assocReq.IEs = append(assocReq.IEs, ie...)
 
 	return c.sendMsg(assocReq)
+}
+
+func (c *PFCPClient) SendAssociationSetupResponse(ie ...*ieLib.IE) error {
+	assocRes := message.NewAssociationSetupResponse(
+		c.getNextSequenceNumber(),
+		ieLib.NewRecoveryTimeStamp(time.Now()),
+		ieLib.NewNodeID(c.localAddr, "", ""),
+	)
+
+	assocRes.IEs = append(assocRes.IEs, ie...)
+
+	return c.sendMsg(assocRes)
 }
 
 func (c *PFCPClient) SendHeartbeatRequest() error {
