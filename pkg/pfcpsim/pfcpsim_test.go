@@ -1,3 +1,6 @@
+//go:build !race || ignore
+// +build !race ignore
+
 /*
  * SPDX-License-Identifier: Apache-2.0
  * Copyright 2022 Open Networking Foundation
@@ -23,8 +26,9 @@ func Test_ListenN4(t *testing.T) {
 
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
-		// Start CP in goroutine, awaiting for UP to start association
+		// Start CP in goroutine, awaiting UP to start association
 		defer wg.Done()
+
 		err := CPSim.ListenN4()
 		require.NoError(t, err)
 	}(wg)
@@ -41,6 +45,7 @@ func Test_ListenN4(t *testing.T) {
 		defer wg.Done()
 		// function that mocks a UPF that answers to a session establishment request
 		buf := make([]byte, 1500)
+
 		for {
 			n, err := upfDial.Read(buf)
 			require.NoError(t, err)
@@ -49,7 +54,6 @@ func Test_ListenN4(t *testing.T) {
 			require.NoError(t, err)
 
 			if _, ok := msg.(*message.SessionEstablishmentRequest); ok {
-
 				mockResponse := message.NewSessionEstablishmentResponse(
 					0,
 					0,
@@ -68,7 +72,6 @@ func Test_ListenN4(t *testing.T) {
 				return
 			}
 		}
-
 	}(wg)
 
 	assocReq := message.NewAssociationSetupRequest(

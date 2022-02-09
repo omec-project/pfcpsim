@@ -42,7 +42,7 @@ type PFCPClient struct {
 	seqNumLock     sync.Mutex
 
 	localAddr string
-	// remoteAddr is needed when Association is performed by the UP
+	// remoteAddr is needed when association is performed by the UP
 	remoteAddr string
 	conn       *net.UDPConn
 }
@@ -99,6 +99,7 @@ func (c *PFCPClient) sendMsg(msg message.Message) error {
 		if err != nil {
 			return err
 		}
+
 		if _, err := c.conn.WriteToUDP(b, rAddr); err != nil {
 			return err
 		}
@@ -420,6 +421,7 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 	if !c.isAssociationActive {
 		return nil, NewAssociationInactiveError()
 	}
+
 	err := c.SendSessionEstablishmentRequest(pdrs, fars, qers)
 	if err != nil {
 		return nil, err
