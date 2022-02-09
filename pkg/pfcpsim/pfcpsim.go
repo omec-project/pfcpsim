@@ -131,7 +131,14 @@ func (c *PFCPClient) ListenN4() error {
 	buf := make([]byte, 1500)
 	// read directly from connection and expect an Association Setup Request
 	n, _, err := conn.ReadFrom(buf)
+	if err != nil {
+		return err
+	}
+
 	msg, err := message.Parse(buf[:n])
+	if err != nil {
+		return err
+	}
 
 	if _, ok := msg.(*message.AssociationSetupRequest); !ok {
 		return NewInvalidRequestError()
