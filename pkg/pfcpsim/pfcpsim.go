@@ -137,15 +137,17 @@ func (c *PFCPClient) ListenN4() error {
 		return NewInvalidRequestError()
 	}
 
+	// use local connection to send response
+	c.conn = conn
+
 	err = c.SendAssociationSetupResponse()
 	if err != nil {
+		// clear connection in case of error
+		c.conn = nil
 		return err
 	}
-
 	// Assuming UP received the response, association is now complete.
 	go c.receiveFromN4()
-
-	c.conn = conn
 
 	return nil
 }
