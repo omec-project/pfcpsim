@@ -174,7 +174,7 @@ func (P ConcretePFCPSimServer) CreateSession(ctx context.Context, request *pb.Cr
 		uplinkAppQerID := appQerID
 		downlinkAppQerID := appQerID + 1
 
-		sdfFilter := "permit out ip from any to assigned"
+		sdfFilter := "permit out ip from 0.0.0.0/0 to assigned"
 
 		pdrs := []*ieLib.IE{
 			// UplinkPDR
