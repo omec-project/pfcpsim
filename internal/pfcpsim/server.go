@@ -45,14 +45,7 @@ func (P ConcretePFCPSimServer) Configure(ctx context.Context, request *pb.Config
 
 	upfN3Address = request.UpfN3Address
 
-	if net.ParseIP(request.GnodeBAddress) == nil {
-		log.Errorf("Could not retrieve IP address of gNodeB")
-		return &pb.Response{}, status.Error(codes.Aborted, "Could not retrieve IP address of gNodeB")
-	}
-
-	gnodeBAddress = request.GnodeBAddress
-
-	configurationMsg := fmt.Sprintf("Server is configured: \n\tRemote peer address: %v, N3 interface address: %v, gNodeB address: %v ", remotePeerAddress, upfN3Address, gnodeBAddress)
+	configurationMsg := fmt.Sprintf("Server is configured: \n\tRemote peer address: %v, N3 interface address: %v ", remotePeerAddress, upfN3Address)
 	log.Info(configurationMsg)
 
 	return &pb.Response{
@@ -151,12 +144,22 @@ func (P ConcretePFCPSimServer) CreateSession(ctx context.Context, request *pb.Cr
 	baseID := int(request.BaseID)
 	count := int(request.Count)
 
-	ueAddress := iplib.NextIP(net.IP(request.UeAddressPool)).String()
+	lastUEAddr, _, err := net.ParseCIDR(request.UeAddressPool)
+	if err != nil {
+		errMsg := fmt.Sprintf(" Could not parse Address Pool: %v", err)
+		log.Error(errMsg)
+		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
+	}
+
+	nodebAddr := request.NodeBAddress
 
 	for i := baseID; i < (count + baseID); i++ {
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i)
 		downlinkTEID := uint32(i + 1)
+
+		ueAddress := iplib.NextIP(lastUEAddr)
+		lastUEAddr = ueAddress
 
 		uplinkFarID := uint32(i)
 		downlinkFarID := uint32(i + 1)
@@ -171,6 +174,8 @@ func (P ConcretePFCPSimServer) CreateSession(ctx context.Context, request *pb.Cr
 		uplinkAppQerID := appQerID
 		downlinkAppQerID := appQerID + 1
 
+		sdfFilter := "permit out ip from any to assigned"
+
 		pdrs := []*ieLib.IE{
 			// UplinkPDR
 			session.NewPDRBuilder().
@@ -181,7 +186,7 @@ func (P ConcretePFCPSimServer) CreateSession(ctx context.Context, request *pb.Cr
 				AddQERID(sessQerID).
 				AddQERID(uplinkAppQerID).
 				WithN3Address(upfN3Address).
-				WithSDFFilter("permit out ip from 0.0.0.0/0 to assigned").
+				WithSDFFilter(sdfFilter).
 				MarkAsUplink().
 				BuildPDR(),
 
@@ -190,8 +195,8 @@ func (P ConcretePFCPSimServer) CreateSession(ctx context.Context, request *pb.Cr
 				WithID(dowlinkPdrID).
 				WithMethod(session.Create).
 				WithPrecedence(100).
-				WithUEAddress(ueAddress).
-				WithSDFFilter("permit out ip from 0.0.0.0/0 to assigned").
+				WithUEAddress(ueAddress.String()).
+				WithSDFFilter(sdfFilter).
 				AddQERID(sessQerID).
 				AddQERID(downlinkAppQerID).
 				WithFARID(downlinkFarID).
@@ -215,7 +220,7 @@ func (P ConcretePFCPSimServer) CreateSession(ctx context.Context, request *pb.Cr
 				WithMethod(session.Create).
 				WithDstInterface(ieLib.DstInterfaceAccess).
 				WithTEID(downlinkTEID).
-				WithDownlinkIP(gnodeBAddress).
+				WithDownlinkIP(nodebAddr).
 				BuildFAR(),
 		}
 
@@ -249,8 +254,6 @@ func (P ConcretePFCPSimServer) CreateSession(ctx context.Context, request *pb.Cr
 		insertSession(i, sess)
 	}
 
-	log.Infof("active sessions: %v, count: %v", len(activeSessions), count)
-
 	infoMsg := fmt.Sprintf("%v sessions were established", count)
 	log.Info(infoMsg)
 
@@ -268,6 +271,13 @@ func (P ConcretePFCPSimServer) ModifySession(ctx context.Context, request *pb.Mo
 	// TODO handle buffer, notifyCP flags and 5G as well
 	baseID := int(request.BaseID)
 	count := int(request.Count)
+	nodeBaddress := request.NodeBAddress
+
+	if len(activeSessions) < count {
+		err := pfcpsim.NewNotEnoughSessionsError()
+		log.Error(err)
+		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
+	}
 
 	for i := baseID; i < (count + baseID); i++ {
 		newFARs := []*ieLib.IE{
@@ -278,17 +288,22 @@ func (P ConcretePFCPSimServer) ModifySession(ctx context.Context, request *pb.Mo
 				WithAction(session.ActionForward).
 				WithDstInterface(ieLib.DstInterfaceAccess).
 				WithTEID(uint32(i + 1)). // Same downlinkTEID that was generated in create sessions
-				WithDownlinkIP(gnodeBAddress).
+				WithDownlinkIP(nodeBaddress).
 				BuildFAR(),
 		}
 
-		err := sim.ModifySession(getSession(i), nil, newFARs, nil)
+		sess, ok := getSession(i)
+		if !ok {
+			errMsg := fmt.Sprintf("Could not retrieve session with index %v", i)
+			log.Error(errMsg)
+			return &pb.Response{}, status.Error(codes.Internal, errMsg)
+		}
+
+		err := sim.ModifySession(sess, nil, newFARs, nil)
 		if err != nil {
 			return &pb.Response{}, status.Error(codes.Internal, err.Error())
 		}
 	}
-
-	log.Infof("active sessions: %v, count: %v", len(activeSessions), count)
 
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
@@ -306,13 +321,16 @@ func (P ConcretePFCPSimServer) DeleteSession(ctx context.Context, request *pb.De
 
 	if len(activeSessions) < count {
 		err := pfcpsim.NewNotEnoughSessionsError()
-		log.Error(err.Error())
+		log.Error(err)
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
 
 	for i := baseID; i < (count + baseID); i++ {
-		sess := getSession(i)
-		log.Info("Got session: %v", sess)
+		sess, ok := getSession(i)
+		if !ok {
+			log.Infof("Session was nil, skip.")
+			continue
+		}
 
 		err := sim.DeleteSession(sess)
 		if err != nil {
@@ -323,8 +341,6 @@ func (P ConcretePFCPSimServer) DeleteSession(ctx context.Context, request *pb.De
 		// remove from activeSessions
 		deleteSession(i)
 	}
-
-	log.Infof("active sessions: %v, count: %v", len(activeSessions), count)
 
 	return &pb.Response{
 		StatusCode: int32(codes.OK),

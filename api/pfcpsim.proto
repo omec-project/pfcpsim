@@ -22,7 +22,6 @@ message ModifySessionRequest {
 
 message ConfigureRequest {
   string upfN3Address = 1;
-  string gnodeBAddress = 2;
   string remotePeerAddress = 3;
 }
 

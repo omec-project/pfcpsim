@@ -22,7 +22,6 @@ var (
 
 	remotePeerAddress string
 	upfN3Address      string
-	gnodeBAddress     string
 
 	// Emulates 5G SMF/ 4G SGW
 	sim                 *pfcpsim.PFCPClient
@@ -36,8 +35,9 @@ func insertSession(index int, session *pfcpsim.PFCPSession) {
 	activeSessions[index] = session
 }
 
-func getSession(index int) *pfcpsim.PFCPSession {
-	return activeSessions[index]
+func getSession(index int) (*pfcpsim.PFCPSession, bool) {
+	element, ok := activeSessions[index]
+	return element, ok
 }
 
 func deleteSession(index int) {
@@ -48,7 +48,7 @@ func deleteSession(index int) {
 }
 
 func isConfigured() bool {
-	if upfN3Address != "" && gnodeBAddress != "" && remotePeerAddress != "" {
+	if upfN3Address != "" && remotePeerAddress != "" {
 		return true
 	}
 

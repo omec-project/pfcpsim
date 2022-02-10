@@ -21,22 +21,8 @@ import (
 )
 
 const (
-	// Values for mock-up4 environment
-	defaultGNodeBAddress = "198.18.0.10"
-	defaultUeAddressPool = "17.0.0.0/24"
-
-	defaultUpfN3Address = "198.18.0.1"
-
 	defaultgRPCServerPort = "54321"
 )
-
-//var (
-//	remotePeerAddress *string
-//	upfAddress        *string
-//	nodeBAddress      *string
-//
-//	ueAddressPool *string
-//)
 
 func startServer(apiDoneChannel chan bool, port string, group *sync.WaitGroup) {
 	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%v", port))
@@ -67,11 +53,6 @@ func startServer(apiDoneChannel chan bool, port string, group *sync.WaitGroup) {
 }
 
 func main() {
-	//remotePeerAddress = getopt.StringLong("remote-peer-address", 'r', "127.0.0.1", "Address or hostname of the remote peer (PFCP Agent)")
-	//upfAddress = getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF")
-	//ueAddressPool = getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")
-	//nodeBAddress = getopt.StringLong("nodeb-address", 'g', defaultGNodeBAddress, "The IPv4 of (g/e)NodeBAddress")
-
 	port := getopt.StringLong("port", 'p', defaultgRPCServerPort, "the gRPC Server port to listen")
 
 	optHelp := getopt.BoolLong("help", 0, "Help")

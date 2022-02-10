@@ -72,7 +72,6 @@ func main() {
 	case "configure":
 		res, err := simClient.Configure(context.Background(), &pb.ConfigureRequest{
 			UpfN3Address:      *n3Addr,
-			GnodeBAddress:     *nodeBAddr,
 			RemotePeerAddress: *remotePeer,
 		})
 		if err != nil {
