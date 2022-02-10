@@ -250,11 +250,10 @@ func (P ConcretePFCPSimServer) CreateSession(ctx context.Context, request *pb.Cr
 		if err != nil {
 			return &pb.Response{}, status.Error(codes.Internal, err.Error())
 		}
-		log.Infof("Saved session: %v", sess)
 		insertSession(i, sess)
 	}
 
-	infoMsg := fmt.Sprintf("%v sessions were established", count)
+	infoMsg := fmt.Sprintf("%v sessions were established using %v as baseID ", count, baseID)
 	log.Info(infoMsg)
 
 	return &pb.Response{
@@ -283,7 +282,7 @@ func (P ConcretePFCPSimServer) ModifySession(ctx context.Context, request *pb.Mo
 		newFARs := []*ieLib.IE{
 			// Downlink FAR
 			session.NewFARBuilder().
-				WithID(uint32(i)).
+				WithID(uint32(i)). // Same FARID that was generated in create sessions
 				WithMethod(session.Update).
 				WithAction(session.ActionForward).
 				WithDstInterface(ieLib.DstInterfaceAccess).
@@ -305,9 +304,12 @@ func (P ConcretePFCPSimServer) ModifySession(ctx context.Context, request *pb.Mo
 		}
 	}
 
+	infoMsg := fmt.Sprintf("%v sessions were modified", count)
+	log.Info(infoMsg)
+
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
-		Message:    fmt.Sprintf("%v sessions correctly modified", count),
+		Message:    infoMsg,
 	}, nil
 }
 
@@ -328,8 +330,9 @@ func (P ConcretePFCPSimServer) DeleteSession(ctx context.Context, request *pb.De
 	for i := baseID; i < (count + baseID); i++ {
 		sess, ok := getSession(i)
 		if !ok {
-			log.Infof("Session was nil, skip.")
-			continue
+			errMsg := "Session was nil. Check baseID"
+			log.Error(errMsg)
+			return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 		}
 
 		err := sim.DeleteSession(sess)
@@ -337,13 +340,15 @@ func (P ConcretePFCPSimServer) DeleteSession(ctx context.Context, request *pb.De
 			log.Error(err.Error())
 			return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 		}
-		log.Infof("Session removed :%v", sess)
 		// remove from activeSessions
 		deleteSession(i)
 	}
 
+	infoMsg := fmt.Sprintf("%v sessions deleted; activeSessions: %v", count, len(activeSessions))
+	log.Info(infoMsg)
+
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
-		Message:    fmt.Sprintf("%v sessions deleted", count),
+		Message:    infoMsg,
 	}, nil
 }
