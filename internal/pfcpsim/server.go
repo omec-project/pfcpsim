@@ -282,7 +282,7 @@ func (P ConcretePFCPSimServer) ModifySession(ctx context.Context, request *pb.Mo
 				BuildFAR(),
 		}
 
-		err := sim.ModifySession(getSession(i-baseID), nil, newFARs, nil)
+		err := sim.ModifySession(getSession(i), nil, newFARs, nil)
 		if err != nil {
 			return &pb.Response{}, status.Error(codes.Internal, err.Error())
 		}
