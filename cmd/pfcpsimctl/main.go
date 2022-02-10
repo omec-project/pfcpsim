@@ -52,7 +52,7 @@ func main() {
 	count := getopt.IntLong("count", 'n', 1, "The number of sessions to create/modify/delete")
 	srvAddr := getopt.StringLong("server", 's', defaultAddress, "the gRPC Server address")
 	baseId := getopt.IntLong("baseID", 'b', 1, "First ID used to generate all other ID fields.")
-	n3Addr := getopt.StringLong("n3-addr", 'n', defaultN3Address, "The IPv4 address of the UPF's N3 interface")
+	n3Addr := getopt.StringLong("n3-addr", 'a', defaultN3Address, "The IPv4 address of the UPF's N3 interface")
 	ueAddrPool := getopt.StringLong("ue-pool", 'u', defaultUEAddressPool, "The IPv4 prefix from which UE addresses will be drawn.")
 	nodeBAddr := getopt.StringLong("gnb-addr", 'g', defaultNodeBAddress, "The IPv4 address of the NodeB")
 	remotePeer := getopt.StringLong("remote-peer", 'r', defaultRemotePeerAddress, "The remote PFCP Agent address")
