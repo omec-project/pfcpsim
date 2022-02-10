@@ -8,14 +8,27 @@ option go_package = ".;api";
 
 message CreateSessionRequest {
   int32 count = 1;
+  int32 baseID = 2;
+  string nodeBAddress = 3;
+  string ueAddressPool = 4;
 }
 
 message ModifySessionRequest {
   int32 count = 1;
+  int32 baseID = 2;
+  string nodeBAddress = 3;
+  string ueAddressPool = 4;
+}
+
+message ConfigureRequest {
+  string upfN3Address = 1;
+  string gnodeBAddress = 2;
+  string remotePeerAddress = 3;
 }
 
 message DeleteSessionRequest {
   int32 count = 1;
+  int32 baseID = 2;
 }
 
 message EmptyRequest {}
@@ -26,6 +39,8 @@ message Response {
 }
 
 service PFCPSim {
+  rpc Configure (ConfigureRequest) returns (Response) {}
+
   rpc Associate (EmptyRequest) returns (Response) {}
   rpc Disassociate (EmptyRequest) returns (Response) {}
 
@@ -34,6 +49,6 @@ service PFCPSim {
   rpc DeleteSession (DeleteSessionRequest) returns (Response) {}
   // Interrupt emulates pfcpsim crash
   rpc Interrupt(EmptyRequest) returns (Response) {}
-  // Establish connection to remote peer (e.g. remote PFCP agent)
+  // Establish connection to remote peer
   rpc ConnectToRemotePeer(EmptyRequest) returns (Response) {}
 }

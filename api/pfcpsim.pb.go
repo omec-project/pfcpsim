@@ -37,7 +37,10 @@ type CreateSessionRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Count int32 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	Count         int32  `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	BaseID        int32  `protobuf:"varint,2,opt,name=baseID,proto3" json:"baseID,omitempty"`
+	NodeBAddress  string `protobuf:"bytes,3,opt,name=nodeBAddress,proto3" json:"nodeBAddress,omitempty"`
+	UeAddressPool string `protobuf:"bytes,4,opt,name=ueAddressPool,proto3" json:"ueAddressPool,omitempty"`
 }
 
 func (x *CreateSessionRequest) Reset() {
@@ -79,12 +82,36 @@ func (x *CreateSessionRequest) GetCount() int32 {
 	return 0
 }
 
+func (x *CreateSessionRequest) GetBaseID() int32 {
+	if x != nil {
+		return x.BaseID
+	}
+	return 0
+}
+
+func (x *CreateSessionRequest) GetNodeBAddress() string {
+	if x != nil {
+		return x.NodeBAddress
+	}
+	return ""
+}
+
+func (x *CreateSessionRequest) GetUeAddressPool() string {
+	if x != nil {
+		return x.UeAddressPool
+	}
+	return ""
+}
+
 type ModifySessionRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Count int32 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	Count         int32  `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	BaseID        int32  `protobuf:"varint,2,opt,name=baseID,proto3" json:"baseID,omitempty"`
+	NodeBAddress  string `protobuf:"bytes,3,opt,name=nodeBAddress,proto3" json:"nodeBAddress,omitempty"`
+	UeAddressPool string `protobuf:"bytes,4,opt,name=ueAddressPool,proto3" json:"ueAddressPool,omitempty"`
 }
 
 func (x *ModifySessionRequest) Reset() {
@@ -126,18 +153,103 @@ func (x *ModifySessionRequest) GetCount() int32 {
 	return 0
 }
 
+func (x *ModifySessionRequest) GetBaseID() int32 {
+	if x != nil {
+		return x.BaseID
+	}
+	return 0
+}
+
+func (x *ModifySessionRequest) GetNodeBAddress() string {
+	if x != nil {
+		return x.NodeBAddress
+	}
+	return ""
+}
+
+func (x *ModifySessionRequest) GetUeAddressPool() string {
+	if x != nil {
+		return x.UeAddressPool
+	}
+	return ""
+}
+
+type ConfigureRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	UpfN3Address      string `protobuf:"bytes,1,opt,name=upfN3Address,proto3" json:"upfN3Address,omitempty"`
+	GnodeBAddress     string `protobuf:"bytes,2,opt,name=gnodeBAddress,proto3" json:"gnodeBAddress,omitempty"`
+	RemotePeerAddress string `protobuf:"bytes,3,opt,name=remotePeerAddress,proto3" json:"remotePeerAddress,omitempty"`
+}
+
+func (x *ConfigureRequest) Reset() {
+	*x = ConfigureRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_pfcpsim_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ConfigureRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConfigureRequest) ProtoMessage() {}
+
+func (x *ConfigureRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pfcpsim_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConfigureRequest.ProtoReflect.Descriptor instead.
+func (*ConfigureRequest) Descriptor() ([]byte, []int) {
+	return file_pfcpsim_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ConfigureRequest) GetUpfN3Address() string {
+	if x != nil {
+		return x.UpfN3Address
+	}
+	return ""
+}
+
+func (x *ConfigureRequest) GetGnodeBAddress() string {
+	if x != nil {
+		return x.GnodeBAddress
+	}
+	return ""
+}
+
+func (x *ConfigureRequest) GetRemotePeerAddress() string {
+	if x != nil {
+		return x.RemotePeerAddress
+	}
+	return ""
+}
+
 type DeleteSessionRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Count int32 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	Count  int32 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	BaseID int32 `protobuf:"varint,2,opt,name=baseID,proto3" json:"baseID,omitempty"`
 }
 
 func (x *DeleteSessionRequest) Reset() {
 	*x = DeleteSessionRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pfcpsim_proto_msgTypes[2]
+		mi := &file_pfcpsim_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -150,7 +262,7 @@ func (x *DeleteSessionRequest) String() string {
 func (*DeleteSessionRequest) ProtoMessage() {}
 
 func (x *DeleteSessionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pfcpsim_proto_msgTypes[2]
+	mi := &file_pfcpsim_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -163,12 +275,19 @@ func (x *DeleteSessionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteSessionRequest.ProtoReflect.Descriptor instead.
 func (*DeleteSessionRequest) Descriptor() ([]byte, []int) {
-	return file_pfcpsim_proto_rawDescGZIP(), []int{2}
+	return file_pfcpsim_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *DeleteSessionRequest) GetCount() int32 {
 	if x != nil {
 		return x.Count
+	}
+	return 0
+}
+
+func (x *DeleteSessionRequest) GetBaseID() int32 {
+	if x != nil {
+		return x.BaseID
 	}
 	return 0
 }
@@ -182,7 +301,7 @@ type EmptyRequest struct {
 func (x *EmptyRequest) Reset() {
 	*x = EmptyRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pfcpsim_proto_msgTypes[3]
+		mi := &file_pfcpsim_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -195,7 +314,7 @@ func (x *EmptyRequest) String() string {
 func (*EmptyRequest) ProtoMessage() {}
 
 func (x *EmptyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pfcpsim_proto_msgTypes[3]
+	mi := &file_pfcpsim_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -208,7 +327,7 @@ func (x *EmptyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmptyRequest.ProtoReflect.Descriptor instead.
 func (*EmptyRequest) Descriptor() ([]byte, []int) {
-	return file_pfcpsim_proto_rawDescGZIP(), []int{3}
+	return file_pfcpsim_proto_rawDescGZIP(), []int{4}
 }
 
 type Response struct {
@@ -223,7 +342,7 @@ type Response struct {
 func (x *Response) Reset() {
 	*x = Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pfcpsim_proto_msgTypes[4]
+		mi := &file_pfcpsim_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -236,7 +355,7 @@ func (x *Response) String() string {
 func (*Response) ProtoMessage() {}
 
 func (x *Response) ProtoReflect() protoreflect.Message {
-	mi := &file_pfcpsim_proto_msgTypes[4]
+	mi := &file_pfcpsim_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -249,7 +368,7 @@ func (x *Response) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Response.ProtoReflect.Descriptor instead.
 func (*Response) Descriptor() ([]byte, []int) {
-	return file_pfcpsim_proto_rawDescGZIP(), []int{4}
+	return file_pfcpsim_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Response) GetStatusCode() int32 {
@@ -270,26 +389,52 @@ var File_pfcpsim_proto protoreflect.FileDescriptor
 
 var file_pfcpsim_proto_rawDesc = []byte{
 	0x0a, 0x0d, 0x70, 0x66, 0x63, 0x70, 0x73, 0x69, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12,
-	0x03, 0x61, 0x70, 0x69, 0x22, 0x2c, 0x0a, 0x14, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x53, 0x65,
-	0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05,
-	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x22, 0x2c, 0x0a, 0x14, 0x4d, 0x6f, 0x64, 0x69, 0x66, 0x79, 0x53, 0x65, 0x73, 0x73,
-	0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x63, 0x6f,
-	0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74,
-	0x22, 0x2c, 0x0a, 0x14, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f,
-	0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x0e,
-	0x0a, 0x0c, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x45,
-	0x0a, 0x08, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x73, 0x74,
-	0x61, 0x74, 0x75, 0x73, 0x5f, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52,
-	0x0a, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x43, 0x6f, 0x64, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d,
-	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65,
-	0x73, 0x73, 0x61, 0x67, 0x65, 0x32, 0x91, 0x03, 0x0a, 0x07, 0x50, 0x46, 0x43, 0x50, 0x53, 0x69,
-	0x6d, 0x12, 0x2f, 0x0a, 0x09, 0x41, 0x73, 0x73, 0x6f, 0x63, 0x69, 0x61, 0x74, 0x65, 0x12, 0x11,
-	0x2e, 0x61, 0x70, 0x69, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x0d, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x00, 0x12, 0x32, 0x0a, 0x0c, 0x44, 0x69, 0x73, 0x61, 0x73, 0x73, 0x6f, 0x63, 0x69, 0x61,
-	0x74, 0x65, 0x12, 0x11, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65,
+	0x03, 0x61, 0x70, 0x69, 0x22, 0x8e, 0x01, 0x0a, 0x14, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x53,
+	0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a,
+	0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x63, 0x6f,
+	0x75, 0x6e, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x62, 0x61, 0x73, 0x65, 0x49, 0x44, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x05, 0x52, 0x06, 0x62, 0x61, 0x73, 0x65, 0x49, 0x44, 0x12, 0x22, 0x0a, 0x0c, 0x6e,
+	0x6f, 0x64, 0x65, 0x42, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0c, 0x6e, 0x6f, 0x64, 0x65, 0x42, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
+	0x24, 0x0a, 0x0d, 0x75, 0x65, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x50, 0x6f, 0x6f, 0x6c,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x75, 0x65, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x50, 0x6f, 0x6f, 0x6c, 0x22, 0x8e, 0x01, 0x0a, 0x14, 0x4d, 0x6f, 0x64, 0x69, 0x66, 0x79,
+	0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14,
+	0x0a, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x63,
+	0x6f, 0x75, 0x6e, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x62, 0x61, 0x73, 0x65, 0x49, 0x44, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x05, 0x52, 0x06, 0x62, 0x61, 0x73, 0x65, 0x49, 0x44, 0x12, 0x22, 0x0a, 0x0c,
+	0x6e, 0x6f, 0x64, 0x65, 0x42, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x0c, 0x6e, 0x6f, 0x64, 0x65, 0x42, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x12, 0x24, 0x0a, 0x0d, 0x75, 0x65, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x50, 0x6f, 0x6f,
+	0x6c, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x75, 0x65, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x50, 0x6f, 0x6f, 0x6c, 0x22, 0x8a, 0x01, 0x0a, 0x10, 0x43, 0x6f, 0x6e, 0x66, 0x69,
+	0x67, 0x75, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x22, 0x0a, 0x0c, 0x75,
+	0x70, 0x66, 0x4e, 0x33, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0c, 0x75, 0x70, 0x66, 0x4e, 0x33, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
+	0x24, 0x0a, 0x0d, 0x67, 0x6e, 0x6f, 0x64, 0x65, 0x42, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x67, 0x6e, 0x6f, 0x64, 0x65, 0x42, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2c, 0x0a, 0x11, 0x72, 0x65, 0x6d, 0x6f, 0x74, 0x65, 0x50,
+	0x65, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x11, 0x72, 0x65, 0x6d, 0x6f, 0x74, 0x65, 0x50, 0x65, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x22, 0x44, 0x0a, 0x14, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x53, 0x65, 0x73,
+	0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x63,
+	0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x12, 0x16, 0x0a, 0x06, 0x62, 0x61, 0x73, 0x65, 0x49, 0x44, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x05, 0x52, 0x06, 0x62, 0x61, 0x73, 0x65, 0x49, 0x44, 0x22, 0x0e, 0x0a, 0x0c, 0x45, 0x6d, 0x70,
+	0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x45, 0x0a, 0x08, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x5f,
+	0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0a, 0x73, 0x74, 0x61, 0x74,
+	0x75, 0x73, 0x43, 0x6f, 0x64, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67,
+	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
+	0x32, 0xc6, 0x03, 0x0a, 0x07, 0x50, 0x46, 0x43, 0x50, 0x53, 0x69, 0x6d, 0x12, 0x2f, 0x0a, 0x09,
+	0x41, 0x73, 0x73, 0x6f, 0x63, 0x69, 0x61, 0x74, 0x65, 0x12, 0x11, 0x2e, 0x61, 0x70, 0x69, 0x2e,
+	0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0d, 0x2e, 0x61,
+	0x70, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x32, 0x0a,
+	0x0c, 0x44, 0x69, 0x73, 0x61, 0x73, 0x73, 0x6f, 0x63, 0x69, 0x61, 0x74, 0x65, 0x12, 0x11, 0x2e,
+	0x61, 0x70, 0x69, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x0d, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x00, 0x12, 0x33, 0x0a, 0x09, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x65, 0x12, 0x15,
+	0x2e, 0x61, 0x70, 0x69, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x65, 0x52, 0x65,
 	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0d, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70,
 	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x3b, 0x0a, 0x0d, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
 	0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x19, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x43, 0x72,
@@ -325,31 +470,34 @@ func file_pfcpsim_proto_rawDescGZIP() []byte {
 	return file_pfcpsim_proto_rawDescData
 }
 
-var file_pfcpsim_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_pfcpsim_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_pfcpsim_proto_goTypes = []interface{}{
 	(*CreateSessionRequest)(nil), // 0: api.CreateSessionRequest
 	(*ModifySessionRequest)(nil), // 1: api.ModifySessionRequest
-	(*DeleteSessionRequest)(nil), // 2: api.DeleteSessionRequest
-	(*EmptyRequest)(nil),         // 3: api.EmptyRequest
-	(*Response)(nil),             // 4: api.Response
+	(*ConfigureRequest)(nil),     // 2: api.ConfigureRequest
+	(*DeleteSessionRequest)(nil), // 3: api.DeleteSessionRequest
+	(*EmptyRequest)(nil),         // 4: api.EmptyRequest
+	(*Response)(nil),             // 5: api.Response
 }
 var file_pfcpsim_proto_depIdxs = []int32{
-	3, // 0: api.PFCPSim.Associate:input_type -> api.EmptyRequest
-	3, // 1: api.PFCPSim.Disassociate:input_type -> api.EmptyRequest
-	0, // 2: api.PFCPSim.CreateSession:input_type -> api.CreateSessionRequest
-	1, // 3: api.PFCPSim.ModifySession:input_type -> api.ModifySessionRequest
-	2, // 4: api.PFCPSim.DeleteSession:input_type -> api.DeleteSessionRequest
-	3, // 5: api.PFCPSim.Interrupt:input_type -> api.EmptyRequest
-	3, // 6: api.PFCPSim.ConnectToRemotePeer:input_type -> api.EmptyRequest
-	4, // 7: api.PFCPSim.Associate:output_type -> api.Response
-	4, // 8: api.PFCPSim.Disassociate:output_type -> api.Response
-	4, // 9: api.PFCPSim.CreateSession:output_type -> api.Response
-	4, // 10: api.PFCPSim.ModifySession:output_type -> api.Response
-	4, // 11: api.PFCPSim.DeleteSession:output_type -> api.Response
-	4, // 12: api.PFCPSim.Interrupt:output_type -> api.Response
-	4, // 13: api.PFCPSim.ConnectToRemotePeer:output_type -> api.Response
-	7, // [7:14] is the sub-list for method output_type
-	0, // [0:7] is the sub-list for method input_type
+	4, // 0: api.PFCPSim.Associate:input_type -> api.EmptyRequest
+	4, // 1: api.PFCPSim.Disassociate:input_type -> api.EmptyRequest
+	2, // 2: api.PFCPSim.Configure:input_type -> api.ConfigureRequest
+	0, // 3: api.PFCPSim.CreateSession:input_type -> api.CreateSessionRequest
+	1, // 4: api.PFCPSim.ModifySession:input_type -> api.ModifySessionRequest
+	3, // 5: api.PFCPSim.DeleteSession:input_type -> api.DeleteSessionRequest
+	4, // 6: api.PFCPSim.Interrupt:input_type -> api.EmptyRequest
+	4, // 7: api.PFCPSim.ConnectToRemotePeer:input_type -> api.EmptyRequest
+	5, // 8: api.PFCPSim.Associate:output_type -> api.Response
+	5, // 9: api.PFCPSim.Disassociate:output_type -> api.Response
+	5, // 10: api.PFCPSim.Configure:output_type -> api.Response
+	5, // 11: api.PFCPSim.CreateSession:output_type -> api.Response
+	5, // 12: api.PFCPSim.ModifySession:output_type -> api.Response
+	5, // 13: api.PFCPSim.DeleteSession:output_type -> api.Response
+	5, // 14: api.PFCPSim.Interrupt:output_type -> api.Response
+	5, // 15: api.PFCPSim.ConnectToRemotePeer:output_type -> api.Response
+	8, // [8:16] is the sub-list for method output_type
+	0, // [0:8] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -386,7 +534,7 @@ func file_pfcpsim_proto_init() {
 			}
 		}
 		file_pfcpsim_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeleteSessionRequest); i {
+			switch v := v.(*ConfigureRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -398,7 +546,7 @@ func file_pfcpsim_proto_init() {
 			}
 		}
 		file_pfcpsim_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EmptyRequest); i {
+			switch v := v.(*DeleteSessionRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -410,6 +558,18 @@ func file_pfcpsim_proto_init() {
 			}
 		}
 		file_pfcpsim_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EmptyRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_pfcpsim_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Response); i {
 			case 0:
 				return &v.state
@@ -428,7 +588,7 @@ func file_pfcpsim_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_pfcpsim_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -456,6 +616,7 @@ const _ = grpc.SupportPackageIsVersion6
 type PFCPSimClient interface {
 	Associate(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Response, error)
 	Disassociate(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Response, error)
+	Configure(ctx context.Context, in *ConfigureRequest, opts ...grpc.CallOption) (*Response, error)
 	CreateSession(ctx context.Context, in *CreateSessionRequest, opts ...grpc.CallOption) (*Response, error)
 	ModifySession(ctx context.Context, in *ModifySessionRequest, opts ...grpc.CallOption) (*Response, error)
 	DeleteSession(ctx context.Context, in *DeleteSessionRequest, opts ...grpc.CallOption) (*Response, error)
@@ -485,6 +646,15 @@ func (c *pFCPSimClient) Associate(ctx context.Context, in *EmptyRequest, opts ..
 func (c *pFCPSimClient) Disassociate(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
 	err := c.cc.Invoke(ctx, "/api.PFCPSim/Disassociate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *pFCPSimClient) Configure(ctx context.Context, in *ConfigureRequest, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/api.PFCPSim/Configure", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -540,6 +710,7 @@ func (c *pFCPSimClient) ConnectToRemotePeer(ctx context.Context, in *EmptyReques
 type PFCPSimServer interface {
 	Associate(context.Context, *EmptyRequest) (*Response, error)
 	Disassociate(context.Context, *EmptyRequest) (*Response, error)
+	Configure(context.Context, *ConfigureRequest) (*Response, error)
 	CreateSession(context.Context, *CreateSessionRequest) (*Response, error)
 	ModifySession(context.Context, *ModifySessionRequest) (*Response, error)
 	DeleteSession(context.Context, *DeleteSessionRequest) (*Response, error)
@@ -558,6 +729,9 @@ func (*UnimplementedPFCPSimServer) Associate(context.Context, *EmptyRequest) (*R
 }
 func (*UnimplementedPFCPSimServer) Disassociate(context.Context, *EmptyRequest) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Disassociate not implemented")
+}
+func (*UnimplementedPFCPSimServer) Configure(context.Context, *ConfigureRequest) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Configure not implemented")
 }
 func (*UnimplementedPFCPSimServer) CreateSession(context.Context, *CreateSessionRequest) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateSession not implemented")
@@ -611,6 +785,24 @@ func _PFCPSim_Disassociate_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PFCPSimServer).Disassociate(ctx, req.(*EmptyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PFCPSim_Configure_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigureRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PFCPSimServer).Configure(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.PFCPSim/Configure",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PFCPSimServer).Configure(ctx, req.(*ConfigureRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -716,6 +908,10 @@ var _PFCPSim_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Disassociate",
 			Handler:    _PFCPSim_Disassociate_Handler,
+		},
+		{
+			MethodName: "Configure",
+			Handler:    _PFCPSim_Configure_Handler,
 		},
 		{
 			MethodName: "CreateSession",

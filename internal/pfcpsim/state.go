@@ -13,41 +13,59 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/c-robinson/iplib"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
-	ieLib "github.com/wmnsk/go-pfcp/ie"
 )
-
-type pfcpClientContext struct {
-	session *pfcpsim.PFCPSession
-
-	pdrs []*ieLib.IE
-	fars []*ieLib.IE
-	qers []*ieLib.IE
-	// Needed when updating sessions.
-	downlinkTEID uint32
-}
 
 var (
-	activeSessions = make([]*pfcpClientContext, 0)
-	sessionsLock   = new(sync.Mutex)
+	activeSessions     = make(map[int]*pfcpsim.PFCPSession, 0)
+	lockActiveSessions = new(sync.Mutex)
 
-	// Keeps track of 'leased' IPs to UEs from ip pool
-	lastUEAddress net.IP
-	addrLock      = new(sync.Mutex)
-
-	localAddress      string
 	remotePeerAddress string
-	upfAddress        string
-	nodeBAddress      string
-	ueAddressPool     string
+	upfN3Address      string
+	gnodeBAddress     string
 
 	// Emulates 5G SMF/ 4G SGW
-	sim *pfcpsim.PFCPClient
+	sim                 *pfcpsim.PFCPClient
+	remotePeerConnected bool
 )
+
+func insertSession(index int, session *pfcpsim.PFCPSession) {
+	lockActiveSessions.Lock()
+	defer lockActiveSessions.Unlock()
+
+	activeSessions[index] = session
+}
+
+func getSession(index int) *pfcpsim.PFCPSession {
+	return activeSessions[index]
+}
+
+func deleteSession(index int) {
+	lockActiveSessions.Lock()
+	defer lockActiveSessions.Unlock()
+
+	delete(activeSessions, index)
+}
+
+func isConfigured() bool {
+	if upfN3Address != "" && gnodeBAddress != "" && remotePeerAddress != "" {
+		return true
+	}
+
+	return false
+}
+
+func isRemotePeerConnected() bool {
+	return remotePeerConnected
+}
 
 func connectPFCPSim() error {
 	if sim == nil {
+		localAddress, err := getLocalAddress()
+		if err != nil {
+			return err
+		}
+
 		sim = pfcpsim.NewPFCPClient(localAddress)
 	}
 
@@ -55,6 +73,8 @@ func connectPFCPSim() error {
 	if err != nil {
 		return err
 	}
+
+	remotePeerConnected = true
 
 	return nil
 }
@@ -93,44 +113,4 @@ func getLocalAddress() (string, error) {
 	}
 
 	return "", fmt.Errorf("could not find interface: %v", interfaceName)
-}
-
-func getActiveSessions() []*pfcpClientContext {
-	sessionsLock.Lock()
-	defer sessionsLock.Unlock()
-
-	return activeSessions
-}
-
-func deleteSessionContext() {
-	sessionsLock.Lock()
-	defer sessionsLock.Unlock()
-
-	if len(activeSessions) > 0 {
-		// pop first element
-		activeSessions = activeSessions[:len(activeSessions)-1]
-	}
-}
-
-func addSessionContext(sessionContext *pfcpClientContext) {
-	sessionsLock.Lock()
-	defer sessionsLock.Unlock()
-
-	activeSessions = append(activeSessions, sessionContext)
-}
-
-// getNextUEAddress retrieves the next available IP address from ueAddressPool
-func getNextUEAddress(addressPool string) net.IP {
-	addrLock.Lock()
-	defer addrLock.Unlock()
-
-	if lastUEAddress != nil {
-		lastUEAddress = iplib.NextIP(lastUEAddress)
-		return lastUEAddress
-	}
-
-	// TODO handle case net IP is full
-	ueIpFromPool, _, _ := net.ParseCIDR(addressPool)
-	lastUEAddress = iplib.NextIP(ueIpFromPool)
-	return lastUEAddress
 }

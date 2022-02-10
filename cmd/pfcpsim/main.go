@@ -30,13 +30,13 @@ const (
 	defaultgRPCServerPort = "54321"
 )
 
-var (
-	remotePeerAddress *string
-	upfAddress        *string
-	nodeBAddress      *string
-
-	ueAddressPool *string
-)
+//var (
+//	remotePeerAddress *string
+//	upfAddress        *string
+//	nodeBAddress      *string
+//
+//	ueAddressPool *string
+//)
 
 func startServer(apiDoneChannel chan bool, port string, group *sync.WaitGroup) {
 	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%v", port))
@@ -45,13 +45,8 @@ func startServer(apiDoneChannel chan bool, port string, group *sync.WaitGroup) {
 	}
 
 	grpcServer := grpc.NewServer()
-	// Initialize server
-	pfcpServer, err := pfcpsim.NewPFCPSimServer(*remotePeerAddress, *upfAddress, *nodeBAddress, *ueAddressPool)
-	if err != nil {
-		log.Fatalf("Could not create pfcpSimServer: %v", err)
-	}
 
-	pb.RegisterPFCPSimServer(grpcServer, pfcpServer)
+	pb.RegisterPFCPSimServer(grpcServer, &pfcpsim.ConcretePFCPSimServer{})
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
@@ -72,11 +67,10 @@ func startServer(apiDoneChannel chan bool, port string, group *sync.WaitGroup) {
 }
 
 func main() {
-	// TODO make pfcpsim configuration possible through RPC instead of using flags
-	remotePeerAddress = getopt.StringLong("remote-peer-address", 'r', "127.0.0.1", "Address or hostname of the remote peer (PFCP Agent)")
-	upfAddress = getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF")
-	ueAddressPool = getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")
-	nodeBAddress = getopt.StringLong("nodeb-address", 'g', defaultGNodeBAddress, "The IPv4 of (g/e)NodeBAddress")
+	//remotePeerAddress = getopt.StringLong("remote-peer-address", 'r', "127.0.0.1", "Address or hostname of the remote peer (PFCP Agent)")
+	//upfAddress = getopt.StringLong("upf-address", 'u', defaultUpfN3Address, "Address of the UPF")
+	//ueAddressPool = getopt.StringLong("ue-address-pool", 'e', defaultUeAddressPool, "The IPv4 CIDR prefix from which UE addresses will be generated, incrementally")
+	//nodeBAddress = getopt.StringLong("nodeb-address", 'g', defaultGNodeBAddress, "The IPv4 of (g/e)NodeBAddress")
 
 	port := getopt.StringLong("port", 'p', defaultgRPCServerPort, "the gRPC Server port to listen")
 
@@ -86,30 +80,6 @@ func main() {
 	if *optHelp {
 		getopt.Usage()
 		os.Exit(0)
-	}
-
-	// Flag checks and validations
-	if net.ParseIP(*nodeBAddress) == nil {
-		log.Fatalf("Could not retrieve IP address of (g/e)NodeB")
-	}
-
-	if net.ParseIP(*remotePeerAddress) == nil {
-		// Try to resolve hostname
-		nameIP, err := net.LookupHost(*remotePeerAddress)
-		if err != nil {
-			log.Fatalf("Could not retrieve hostname or address for remote peer: %s", *remotePeerAddress)
-		}
-
-		*remotePeerAddress = nameIP[0]
-	}
-
-	if net.ParseIP(*upfAddress) == nil {
-		log.Fatalf("Error while parsing UPF address")
-	}
-
-	_, _, err := net.ParseCIDR(*ueAddressPool)
-	if err != nil {
-		log.Fatalf("Could not parse ue address pool: %v", err)
 	}
 
 	// control channels, they are only closed when the goroutine needs to be terminated

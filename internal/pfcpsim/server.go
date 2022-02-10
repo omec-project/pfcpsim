@@ -8,89 +8,150 @@ package pfcpsim
 import (
 	"context"
 	"fmt"
+	"net"
 
+	"github.com/c-robinson/iplib"
 	pb "github.com/omec-project/pfcpsim/api"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
+	log "github.com/sirupsen/logrus"
 	ieLib "github.com/wmnsk/go-pfcp/ie"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-// pfcpSimServer implements the Protobuf methods and keeps a connection to a remote PFCP Agent peer.
+// ConcretePFCPSimServer implements the Protobuf interface and keeps a connection to a remote PFCP Agent peer.
 // Its state is handled in internal/pfcpsim/state.go
-type pfcpSimServer struct{}
+type ConcretePFCPSimServer struct{}
 
-func (P pfcpSimServer) ConnectToRemotePeer(ctx context.Context, request *pb.EmptyRequest) (*pb.Response, error) {
+func (P ConcretePFCPSimServer) Configure(ctx context.Context, request *pb.ConfigureRequest) (*pb.Response, error) {
+	remotePeerAddress = request.RemotePeerAddress
+	if net.ParseIP(remotePeerAddress) == nil {
+		// Try to resolve hostname
+		lookupHost, err := net.LookupHost(remotePeerAddress)
+		if err != nil {
+			errMsg := fmt.Sprintf("Could not retrieve hostname or address for remote peer: %s", remotePeerAddress)
+			log.Error(errMsg)
+			return &pb.Response{}, status.Error(codes.Aborted, errMsg)
+		}
+		remotePeerAddress = lookupHost[0]
+	}
+
+	if net.ParseIP(request.UpfN3Address) == nil {
+		errMsg := fmt.Sprintf("Error while parsing UPF N3 address: %v", request.UpfN3Address)
+		log.Error(errMsg)
+		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
+	}
+
+	upfN3Address = request.UpfN3Address
+
+	if net.ParseIP(request.GnodeBAddress) == nil {
+		log.Errorf("Could not retrieve IP address of gNodeB")
+		return &pb.Response{}, status.Error(codes.Aborted, "Could not retrieve IP address of gNodeB")
+	}
+
+	gnodeBAddress = request.GnodeBAddress
+
+	configurationMsg := fmt.Sprintf("Server is configured: \n\tRemote peer address: %v, N3 interface address: %v, gNodeB address: %v ", remotePeerAddress, upfN3Address, gnodeBAddress)
+	log.Info(configurationMsg)
+
+	return &pb.Response{
+		StatusCode: int32(codes.OK),
+		Message:    configurationMsg,
+	}, nil
+}
+
+func (P ConcretePFCPSimServer) ConnectToRemotePeer(ctx context.Context, request *pb.EmptyRequest) (*pb.Response, error) {
+	if !isConfigured() {
+		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
+	}
+
 	err := connectPFCPSim()
 	if err != nil {
 		return nil, err
 	}
+	infoMsg := "Connection to remote peer established"
+	log.Info(infoMsg)
 
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
-		Message:    "Emulating Crash",
+		Message:    infoMsg,
 	}, nil
 }
 
-func (P pfcpSimServer) Interrupt(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
+func (P ConcretePFCPSimServer) Interrupt(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
+	if !isConfigured() {
+		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
+	}
+
 	sim.DisconnectN4()
 
+	remotePeerConnected = false
+
+	infoMsg := "Connection to remote peer closed"
+	log.Info(infoMsg)
+
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
-		Message:    "Emulating Crash",
+		Message:    infoMsg,
 	}, nil
 }
 
-func NewPFCPSimServer(remotePeerAddr string, upfAddr string, nodeBAddr string, ueAddrPool string) (*pfcpSimServer, error) {
-	var err error
-	localAddress, err = getLocalAddress()
-	if err != nil {
-		return nil, err
+func (P ConcretePFCPSimServer) Associate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
+	if !isConfigured() {
+		log.Error("Server is not configured")
+		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
 	}
 
-	remotePeerAddress = remotePeerAddr
-	upfAddress = upfAddr
-	nodeBAddress = nodeBAddr
-	ueAddressPool = ueAddrPool
-
-	// Connect internal PFCPSim to remote Peer
-	err = connectPFCPSim()
-	if err != nil {
-		return nil, err
+	if !isRemotePeerConnected() {
+		log.Error("PFCP agent is not connected to remote peer")
+		return &pb.Response{}, status.Error(codes.Aborted, "PFCP agent is not connected to remote peer")
 	}
 
-	return &pfcpSimServer{}, nil
-}
-
-func (P pfcpSimServer) Associate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
 	err := sim.SetupAssociation()
 	if err != nil {
-		return nil, err
+		log.Error(err.Error())
+		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
+
+	infoMsg := "Association established"
+	log.Info(infoMsg)
 
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
-		Message:    "Association completed",
+		Message:    infoMsg,
 	}, nil
 }
 
-func (P pfcpSimServer) Disassociate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
+func (P ConcretePFCPSimServer) Disassociate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
+	if !isConfigured() {
+		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
+	}
+
 	err := sim.TeardownAssociation()
 	if err != nil {
-		return nil, err
+		log.Error(err.Error())
+		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
+
+	infoMsg := "Association teardown completed"
+	log.Info(infoMsg)
 
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
-		Message:    "Association teardown completed",
+		Message:    infoMsg,
 	}, nil
 }
 
-func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSessionRequest) (*pb.Response, error) {
-	sessions := getActiveSessions()
+func (P ConcretePFCPSimServer) CreateSession(ctx context.Context, request *pb.CreateSessionRequest) (*pb.Response, error) {
+	if !isConfigured() {
+		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
+	}
 
-	baseID := len(sessions) + 1
+	baseID := int(request.BaseID)
 	count := int(request.Count)
+
+	ueAddress := iplib.NextIP(net.IP(request.UeAddressPool)).String()
 
 	for i := baseID; i < (count + baseID); i++ {
 		// using variables to ease comprehension on how rules are linked together
@@ -119,7 +180,7 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 				WithFARID(uplinkFarID).
 				AddQERID(sessQerID).
 				AddQERID(uplinkAppQerID).
-				WithN3Address(upfAddress).
+				WithN3Address(upfN3Address).
 				WithSDFFilter("permit out ip from 0.0.0.0/0 to assigned").
 				MarkAsUplink().
 				BuildPDR(),
@@ -129,7 +190,7 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 				WithID(dowlinkPdrID).
 				WithMethod(session.Create).
 				WithPrecedence(100).
-				WithUEAddress(getNextUEAddress(ueAddressPool).String()).
+				WithUEAddress(ueAddress).
 				WithSDFFilter("permit out ip from 0.0.0.0/0 to assigned").
 				AddQERID(sessQerID).
 				AddQERID(downlinkAppQerID).
@@ -154,7 +215,7 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 				WithMethod(session.Create).
 				WithDstInterface(ieLib.DstInterfaceAccess).
 				WithTEID(downlinkTEID).
-				WithDownlinkIP(nodeBAddress).
+				WithDownlinkIP(gnodeBAddress).
 				BuildFAR(),
 		}
 
@@ -182,76 +243,52 @@ func (P pfcpSimServer) CreateSession(ctx context.Context, request *pb.CreateSess
 
 		sess, err := sim.EstablishSession(pdrs, fars, qers)
 		if err != nil {
-			return nil, err
+			return &pb.Response{}, status.Error(codes.Internal, err.Error())
 		}
-
-		addSessionContext(&pfcpClientContext{
-			session:      sess,
-			pdrs:         pdrs,
-			fars:         fars,
-			qers:         qers,
-			downlinkTEID: downlinkTEID,
-		})
+		log.Infof("Saved session: %v", sess)
+		insertSession(i, sess)
 	}
+
+	log.Infof("active sessions: %v, count: %v", len(activeSessions), count)
+
+	infoMsg := fmt.Sprintf("%v sessions were established", count)
+	log.Info(infoMsg)
 
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
-		Message:    fmt.Sprintf("%v sessions were established", count),
+		Message:    infoMsg,
 	}, nil
 }
 
-func (P pfcpSimServer) ModifySession(ctx context.Context, request *pb.ModifySessionRequest) (*pb.Response, error) {
-	sessions := getActiveSessions()
+func (P ConcretePFCPSimServer) ModifySession(ctx context.Context, request *pb.ModifySessionRequest) (*pb.Response, error) {
+	if !isConfigured() {
+		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
+	}
 
+	// TODO handle buffer, notifyCP flags and 5G as well
+	baseID := int(request.BaseID)
 	count := int(request.Count)
 
-	if len(sessions) < count {
-		return nil, pfcpsim.NewNotEnoughSessionsError()
-	}
-
-	for i, ctx := range sessions {
-		if i >= count {
-			// Modify only 'count' sessions
-			break
+	for i := baseID; i < (count + baseID); i++ {
+		newFARs := []*ieLib.IE{
+			// Downlink FAR
+			session.NewFARBuilder().
+				WithID(uint32(i)).
+				WithMethod(session.Update).
+				WithAction(session.ActionForward).
+				WithDstInterface(ieLib.DstInterfaceAccess).
+				WithTEID(uint32(i + 1)). // Same downlinkTEID that was generated in create sessions
+				WithDownlinkIP(gnodeBAddress).
+				BuildFAR(),
 		}
 
-		for _, far := range ctx.fars {
-			action, err := far.ApplyAction()
-			if err != nil {
-				return nil, err
-			}
-
-			if !(action == session.ActionDrop) {
-				// Updating only FARs with ActionDrop.
-				continue
-			}
-
-			oldFarID, err := far.FARID()
-			if err != nil {
-				return nil, err
-			}
-
-			// TODO handle buffer and notifyCP flags and 5G as well
-			newFARs := []*ieLib.IE{
-				// Downlink FAR
-				session.NewFARBuilder().
-					WithID(oldFarID).
-					WithMethod(session.Update).
-					WithAction(session.ActionForward).
-					WithDstInterface(ieLib.DstInterfaceAccess).
-					WithTEID(ctx.downlinkTEID).
-					WithDownlinkIP(nodeBAddress).
-					BuildFAR(),
-			}
-
-			err = sim.ModifySession(ctx.session, nil, newFARs, nil)
-			if err != nil {
-				return nil, err
-			}
-
-			ctx.fars = append(ctx.fars, newFARs...) // save new sent FAR // FIXME should old FARs be replaced?
+		err := sim.ModifySession(getSession(i-baseID), nil, newFARs, nil)
+		if err != nil {
+			return &pb.Response{}, status.Error(codes.Internal, err.Error())
 		}
 	}
+
+	log.Infof("active sessions: %v, count: %v", len(activeSessions), count)
 
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
@@ -259,18 +296,35 @@ func (P pfcpSimServer) ModifySession(ctx context.Context, request *pb.ModifySess
 	}, nil
 }
 
-func (P pfcpSimServer) DeleteSession(ctx context.Context, request *pb.DeleteSessionRequest) (*pb.Response, error) {
-	sessions := getActiveSessions()
+func (P ConcretePFCPSimServer) DeleteSession(ctx context.Context, request *pb.DeleteSessionRequest) (*pb.Response, error) {
+	if !isConfigured() {
+		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
+	}
 
+	baseID := int(request.BaseID)
 	count := int(request.Count)
 
-	if len(sessions) < count {
-		return nil, pfcpsim.NewNotEnoughSessionsError()
+	if len(activeSessions) < count {
+		err := pfcpsim.NewNotEnoughSessionsError()
+		log.Error(err.Error())
+		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
 
-	for i := count; i > 0; i-- {
-		deleteSessionContext()
+	for i := baseID; i < (count + baseID); i++ {
+		sess := getSession(i)
+		log.Info("Got session: %v", sess)
+
+		err := sim.DeleteSession(sess)
+		if err != nil {
+			log.Error(err.Error())
+			return &pb.Response{}, status.Error(codes.Aborted, err.Error())
+		}
+		log.Infof("Session removed :%v", sess)
+		// remove from activeSessions
+		deleteSession(i)
 	}
+
+	log.Infof("active sessions: %v, count: %v", len(activeSessions), count)
 
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
