@@ -21,7 +21,8 @@ import (
 )
 
 const (
-	defaultSDFfilter = "permit out ip from 0.0.0.0/0 to assigned"
+	//FIXME: the SDF Filter is not spec-compliant. We should fix it once SD-Core supports the spec-compliant format.
+	defaultSDFfilter = "permit out ip from 0.0.0.0/0 to assigned 80-80"
 )
 
 // PFCPSimService implements the Protobuf interface and keeps a connection to a remote PFCP Agent peer.
