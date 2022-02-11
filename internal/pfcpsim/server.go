@@ -20,11 +20,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// ConcretePFCPSimServer implements the Protobuf interface and keeps a connection to a remote PFCP Agent peer.
+// PFCPSimService implements the Protobuf interface and keeps a connection to a remote PFCP Agent peer.
 // Its state is handled in internal/pfcpsim/state.go
-type ConcretePFCPSimServer struct{}
+type PFCPSimService struct{}
 
-func (P ConcretePFCPSimServer) Configure(ctx context.Context, request *pb.ConfigureRequest) (*pb.Response, error) {
+func (P PFCPSimService) Configure(ctx context.Context, request *pb.ConfigureRequest) (*pb.Response, error) {
 	remotePeerAddress = request.RemotePeerAddress
 	if net.ParseIP(remotePeerAddress) == nil {
 		// Try to resolve hostname
@@ -54,7 +54,7 @@ func (P ConcretePFCPSimServer) Configure(ctx context.Context, request *pb.Config
 	}, nil
 }
 
-func (P ConcretePFCPSimServer) ConnectToRemotePeer(ctx context.Context, request *pb.EmptyRequest) (*pb.Response, error) {
+func (P PFCPSimService) ConnectToRemotePeer(ctx context.Context, request *pb.EmptyRequest) (*pb.Response, error) {
 	if !isConfigured() {
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
 	}
@@ -72,7 +72,7 @@ func (P ConcretePFCPSimServer) ConnectToRemotePeer(ctx context.Context, request 
 	}, nil
 }
 
-func (P ConcretePFCPSimServer) Interrupt(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
+func (P PFCPSimService) Interrupt(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
 	if !isConfigured() {
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
 	}
@@ -90,7 +90,7 @@ func (P ConcretePFCPSimServer) Interrupt(ctx context.Context, empty *pb.EmptyReq
 	}, nil
 }
 
-func (P ConcretePFCPSimServer) Associate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
+func (P PFCPSimService) Associate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
 	if !isConfigured() {
 		log.Error("Server is not configured")
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
@@ -116,7 +116,7 @@ func (P ConcretePFCPSimServer) Associate(ctx context.Context, empty *pb.EmptyReq
 	}, nil
 }
 
-func (P ConcretePFCPSimServer) Disassociate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
+func (P PFCPSimService) Disassociate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
 	if !isConfigured() {
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
 	}
@@ -136,7 +136,7 @@ func (P ConcretePFCPSimServer) Disassociate(ctx context.Context, empty *pb.Empty
 	}, nil
 }
 
-func (P ConcretePFCPSimServer) CreateSession(ctx context.Context, request *pb.CreateSessionRequest) (*pb.Response, error) {
+func (P PFCPSimService) CreateSession(ctx context.Context, request *pb.CreateSessionRequest) (*pb.Response, error) {
 	if !isConfigured() {
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
 	}
@@ -262,7 +262,7 @@ func (P ConcretePFCPSimServer) CreateSession(ctx context.Context, request *pb.Cr
 	}, nil
 }
 
-func (P ConcretePFCPSimServer) ModifySession(ctx context.Context, request *pb.ModifySessionRequest) (*pb.Response, error) {
+func (P PFCPSimService) ModifySession(ctx context.Context, request *pb.ModifySessionRequest) (*pb.Response, error) {
 	if !isConfigured() {
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
 	}
@@ -313,7 +313,7 @@ func (P ConcretePFCPSimServer) ModifySession(ctx context.Context, request *pb.Mo
 	}, nil
 }
 
-func (P ConcretePFCPSimServer) DeleteSession(ctx context.Context, request *pb.DeleteSessionRequest) (*pb.Response, error) {
+func (P PFCPSimService) DeleteSession(ctx context.Context, request *pb.DeleteSessionRequest) (*pb.Response, error) {
 	if !isConfigured() {
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
 	}

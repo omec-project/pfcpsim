@@ -32,7 +32,7 @@ func startServer(apiDoneChannel chan bool, port string, group *sync.WaitGroup) {
 
 	grpcServer := grpc.NewServer()
 
-	pb.RegisterPFCPSimServer(grpcServer, &pfcpsim.ConcretePFCPSimServer{})
+	pb.RegisterPFCPSimServer(grpcServer, &pfcpsim.PFCPSimService{})
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
