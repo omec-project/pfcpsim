@@ -7,26 +7,32 @@ package api;
 option go_package = ".;api";
 
 message CreateSessionRequest {
+  // count represents the number of session
   int32 count = 1;
+  // baseID is used to create incremental IDs for PDRs, FARs, QERs
   int32 baseID = 2;
   string nodeBAddress = 3;
   string ueAddressPool = 4;
 }
 
 message ModifySessionRequest {
+  // count represents the number of session
   int32 count = 1;
+  // baseID is used to create incremental IDs for PDRs, FARs, QERs
   int32 baseID = 2;
   string nodeBAddress = 3;
   string ueAddressPool = 4;
 }
 
 message ConfigureRequest {
+  // the data-plane interface between UPF and gNodeB
   string upfN3Address = 1;
   string remotePeerAddress = 3;
 }
 
 message DeleteSessionRequest {
   int32 count = 1;
+  // baseID is used to decide where to start deleting sessions
   int32 baseID = 2;
 }
 
@@ -39,15 +45,13 @@ message Response {
 
 service PFCPSim {
   rpc Configure (ConfigureRequest) returns (Response) {}
-
+  // Associate connects PFCPClient to remote peer and starts an association
   rpc Associate (EmptyRequest) returns (Response) {}
   rpc Disassociate (EmptyRequest) returns (Response) {}
 
   rpc CreateSession (CreateSessionRequest) returns (Response) {}
   rpc ModifySession (ModifySessionRequest) returns (Response) {}
   rpc DeleteSession (DeleteSessionRequest) returns (Response) {}
-  // Interrupt emulates pfcpsim crash
+  // Interrupt emulates a crash causing a disconnection from the remote peer.
   rpc Interrupt(EmptyRequest) returns (Response) {}
-  // Establish connection to remote peer
-  rpc ConnectToRemotePeer(EmptyRequest) returns (Response) {}
 }

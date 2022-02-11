@@ -40,10 +40,9 @@ func connect(serverAddr string) (pb.PFCPSimClient, *grpc.ClientConn) {
 
 func main() {
 	// TODO improve parser
-	helpMsg := "'connect-remote': Connects to remote peer " +
-		"\n 'configure': configure Server " +
+	helpMsg := "'configure': Configure Server " +
 		"\n 'disassociate': Teardown Association " +
-		"\n 'associate': Setup Association " +
+		"\n 'associate': Connect to remote peer and setup association " +
 		"\n 'create': Create Sessions  " +
 		"\n 'delete': Delete Sessions " +
 		"\n 'interrupt': Emulates a crash " +
@@ -76,14 +75,6 @@ func main() {
 		})
 		if err != nil {
 			log.Errorf("Error while configuring: %v", err)
-		}
-
-		log.Info(res.Message)
-
-	case "connect-remote":
-		res, err := simClient.ConnectToRemotePeer(context.Background(), &pb.EmptyRequest{})
-		if err != nil {
-			log.Errorf("Error while connecting to remote peer: %v", err)
 		}
 
 		log.Info(res.Message)

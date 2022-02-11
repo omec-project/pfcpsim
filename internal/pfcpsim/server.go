@@ -20,6 +20,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const (
+	defaultSDFfilter = "permit out ip from 0.0.0.0/0 to assigned"
+)
+
 // PFCPSimService implements the Protobuf interface and keeps a connection to a remote PFCP Agent peer.
 // Its state is handled in internal/pfcpsim/state.go
 type PFCPSimService struct{}
@@ -54,24 +58,6 @@ func (P PFCPSimService) Configure(ctx context.Context, request *pb.ConfigureRequ
 	}, nil
 }
 
-func (P PFCPSimService) ConnectToRemotePeer(ctx context.Context, request *pb.EmptyRequest) (*pb.Response, error) {
-	if !isConfigured() {
-		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
-	}
-
-	err := connectPFCPSim()
-	if err != nil {
-		return nil, err
-	}
-	infoMsg := "Connection to remote peer established"
-	log.Info(infoMsg)
-
-	return &pb.Response{
-		StatusCode: int32(codes.OK),
-		Message:    infoMsg,
-	}, nil
-}
-
 func (P PFCPSimService) Interrupt(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
 	if !isConfigured() {
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
@@ -97,12 +83,14 @@ func (P PFCPSimService) Associate(ctx context.Context, empty *pb.EmptyRequest) (
 	}
 
 	if !isRemotePeerConnected() {
-		log.Error("PFCP agent is not connected to remote peer")
-		return &pb.Response{}, status.Error(codes.Aborted, "PFCP agent is not connected to remote peer")
+		if err := connectPFCPSim(); err != nil {
+			errMsg := fmt.Sprintf("Could not connect to remote peer :%v", err)
+			log.Error(errMsg)
+			return &pb.Response{}, status.Error(codes.Aborted, errMsg)
+		}
 	}
 
-	err := sim.SetupAssociation()
-	if err != nil {
+	if err := sim.SetupAssociation(); err != nil {
 		log.Error(err.Error())
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
@@ -121,8 +109,7 @@ func (P PFCPSimService) Disassociate(ctx context.Context, empty *pb.EmptyRequest
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
 	}
 
-	err := sim.TeardownAssociation()
-	if err != nil {
+	if err := sim.TeardownAssociation(); err != nil {
 		log.Error(err.Error())
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
@@ -174,8 +161,6 @@ func (P PFCPSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		uplinkAppQerID := appQerID
 		downlinkAppQerID := appQerID + 1
 
-		sdfFilter := "permit out ip from 0.0.0.0/0 to assigned"
-
 		pdrs := []*ieLib.IE{
 			// UplinkPDR
 			session.NewPDRBuilder().
@@ -186,7 +171,7 @@ func (P PFCPSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				AddQERID(sessQerID).
 				AddQERID(uplinkAppQerID).
 				WithN3Address(upfN3Address).
-				WithSDFFilter(sdfFilter).
+				WithSDFFilter(defaultSDFfilter).
 				MarkAsUplink().
 				BuildPDR(),
 
@@ -196,7 +181,7 @@ func (P PFCPSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				WithMethod(session.Create).
 				WithPrecedence(100).
 				WithUEAddress(ueAddress.String()).
-				WithSDFFilter(sdfFilter).
+				WithSDFFilter(defaultSDFfilter).
 				AddQERID(sessQerID).
 				AddQERID(downlinkAppQerID).
 				WithFARID(downlinkFarID).

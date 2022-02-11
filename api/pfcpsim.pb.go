@@ -37,7 +37,9 @@ type CreateSessionRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Count         int32  `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	// count represents the number of session
+	Count int32 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	// baseID is used to create incremental IDs for PDRs, FARs, QERs
 	BaseID        int32  `protobuf:"varint,2,opt,name=baseID,proto3" json:"baseID,omitempty"`
 	NodeBAddress  string `protobuf:"bytes,3,opt,name=nodeBAddress,proto3" json:"nodeBAddress,omitempty"`
 	UeAddressPool string `protobuf:"bytes,4,opt,name=ueAddressPool,proto3" json:"ueAddressPool,omitempty"`
@@ -108,7 +110,9 @@ type ModifySessionRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Count         int32  `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	// count represents the number of session
+	Count int32 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	// baseID is used to create incremental IDs for PDRs, FARs, QERs
 	BaseID        int32  `protobuf:"varint,2,opt,name=baseID,proto3" json:"baseID,omitempty"`
 	NodeBAddress  string `protobuf:"bytes,3,opt,name=nodeBAddress,proto3" json:"nodeBAddress,omitempty"`
 	UeAddressPool string `protobuf:"bytes,4,opt,name=ueAddressPool,proto3" json:"ueAddressPool,omitempty"`
@@ -179,6 +183,7 @@ type ConfigureRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// the data-plane interface between UPF and gNodeB
 	UpfN3Address      string `protobuf:"bytes,1,opt,name=upfN3Address,proto3" json:"upfN3Address,omitempty"`
 	RemotePeerAddress string `protobuf:"bytes,3,opt,name=remotePeerAddress,proto3" json:"remotePeerAddress,omitempty"`
 }
@@ -234,7 +239,8 @@ type DeleteSessionRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Count  int32 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	Count int32 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	// baseID is used to decide where to start deleting sessions
 	BaseID int32 `protobuf:"varint,2,opt,name=baseID,proto3" json:"baseID,omitempty"`
 }
 
@@ -415,7 +421,7 @@ var file_pfcpsim_proto_rawDesc = []byte{
 	0x0a, 0x0b, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x5f, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20,
 	0x01, 0x28, 0x05, 0x52, 0x0a, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x43, 0x6f, 0x64, 0x65, 0x12,
 	0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x32, 0xc6, 0x03, 0x0a, 0x07, 0x50, 0x46,
+	0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x32, 0x8b, 0x03, 0x0a, 0x07, 0x50, 0x46,
 	0x43, 0x50, 0x53, 0x69, 0x6d, 0x12, 0x33, 0x0a, 0x09, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75,
 	0x72, 0x65, 0x12, 0x15, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75,
 	0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0d, 0x2e, 0x61, 0x70, 0x69, 0x2e,
@@ -440,12 +446,8 @@ var file_pfcpsim_proto_rawDesc = []byte{
 	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x2f, 0x0a, 0x09, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x72,
 	0x75, 0x70, 0x74, 0x12, 0x11, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52,
 	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0d, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x39, 0x0a, 0x13, 0x43, 0x6f, 0x6e, 0x6e, 0x65,
-	0x63, 0x74, 0x54, 0x6f, 0x52, 0x65, 0x6d, 0x6f, 0x74, 0x65, 0x50, 0x65, 0x65, 0x72, 0x12, 0x11,
-	0x2e, 0x61, 0x70, 0x69, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x0d, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x00, 0x42, 0x07, 0x5a, 0x05, 0x2e, 0x3b, 0x61, 0x70, 0x69, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x07, 0x5a, 0x05, 0x2e, 0x3b, 0x61, 0x70, 0x69,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -477,17 +479,15 @@ var file_pfcpsim_proto_depIdxs = []int32{
 	1, // 4: api.PFCPSim.ModifySession:input_type -> api.ModifySessionRequest
 	3, // 5: api.PFCPSim.DeleteSession:input_type -> api.DeleteSessionRequest
 	4, // 6: api.PFCPSim.Interrupt:input_type -> api.EmptyRequest
-	4, // 7: api.PFCPSim.ConnectToRemotePeer:input_type -> api.EmptyRequest
-	5, // 8: api.PFCPSim.Configure:output_type -> api.Response
-	5, // 9: api.PFCPSim.Associate:output_type -> api.Response
-	5, // 10: api.PFCPSim.Disassociate:output_type -> api.Response
-	5, // 11: api.PFCPSim.CreateSession:output_type -> api.Response
-	5, // 12: api.PFCPSim.ModifySession:output_type -> api.Response
-	5, // 13: api.PFCPSim.DeleteSession:output_type -> api.Response
-	5, // 14: api.PFCPSim.Interrupt:output_type -> api.Response
-	5, // 15: api.PFCPSim.ConnectToRemotePeer:output_type -> api.Response
-	8, // [8:16] is the sub-list for method output_type
-	0, // [0:8] is the sub-list for method input_type
+	5, // 7: api.PFCPSim.Configure:output_type -> api.Response
+	5, // 8: api.PFCPSim.Associate:output_type -> api.Response
+	5, // 9: api.PFCPSim.Disassociate:output_type -> api.Response
+	5, // 10: api.PFCPSim.CreateSession:output_type -> api.Response
+	5, // 11: api.PFCPSim.ModifySession:output_type -> api.Response
+	5, // 12: api.PFCPSim.DeleteSession:output_type -> api.Response
+	5, // 13: api.PFCPSim.Interrupt:output_type -> api.Response
+	7, // [7:14] is the sub-list for method output_type
+	0, // [0:7] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -605,15 +605,14 @@ const _ = grpc.SupportPackageIsVersion6
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type PFCPSimClient interface {
 	Configure(ctx context.Context, in *ConfigureRequest, opts ...grpc.CallOption) (*Response, error)
+	// Associate connects PFCPClient to remote peer and starts an association
 	Associate(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Response, error)
 	Disassociate(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Response, error)
 	CreateSession(ctx context.Context, in *CreateSessionRequest, opts ...grpc.CallOption) (*Response, error)
 	ModifySession(ctx context.Context, in *ModifySessionRequest, opts ...grpc.CallOption) (*Response, error)
 	DeleteSession(ctx context.Context, in *DeleteSessionRequest, opts ...grpc.CallOption) (*Response, error)
-	// Interrupt emulates pfcpsim crash
+	// Interrupt emulates a crash causing a disconnection from the remote peer.
 	Interrupt(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Response, error)
-	// Establish connection to remote peer
-	ConnectToRemotePeer(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Response, error)
 }
 
 type pFCPSimClient struct {
@@ -687,27 +686,17 @@ func (c *pFCPSimClient) Interrupt(ctx context.Context, in *EmptyRequest, opts ..
 	return out, nil
 }
 
-func (c *pFCPSimClient) ConnectToRemotePeer(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
-	err := c.cc.Invoke(ctx, "/api.PFCPSim/ConnectToRemotePeer", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // PFCPSimServer is the server API for PFCPSim service.
 type PFCPSimServer interface {
 	Configure(context.Context, *ConfigureRequest) (*Response, error)
+	// Associate connects PFCPClient to remote peer and starts an association
 	Associate(context.Context, *EmptyRequest) (*Response, error)
 	Disassociate(context.Context, *EmptyRequest) (*Response, error)
 	CreateSession(context.Context, *CreateSessionRequest) (*Response, error)
 	ModifySession(context.Context, *ModifySessionRequest) (*Response, error)
 	DeleteSession(context.Context, *DeleteSessionRequest) (*Response, error)
-	// Interrupt emulates pfcpsim crash
+	// Interrupt emulates a crash causing a disconnection from the remote peer.
 	Interrupt(context.Context, *EmptyRequest) (*Response, error)
-	// Establish connection to remote peer
-	ConnectToRemotePeer(context.Context, *EmptyRequest) (*Response, error)
 }
 
 // UnimplementedPFCPSimServer can be embedded to have forward compatible implementations.
@@ -734,9 +723,6 @@ func (*UnimplementedPFCPSimServer) DeleteSession(context.Context, *DeleteSession
 }
 func (*UnimplementedPFCPSimServer) Interrupt(context.Context, *EmptyRequest) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Interrupt not implemented")
-}
-func (*UnimplementedPFCPSimServer) ConnectToRemotePeer(context.Context, *EmptyRequest) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ConnectToRemotePeer not implemented")
 }
 
 func RegisterPFCPSimServer(s *grpc.Server, srv PFCPSimServer) {
@@ -869,24 +855,6 @@ func _PFCPSim_Interrupt_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PFCPSim_ConnectToRemotePeer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EmptyRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(PFCPSimServer).ConnectToRemotePeer(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/api.PFCPSim/ConnectToRemotePeer",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PFCPSimServer).ConnectToRemotePeer(ctx, req.(*EmptyRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 var _PFCPSim_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "api.PFCPSim",
 	HandlerType: (*PFCPSimServer)(nil),
@@ -918,10 +886,6 @@ var _PFCPSim_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Interrupt",
 			Handler:    _PFCPSim_Interrupt_Handler,
-		},
-		{
-			MethodName: "ConnectToRemotePeer",
-			Handler:    _PFCPSim_ConnectToRemotePeer_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
