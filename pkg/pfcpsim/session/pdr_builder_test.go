@@ -89,7 +89,7 @@ func TestPDRBuilderShouldPanic(t *testing.T) {
 	} {
 		t.Run(scenario.description, func(t *testing.T) {
 			assert.Panics(t, func() { scenario.input.BuildPDR() })
-			assert.Equal(t, scenario.input, scenario.expected)
+			assert.Equal(t, scenario.expected, scenario.input)
 		})
 	}
 }
@@ -116,13 +116,13 @@ func TestPDRBuilder(t *testing.T) {
 			expected: ie.NewCreatePDR(
 				ie.NewPDRID(1),
 				ie.NewPrecedence(2),
+				ie.NewOuterHeaderRemoval(0, 0),
+				ie.NewFARID(3),
 				ie.NewPDI(
 					ie.NewSourceInterface(ie.SrcInterfaceAccess),
 					ie.NewFTEID(0x01, 100, net.ParseIP("192.168.0.1"), nil, 0),
 					ie.NewSDFFilter("permit ip any to assigned", "", "", "", 1),
 				),
-				ie.NewOuterHeaderRemoval(0, 0),
-				ie.NewFARID(3),
 				ie.NewQERID(4),
 			),
 			description: "Valid Create Uplink PDR",
@@ -135,21 +135,43 @@ func TestPDRBuilder(t *testing.T) {
 				WithUEAddress("172.16.0.1").
 				WithMethod(Update).
 				WithFARID(3).
-				AddQERID(4).
 				WithSDFFilter("permit ip any to assigned").
+				AddQERID(4).
 				MarkAsDownlink(),
 			expected: ie.NewUpdatePDR(
 				ie.NewPDRID(1),
 				ie.NewPrecedence(2),
+				ie.NewFARID(3),
 				ie.NewPDI(
 					ie.NewSourceInterface(ie.SrcInterfaceCore),
 					ie.NewUEIPAddress(0x2, "172.16.0.1", "", 0, 0),
 					ie.NewSDFFilter("permit ip any to assigned", "", "", "", 1),
 				),
-				ie.NewFARID(3),
 				ie.NewQERID(4),
 			),
-			description: "Valid Update Downlink PDR",
+			description: "Valid Create Downlink PDR",
+		},
+		{
+			input: NewPDRBuilder().
+				WithID(1).
+				WithPrecedence(2).
+				WithTEID(100).
+				WithUEAddress("172.16.0.1").
+				WithMethod(Update).
+				WithFARID(3).
+				AddQERID(4).
+				MarkAsDownlink(),
+			expected: ie.NewUpdatePDR(
+				ie.NewPDRID(1),
+				ie.NewPrecedence(2),
+				ie.NewFARID(3),
+				ie.NewPDI(
+					ie.NewSourceInterface(ie.SrcInterfaceCore),
+					ie.NewUEIPAddress(0x2, "172.16.0.1", "", 0, 0),
+				),
+				ie.NewQERID(4),
+			),
+			description: "Valid Update Downlink PDR no SDF",
 		},
 		{
 			input: NewPDRBuilder().
@@ -160,18 +182,16 @@ func TestPDRBuilder(t *testing.T) {
 				WithMethod(Delete).
 				WithFARID(3).
 				AddQERID(4).
-				WithSDFFilter("permit ip any to assigned").
 				MarkAsDownlink(),
 			expected: ie.NewRemovePDR(
 				ie.NewCreatePDR(
 					ie.NewPDRID(1),
 					ie.NewPrecedence(2),
+					ie.NewFARID(3),
 					ie.NewPDI(
 						ie.NewSourceInterface(ie.SrcInterfaceCore),
 						ie.NewUEIPAddress(0x2, "172.16.0.1", "", 0, 0),
-						ie.NewSDFFilter("permit ip any to assigned", "", "", "", 1),
 					),
-					ie.NewFARID(3),
 					ie.NewQERID(4),
 				),
 			),
@@ -180,7 +200,7 @@ func TestPDRBuilder(t *testing.T) {
 	} {
 		t.Run(scenario.description, func(t *testing.T) {
 			assert.NotPanics(t, func() { scenario.input.BuildPDR() })
-			assert.Equal(t, scenario.input.BuildPDR(), scenario.expected)
+			assert.Equal(t, scenario.expected, scenario.input.BuildPDR())
 		})
 	}
 }
