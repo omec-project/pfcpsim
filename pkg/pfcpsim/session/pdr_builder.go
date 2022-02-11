@@ -127,22 +127,17 @@ func (b *pdrBuilder) BuildPDR() *ie.IE {
 	}
 
 	if b.direction == downlink {
-		pdi := ie.NewPDI(
-			ie.NewSourceInterface(ie.SrcInterfaceCore),
-			ie.NewUEIPAddress(0x2, b.ueAddress, "", 0, 0),
-		)
-
-		if b.sdfFilter != "" {
-			pdi.Add(ie.NewSDFFilter(b.sdfFilter, "", "", "", 1))
-		}
-
 		pdr := createFunc(
 			ie.NewPDRID(b.id),
 			ie.NewPrecedence(b.precedence),
+			ie.NewPDI(
+				ie.NewSourceInterface(ie.SrcInterfaceCore),
+				ie.NewUEIPAddress(0x2, b.ueAddress, "", 0, 0),
+				ie.NewSDFFilter(b.sdfFilter, "", "", "", 1),
+			),
 			ie.NewFARID(b.farID),
 		)
 
-		pdr.Add(pdi)
 		pdr.Add(b.qerIDs...)
 
 		if b.method == Delete {
@@ -153,23 +148,18 @@ func (b *pdrBuilder) BuildPDR() *ie.IE {
 	}
 
 	// UplinkPDR
-	pdi := ie.NewPDI(
-		ie.NewSourceInterface(ie.SrcInterfaceAccess),
-		ie.NewFTEID(0x01, b.teid, net.ParseIP(b.n3Address), nil, 0),
-	)
-
-	if b.sdfFilter != "" {
-		pdi.Add(ie.NewSDFFilter(b.sdfFilter, "", "", "", 1))
-	}
-
 	pdr := createFunc(
 		ie.NewPDRID(b.id),
 		ie.NewPrecedence(b.precedence),
+		ie.NewPDI(
+			ie.NewSourceInterface(ie.SrcInterfaceAccess),
+			ie.NewFTEID(0x01, b.teid, net.ParseIP(b.n3Address), nil, 0),
+			ie.NewSDFFilter(b.sdfFilter, "", "", "", 1),
+		),
 		ie.NewOuterHeaderRemoval(0, 0),
 		ie.NewFARID(b.farID),
 	)
 
-	pdr.Add(pdi)
 	pdr.Add(b.qerIDs...)
 
 	if b.method == Delete {
