@@ -38,7 +38,7 @@ func (P PFCPSimService) Configure(ctx context.Context, request *pb.ConfigureRequ
 	remotePeerAddress = request.RemotePeerAddress
 	upfN3Address = request.UpfN3Address
 
-	configurationMsg := fmt.Sprintf("Server is configured: \n\tRemote peer address: %v, N3 interface address: %v ", remotePeerAddress, upfN3Address)
+	configurationMsg := fmt.Sprintf("Server is configured. Remote peer address: %v, N3 interface address: %v ", remotePeerAddress, upfN3Address)
 	log.Info(configurationMsg)
 
 	return &pb.Response{
