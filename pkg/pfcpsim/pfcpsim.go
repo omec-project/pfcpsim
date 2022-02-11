@@ -122,7 +122,7 @@ func (c *PFCPClient) receiveFromN4() {
 }
 
 func (c *PFCPClient) ConnectN4(remoteAddr string) error {
-	addr := fmt.Sprintf(fmt.Sprintf("%s:%d", remoteAddr, PFCPStandardPort))
+	addr := fmt.Sprintf("%s:%d", remoteAddr, PFCPStandardPort)
 
 	if host, port, err := net.SplitHostPort(remoteAddr); err == nil {
 		// remoteAddr contains also a port. Use provided port instead of PFCPStandardPort
