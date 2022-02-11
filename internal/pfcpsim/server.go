@@ -29,24 +29,13 @@ const (
 type PFCPSimService struct{}
 
 func (P PFCPSimService) Configure(ctx context.Context, request *pb.ConfigureRequest) (*pb.Response, error) {
-	remotePeerAddress = request.RemotePeerAddress
-	if net.ParseIP(remotePeerAddress) == nil {
-		// Try to resolve hostname
-		lookupHost, err := net.LookupHost(remotePeerAddress)
-		if err != nil {
-			errMsg := fmt.Sprintf("Could not retrieve hostname or address for remote peer: %s", remotePeerAddress)
-			log.Error(errMsg)
-			return &pb.Response{}, status.Error(codes.Aborted, errMsg)
-		}
-		remotePeerAddress = lookupHost[0]
-	}
-
 	if net.ParseIP(request.UpfN3Address) == nil {
 		errMsg := fmt.Sprintf("Error while parsing UPF N3 address: %v", request.UpfN3Address)
 		log.Error(errMsg)
 		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 	}
-
+	// remotePeerAddress is validated in pfcpsim
+	remotePeerAddress = request.RemotePeerAddress
 	upfN3Address = request.UpfN3Address
 
 	configurationMsg := fmt.Sprintf("Server is configured: \n\tRemote peer address: %v, N3 interface address: %v ", remotePeerAddress, upfN3Address)

@@ -75,6 +75,7 @@ func main() {
 		})
 		if err != nil {
 			log.Errorf("Error while configuring: %v", err)
+			break
 		}
 
 		log.Info(res.Message)
