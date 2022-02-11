@@ -135,6 +135,30 @@ func TestPDRBuilder(t *testing.T) {
 				WithUEAddress("172.16.0.1").
 				WithMethod(Update).
 				WithFARID(3).
+				WithSDFFilter("permit ip any to assigned").
+				AddQERID(4).
+				MarkAsDownlink(),
+			expected: ie.NewUpdatePDR(
+				ie.NewPDRID(1),
+				ie.NewPrecedence(2),
+				ie.NewFARID(3),
+				ie.NewPDI(
+					ie.NewSourceInterface(ie.SrcInterfaceCore),
+					ie.NewUEIPAddress(0x2, "172.16.0.1", "", 0, 0),
+					ie.NewSDFFilter("permit ip any to assigned", "", "", "", 1),
+				),
+				ie.NewQERID(4),
+			),
+			description: "Valid Create Downlink PDR",
+		},
+		{
+			input: NewPDRBuilder().
+				WithID(1).
+				WithPrecedence(2).
+				WithTEID(100).
+				WithUEAddress("172.16.0.1").
+				WithMethod(Update).
+				WithFARID(3).
 				AddQERID(4).
 				MarkAsDownlink(),
 			expected: ie.NewUpdatePDR(
