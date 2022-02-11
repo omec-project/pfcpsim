@@ -130,7 +130,7 @@ func (P PFCPSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 
 	nodebAddr := request.NodeBAddress
 
-	for i := baseID; i < (count + baseID); i++ {
+	for i := baseID; i < (count*2 + baseID); i = i + 2 {
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i)
 		downlinkTEID := uint32(i + 1)
@@ -253,7 +253,7 @@ func (P PFCPSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
 
-	for i := baseID; i < (count + baseID); i++ {
+	for i := baseID; i < (count*2 + baseID); i = i + 2 {
 		newFARs := []*ieLib.IE{
 			// Downlink FAR
 			session.NewFARBuilder().
