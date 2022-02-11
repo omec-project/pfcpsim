@@ -23,25 +23,25 @@ docker container run --rm -d --name pfcpsim --net host pfcpsim:0.1.0-dev
 
 3. Use pfcpsimctl by using `docker exec` on the same container to configure the server (not passing any flag will use mock-up4's default values)
 ```bash
-docker exec pfcpsim /bin/pfcpsimctl -c configure
+docker exec pfcpsim /bin/pfcpctl -c configure
 ```
 
 4. Associate
 ```bash
-docker exec pfcpsim /bin/pfcpsimctl -c associate
+docker exec pfcpsim /bin/pfcpctl -c associate
 ```
 
 5. Create 5 sessions
 ```bash
-docker exec pfcpsim /bin/pfcpsimctl -c create --count 5 --baseID 2 --ue-pool 17.0.0.0/24 --gnb-addr 198.18.0.10
+docker exec pfcpsim /bin/pfcpctl -c create --count 5 --baseID 2 --ue-pool 17.0.0.0/24 --gnb-addr 198.18.0.10
 ```
 
 6. Delete the sessions
 ```bash
-docker exec pfcpsim /bin/pfcpsimctl -c delete --count 5 --baseID 2
+docker exec pfcpsim /bin/pfcpctl -c delete --count 5 --baseID 2
 ```
 
 7. Disconnect from remote peer
 ```bash
-docker exec pfcpsim /bin/pfcpsimctl -c interrupt
+docker exec pfcpsim /bin/pfcpctl -c interrupt
 ```
