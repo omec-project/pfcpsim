@@ -9,8 +9,8 @@ pfcpsim is designed to work within a containerized environment. The docker image
 ![Alt text](docs/images/schema.svg?raw=true "schema")
 
 ## Example
-In the following example we will borrow the `mock-up4` environment, from [upf-epc repository](https://github.com/omec-project/upf-epc/tree/master/test/integration).
-Using mock-up4's `docker-compose` will create a pfcp agent container listening on `0.0.0.0:8805`:
+In the following example we will borrow `mock-up4` environment, from [upf-epc repository](https://github.com/omec-project/upf-epc/tree/master/test/integration).
+Using mock-up4's `docker-compose.yml` will create a pfcp agent container listening on `0.0.0.0:8805`:
 
 1. Build the container locally (You can skip this once docker image is published by the CI):
 ```bash
@@ -31,7 +31,17 @@ docker exec pfcpsim /bin/pfcpsimctl -c configure
 docker exec pfcpsim /bin/pfcpsimctl -c associate
 ```
 
-6. Create 5 sessions
+5. Create 5 sessions
 ```bash
 docker exec pfcpsim /bin/pfcpsimctl -c create --count 5 --baseID 2 --ue-pool 17.0.0.0/24 --gnb-addr 198.18.0.10
+```
+
+6. Delete the sessions
+```bash
+docker exec pfcpsim /bin/pfcpsimctl -c delete --count 5 --baseID 2
+```
+
+7. Disconnect from remote peer
+```bash
+docker exec pfcpsim /bin/pfcpsimctl -c interrupt
 ```
