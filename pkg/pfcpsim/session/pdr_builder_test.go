@@ -89,7 +89,7 @@ func TestPDRBuilderShouldPanic(t *testing.T) {
 	} {
 		t.Run(scenario.description, func(t *testing.T) {
 			assert.Panics(t, func() { scenario.input.BuildPDR() })
-			assert.Equal(t, scenario.input, scenario.expected)
+			assert.Equal(t, scenario.expected, scenario.input)
 		})
 	}
 }
