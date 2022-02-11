@@ -76,7 +76,7 @@ func main() {
 	}()
 
 	wg := sync.WaitGroup{}
-	wg.Add(4)
+	wg.Add(1)
 
 	go startServer(doneChannel, *port, &wg)
 	log.Debugf("Started API gRPC Service")
