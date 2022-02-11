@@ -27,6 +27,7 @@ message ModifySessionRequest {
 message ConfigureRequest {
   // the data-plane interface between UPF and gNodeB
   string upfN3Address = 1;
+  // the PFCP agent server address
   string remotePeerAddress = 3;
 }
 
@@ -47,11 +48,10 @@ service PFCPSim {
   rpc Configure (ConfigureRequest) returns (Response) {}
   // Associate connects PFCPClient to remote peer and starts an association
   rpc Associate (EmptyRequest) returns (Response) {}
+  // Disassociate perform teardown of association and disconnects from remote peer.
   rpc Disassociate (EmptyRequest) returns (Response) {}
 
   rpc CreateSession (CreateSessionRequest) returns (Response) {}
   rpc ModifySession (ModifySessionRequest) returns (Response) {}
   rpc DeleteSession (DeleteSessionRequest) returns (Response) {}
-  // Interrupt emulates a crash causing a disconnection from the remote peer.
-  rpc Interrupt(EmptyRequest) returns (Response) {}
 }

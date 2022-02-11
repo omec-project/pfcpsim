@@ -21,7 +21,8 @@ import (
 )
 
 const (
-	//FIXME: the SDF Filter is not spec-compliant. We should fix it once SD-Core supports the spec-compliant format.
+	// FIXME: the SDF Filter is not spec-compliant. We should fix it once SD-Core supports the spec-compliant format.
+	// TODO make SDF filter configurable using the cli
 	defaultSDFfilter = "permit out ip from 0.0.0.0/0 to assigned 80-80"
 )
 
@@ -45,24 +46,6 @@ func (P PFCPSimService) Configure(ctx context.Context, request *pb.ConfigureRequ
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
 		Message:    configurationMsg,
-	}, nil
-}
-
-func (P PFCPSimService) Interrupt(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
-	if !isConfigured() {
-		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
-	}
-
-	sim.DisconnectN4()
-
-	remotePeerConnected = false
-
-	infoMsg := "Connection to remote peer closed"
-	log.Info(infoMsg)
-
-	return &pb.Response{
-		StatusCode: int32(codes.OK),
-		Message:    infoMsg,
 	}, nil
 }
 
@@ -104,7 +87,11 @@ func (P PFCPSimService) Disassociate(ctx context.Context, empty *pb.EmptyRequest
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
 
-	infoMsg := "Association teardown completed"
+	sim.DisconnectN4()
+
+	remotePeerConnected = false
+
+	infoMsg := "Association teardown completed and connection to remote peer closed"
 	log.Info(infoMsg)
 
 	return &pb.Response{
