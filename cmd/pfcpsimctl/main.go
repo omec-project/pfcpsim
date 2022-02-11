@@ -87,7 +87,7 @@ func main() {
 			break
 		}
 
-		log.Info(res.Message)
+		log.Infof(res.Message)
 
 	case "associate":
 		res, err := simClient.Associate(context.Background(), &pb.EmptyRequest{})
@@ -96,7 +96,7 @@ func main() {
 			break
 		}
 
-		log.Info(res.Message)
+		log.Infof(res.Message)
 
 	case "create":
 		res, err := simClient.CreateSession(context.Background(), &pb.CreateSessionRequest{
@@ -110,7 +110,7 @@ func main() {
 			break
 		}
 
-		log.Info(res.Message)
+		log.Infof(res.Message)
 
 	case "modify":
 		res, err := simClient.ModifySession(context.Background(), &pb.ModifySessionRequest{
@@ -124,7 +124,7 @@ func main() {
 			break
 		}
 
-		log.Info(res.Message)
+		log.Infof(res.Message)
 
 	case "delete":
 		res, err := simClient.DeleteSession(context.Background(), &pb.DeleteSessionRequest{
@@ -136,7 +136,7 @@ func main() {
 			break
 		}
 
-		log.Info(res.Message)
+		log.Infof(res.Message)
 
 	case "interrupt":
 		res, err := simClient.Interrupt(context.Background(), &pb.EmptyRequest{})
@@ -145,7 +145,7 @@ func main() {
 			break
 		}
 
-		log.Info(res.Message)
+		log.Infof(res.Message)
 
 	default:
 		log.Error("Command not recognized")
