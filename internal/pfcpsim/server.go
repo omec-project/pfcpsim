@@ -302,7 +302,7 @@ func (P PFCPSimService) DeleteSession(ctx context.Context, request *pb.DeleteSes
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
 
-	for i := baseID; i < (count + baseID); i++ {
+	for i := baseID; i < (count*2 + baseID); i = i + 2 {
 		sess, ok := getSession(i)
 		if !ok {
 			errMsg := "Session was nil. Check baseID"
