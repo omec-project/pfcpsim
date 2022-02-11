@@ -23,4 +23,8 @@ RUN apk update && apk add net-tools && apk add --no-cache bash
 
 COPY --from=builder /bin/pfcpctl /bin
 COPY --from=builder /bin/pfcpsim /bin
+
+# Make pfcpctl and pfcpsim globally available
+RUN echo "export PATH=/bin:${PATH}" >> /root/.bashrc
+
 ENTRYPOINT [ "/bin/pfcpsim" ]
