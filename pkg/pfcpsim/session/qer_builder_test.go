@@ -30,17 +30,6 @@ func TestQERBuilderShouldPanic(t *testing.T) {
 			},
 			description: "Invalid QER: No ID provided",
 		},
-		{
-			input: NewQERBuilder().
-				WithMethod(Create).
-				WithID(2),
-			expected: &qerBuilder{
-				method:  Create,
-				qerID:   2,
-				isIDSet: true,
-			},
-			description: "Invalid QER: No QFI provided",
-		},
 	} {
 		t.Run(scenario.description, func(t *testing.T) {
 			assert.Panics(t, func() { scenario.input.Build() })

@@ -55,10 +55,6 @@ func (b *qerBuilder) validate() {
 	if !b.isIDSet {
 		panic("Tried to build a QER without setting the QER ID")
 	}
-
-	if b.qfi == 0 {
-		panic("Tried to create a QER with 0 as QFI")
-	}
 }
 
 func (b *qerBuilder) WithMethod(method IEMethod) *qerBuilder {
