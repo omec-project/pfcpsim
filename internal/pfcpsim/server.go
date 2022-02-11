@@ -256,7 +256,7 @@ func (P PFCPSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 		newFARs := []*ieLib.IE{
 			// Downlink FAR
 			session.NewFARBuilder().
-				WithID(uint32(i)). // Same FARID that was generated in create sessions
+				WithID(uint32(i + 1)). // Same FARID that was generated in create sessions
 				WithMethod(session.Update).
 				WithAction(session.ActionForward).
 				WithDstInterface(ieLib.DstInterfaceAccess).
