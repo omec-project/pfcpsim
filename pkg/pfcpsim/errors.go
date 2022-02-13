@@ -52,3 +52,10 @@ func NewInvalidResponseError(err ...error) *pfcpSimError {
 		error:   err,
 	}
 }
+
+func NewInvalidRequestError(err ...error) *pfcpSimError {
+	return &pfcpSimError{
+		message: "Invalid request received",
+		error:   err,
+	}
+}

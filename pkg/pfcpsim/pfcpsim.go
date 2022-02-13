@@ -42,7 +42,9 @@ type PFCPClient struct {
 	seqNumLock     sync.Mutex
 
 	localAddr string
-	conn      *net.UDPConn
+	// remoteAddr is needed when association is performed by the UP
+	remoteAddr string
+	conn       *net.UDPConn
 }
 
 func NewPFCPClient(localAddr string) *PFCPClient {
@@ -92,6 +94,19 @@ func (c *PFCPClient) sendMsg(msg message.Message) error {
 		return err
 	}
 
+	if c.remoteAddr != "" {
+		rAddr, err := net.ResolveUDPAddr("udp", c.remoteAddr)
+		if err != nil {
+			return err
+		}
+
+		if _, err := c.conn.WriteToUDP(b, rAddr); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
 	if _, err := c.conn.Write(b); err != nil {
 		return err
 	}
@@ -119,6 +134,51 @@ func (c *PFCPClient) receiveFromN4() {
 			c.recvChan <- msg
 		}
 	}
+}
+
+// ListenN4 allows for UP initiated PFCP associations. It waits for a connection and for an association request from UP.
+func (c *PFCPClient) ListenN4() error {
+	conn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: PFCPStandardPort})
+	if err != nil {
+		return err
+	}
+
+	buf := make([]byte, 1500)
+	n, remoteAddr, err := conn.ReadFromUDP(buf)
+
+	if err != nil {
+		return err
+	}
+
+	msg, err := message.Parse(buf[:n])
+	if err != nil {
+		return err
+	}
+
+	if _, ok := msg.(*message.AssociationSetupRequest); !ok {
+		return NewInvalidRequestError()
+	}
+
+	// Save remote address when connection is established while listening
+	c.remoteAddr = remoteAddr.String()
+	c.conn = conn
+
+	err = c.SendAssociationSetupResponse()
+	if err != nil {
+		// clear connection in case of error
+		c.conn = nil
+		return err
+	}
+
+	ctx, cancelFunc := context.WithCancel(c.ctx)
+	c.cancelHeartbeats = cancelFunc
+
+	c.setAssociationStatus(true)
+
+	go c.receiveFromN4()
+	go c.StartHeartbeats(ctx)
+
+	return nil
 }
 
 func (c *PFCPClient) ConnectN4(remoteAddr string) error {
@@ -185,6 +245,18 @@ func (c *PFCPClient) SendAssociationSetupRequest(ie ...*ieLib.IE) error {
 	assocReq.IEs = append(assocReq.IEs, ie...)
 
 	return c.sendMsg(assocReq)
+}
+
+func (c *PFCPClient) SendAssociationSetupResponse(ie ...*ieLib.IE) error {
+	assocRes := message.NewAssociationSetupResponse(
+		c.getNextSequenceNumber(),
+		ieLib.NewRecoveryTimeStamp(time.Now()),
+		ieLib.NewNodeID(c.localAddr, "", ""),
+	)
+
+	assocRes.IEs = append(assocRes.IEs, ie...)
+
+	return c.sendMsg(assocRes)
 }
 
 func (c *PFCPClient) SendHeartbeatRequest() error {
