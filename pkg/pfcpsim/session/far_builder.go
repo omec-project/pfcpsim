@@ -12,7 +12,8 @@ type farBuilder struct {
 	downlinkIP   string
 	dstInterface uint8
 
-	isInterfaceSet bool
+	zeroBasedOuterHeader bool
+	isInterfaceSet       bool
 }
 
 // NewFARBuilder returns a farBuilder.
@@ -22,6 +23,11 @@ func NewFARBuilder() *farBuilder {
 
 func (b *farBuilder) WithID(id uint32) *farBuilder {
 	b.farID = id
+	return b
+}
+
+func (b *farBuilder) WithZeroBasedOuterHeaderCreation() *farBuilder {
+	b.zeroBasedOuterHeader = true
 	return b
 }
 
@@ -61,7 +67,7 @@ func (b *farBuilder) validate() {
 		panic("Tried building FAR without setting a destination interface")
 	}
 
-	if b.downlinkIP != "" && b.teid == 0 || b.downlinkIP == "" && b.teid != 0 {
+	if (b.downlinkIP != "" && b.teid == 0 || b.downlinkIP == "" && b.teid != 0) && !b.zeroBasedOuterHeader {
 		panic("Tried building FAR providing only partial parameters. Check downlink IP or TEID")
 	}
 }
@@ -71,30 +77,31 @@ func (b *farBuilder) validate() {
 func (b *farBuilder) BuildFAR() *ie.IE {
 	b.validate()
 
-	updateFwdParams := ie.NewForwardingParameters(
+	fwdParams := ie.NewForwardingParameters(
 		ie.NewDestinationInterface(b.dstInterface),
 	)
 
 	createFunc := ie.NewCreateFAR
 	if b.method == Update {
 		createFunc = ie.NewUpdateFAR
-		updateFwdParams = ie.NewUpdateForwardingParameters(
+		fwdParams = ie.NewUpdateForwardingParameters(
 			ie.NewDestinationInterface(b.dstInterface),
 		)
 	}
 
-	if b.downlinkIP != "" && b.teid != 0 {
-		updateFwdParams.Add(
-			// FIXME desc 0x100?
-			ie.NewOuterHeaderCreation(0x100, b.teid, b.downlinkIP, "", 0, 0, 0),
-		)
+	if b.zeroBasedOuterHeader {
+		fwdParams.Add(ie.NewOuterHeaderCreation(S_TAG, 0, "0.0.0.0", "", 0, 0, 0))
+	} else {
+		// TEID and DownlinkIP are provided
+		fwdParams.Add(ie.NewOuterHeaderCreation(S_TAG, b.teid, b.downlinkIP, "", 0, 0, 0))
 	}
 
 	far := createFunc(
 		ie.NewFARID(b.farID),
 		ie.NewApplyAction(b.applyAction),
-		updateFwdParams,
+		fwdParams,
 	)
+
 	if b.method == Delete {
 		return ie.NewRemoveFAR(far)
 	}

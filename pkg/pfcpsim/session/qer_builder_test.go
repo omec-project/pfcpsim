@@ -55,8 +55,6 @@ func TestQERBuilder(t *testing.T) {
 				ie.NewQERID(1),
 				ie.NewQFI(2),
 				ie.NewGateStatus(0, 0),
-				ie.NewMBR(0, 0),
-				ie.NewGBR(0, 0),
 			),
 			description: "Valid Create QER",
 		},
@@ -64,13 +62,14 @@ func TestQERBuilder(t *testing.T) {
 			input: NewQERBuilder().
 				WithID(1).
 				WithMethod(Update).
-				WithQFI(2),
+				WithQFI(2).
+				WithDownlinkMBR(0).
+				WithUplinkMBR(0),
 			expected: ie.NewUpdateQER(
 				ie.NewQERID(1),
 				ie.NewQFI(2),
 				ie.NewGateStatus(0, 0),
 				ie.NewMBR(0, 0),
-				ie.NewGBR(0, 0),
 			),
 			description: "Valid Update QER",
 		},
@@ -78,13 +77,14 @@ func TestQERBuilder(t *testing.T) {
 			input: NewQERBuilder().
 				WithID(1).
 				WithMethod(Delete).
-				WithQFI(2),
+				WithQFI(2).
+				WithDownlinkGBR(0).
+				WithUplinkGBR(0),
 			expected: ie.NewRemoveQER(
 				ie.NewCreateQER(
 					ie.NewQERID(1),
 					ie.NewQFI(2),
 					ie.NewGateStatus(0, 0),
-					ie.NewMBR(0, 0),
 					ie.NewGBR(0, 0),
 				),
 			),

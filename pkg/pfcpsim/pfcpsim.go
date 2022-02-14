@@ -122,17 +122,16 @@ func (c *PFCPClient) receiveFromN4() {
 }
 
 func (c *PFCPClient) ConnectN4(remoteAddr string) error {
-	raddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", remoteAddr, PFCPStandardPort))
-	if err != nil {
-		return err
-	}
+	addr := fmt.Sprintf("%s:%d", remoteAddr, PFCPStandardPort)
 
 	if host, port, err := net.SplitHostPort(remoteAddr); err == nil {
 		// remoteAddr contains also a port. Use provided port instead of PFCPStandardPort
-		raddr, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%s", host, port))
-		if err != nil {
-			return err
-		}
+		addr = fmt.Sprintf("%s:%s", host, port)
+	}
+
+	raddr, err := net.ResolveUDPAddr("udp", addr)
+	if err != nil {
+		return err
 	}
 
 	conn, err := net.DialUDP("udp", nil, raddr)
