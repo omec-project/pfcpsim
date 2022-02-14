@@ -46,7 +46,6 @@ jobs:
 
       - name: Build with Docker
         uses: docker/build-push-action@v2
-        if: steps.check.outputs.PORCELAIN == ""
         with:
           context: .
           push: true
