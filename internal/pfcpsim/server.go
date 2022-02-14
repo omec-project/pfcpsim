@@ -135,10 +135,8 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 
 		sessQerID := uint32(i + 3)
 
-		appQerID := uint32(i)
-
-		uplinkAppQerID := appQerID
-		downlinkAppQerID := appQerID + 1
+		uplinkAppQerID := uint32(i)
+		downlinkAppQerID := uint32(i + 1)
 
 		pdrs := []*ieLib.IE{
 			// UplinkPDR
@@ -183,6 +181,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				WithAction(session.ActionDrop).
 				WithMethod(session.Create).
 				WithDstInterface(ieLib.DstInterfaceAccess).
+				WithZeroBasedOuterHeaderCreation().
 				BuildFAR(),
 		}
 
@@ -195,16 +194,24 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				WithDownlinkMBR(50000).
 				Build(),
 
-			// application QER
+			// Uplink application QER
 			// TODO make rates configurable by pfcpctl
 			session.NewQERBuilder().
-				WithID(appQerID).
+				WithID(uplinkAppQerID).
 				WithMethod(session.Create).
 				WithQFI(0x08).
 				WithUplinkMBR(50000).
-				WithUplinkGBR(50000).
 				WithDownlinkMBR(30000).
-				WithUplinkGBR(30000).
+				Build(),
+
+			// Downlink application QER
+			// TODO make rates configurable by pfcpctl
+			session.NewQERBuilder().
+				WithID(downlinkAppQerID).
+				WithMethod(session.Create).
+				WithQFI(0x08).
+				WithUplinkMBR(50000).
+				WithDownlinkMBR(30000).
 				Build(),
 		}
 
