@@ -16,16 +16,18 @@ pfcpsim is designed to work within a containerized environment. The docker image
 make build-pfcpsim
 ```
 
-#### 2. Create the container. Use `-p` to set a custom gRPC listening port (default is 54321)
+#### 2. Create the container:
 ```bash
-docker container run --rm -d --name pfcpsim pfcpsim:0.1.0-dev -p 12345
+docker container run --rm -d --name pfcpsim pfcpsim:0.1.0-dev -p 12345 --interface <interface-name>
 ```
+ - `-p` (**optional**, default is 54321): to set a custom gRPC listening port
+ - `--interface` (**optional**, default is first non-loopback interface): to specify a specific interface from which retrieve local IP address
 
 #### 3. Use `pfcpctl` to configure server's remote peer address and N3 interface address:
 ```bash
 docker exec pfcpsim pfcpctl --server localhost:12345 -c configure --n3-addr <N3-interface-address> --remote-peer <PFCP-server-address>
 ```
- - `--server`: gRPC server address.
+ - `--server`: (**optional**, Default is localhost:54321) gRPC server address.
  - `-c`: command to execute.
  - `--n3-addr`: address of the N3 Interface between UPF and nodeB.
  - `--remote-peer`: address of the PFCP server. It supports the override of the IANA PFCP port (e.g. `10.0.0.1:8888`).
