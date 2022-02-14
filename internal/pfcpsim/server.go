@@ -120,12 +120,9 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 	}
 
-	nodebAddr := request.NodeBAddress
-
 	for i := baseID; i < (count*2 + baseID); i = i + 2 {
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i)
-		downlinkTEID := uint32(i + 1)
 
 		ueAddress := iplib.NextIP(lastUEAddr)
 		lastUEAddr = ueAddress
@@ -186,8 +183,6 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				WithAction(session.ActionDrop).
 				WithMethod(session.Create).
 				WithDstInterface(ieLib.DstInterfaceAccess).
-				WithTEID(downlinkTEID).
-				WithDownlinkIP(nodebAddr).
 				BuildFAR(),
 		}
 
@@ -196,7 +191,6 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 			session.NewQERBuilder().
 				WithID(sessQerID).
 				WithMethod(session.Create).
-				WithQFI(0x09).
 				WithUplinkMBR(50000).
 				WithDownlinkMBR(50000).
 				Build(),
@@ -254,7 +248,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 				WithMethod(session.Update).
 				WithAction(session.ActionForward).
 				WithDstInterface(ieLib.DstInterfaceAccess).
-				WithTEID(uint32(i + 1)). // Same downlinkTEID that was generated in create sessions
+				WithTEID(uint32(i + 1)).
 				WithDownlinkIP(nodeBaddress).
 				BuildFAR(),
 		}

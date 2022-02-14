@@ -31,7 +31,7 @@ test: .coverage
 
 build-proto:
 	@echo "Compiling proto files..."
-	docker run --rm -v $(CURDIR)/api:/source -w /source jaegertracing/protobuf:latest \
+	docker run --rm -v $(CURDIR)/api:/source -w /source jaegertracing/protobuf:0.3.1 \
     -I./ \
     --go_out=paths=source_relative,plugins=grpc:./ \
     pfcpsim.proto
