@@ -6,23 +6,19 @@
 package pfcpsim
 
 import (
-	"fmt"
 	"net"
-	"os/exec"
-	"runtime"
-	"strings"
 
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
 )
 
 func connectPFCPSim() error {
 	if sim == nil {
-		localAddress, err := getLocalAddress()
+		localAddr, err := getLocalAddress(interfaceName)
 		if err != nil {
 			return err
 		}
 
-		sim = pfcpsim.NewPFCPClient(localAddress)
+		sim = pfcpsim.NewPFCPClient(localAddr.String())
 	}
 
 	err := sim.ConnectN4(remotePeerAddress)
@@ -47,38 +43,33 @@ func isRemotePeerConnected() bool {
 	return remotePeerConnected
 }
 
-// getLocalAddress retrieves local address in string format to use when establishing a connection with PFCP agent
-func getLocalAddress() (string, error) {
-	// cmd to run for darwin platforms
-	cmd := "route -n get default | grep 'interface:' | grep -o '[^ ]*$'"
-
-	if runtime.GOOS != "darwin" {
-		// assuming linux platform
-		cmd = "route | grep '^default' | grep -o '[^ ]*$'"
-	}
-
-	cmdOutput, err := exec.Command("bash", "-c", cmd).Output()
+// getLocalAddress retrieves the IP of the first non-loopback interface.
+// Returns IP address of interfaceName, if specified.
+// Returns error if fail occurs at any stage.
+func getLocalAddress(interfaceName string) (net.IP, error) {
+	addrs, err := net.InterfaceAddrs()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	interfaceName := strings.TrimSuffix(string(cmdOutput[:]), "\n")
+	if interfaceName != "" {
+		// Interface name is specified. Use it.
+		interfaceAddrs, err := net.InterfaceByName(interfaceName)
+		if err != nil {
+			return nil, err
+		}
 
-	itf, _ := net.InterfaceByName(interfaceName)
-	item, _ := itf.Addrs()
-	var ip net.IP
-	for _, addr := range item {
-		switch v := addr.(type) {
-		case *net.IPNet:
-			if v.IP.To4() != nil { //Verify if IP is IPV4
-				ip = v.IP
+		addrs, _ = interfaceAddrs.Addrs()
+	}
+
+	for _, address := range addrs {
+		// Check address type to be non-loopback
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP, nil
 			}
 		}
 	}
 
-	if ip != nil {
-		return ip.String(), nil
-	}
-
-	return "", fmt.Errorf("could not find interface: %v", interfaceName)
+	return nil, pfcpsim.NewNoValidInterfaceError()
 }

@@ -39,6 +39,13 @@ func NewNotEnoughSessionsError(err ...error) *pfcpSimError {
 	}
 }
 
+func NewNoValidInterfaceError(err ...error) *pfcpSimError {
+	return &pfcpSimError{
+		message: "No valid interface found",
+		error:   err,
+	}
+}
+
 func NewAssociationInactiveError(err ...error) *pfcpSimError {
 	return &pfcpSimError{
 		message: "Could not complete operation: Association is not active",

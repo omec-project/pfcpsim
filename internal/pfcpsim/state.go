@@ -18,6 +18,8 @@ var (
 	remotePeerAddress string
 	upfN3Address      string
 
+	interfaceName string
+
 	// Emulates 5G SMF/ 4G SGW
 	sim                 *pfcpsim.PFCPClient
 	remotePeerConnected bool

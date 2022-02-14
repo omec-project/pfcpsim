@@ -26,11 +26,16 @@ const (
 	defaultSDFfilter = "permit out ip from 0.0.0.0/0 to assigned 80-80"
 )
 
-// PFCPSimService implements the Protobuf interface and keeps a connection to a remote PFCP Agent peer.
+// pfcpSimService implements the Protobuf interface and keeps a connection to a remote PFCP Agent peer.
 // Its state is handled in internal/pfcpsim/state.go
-type PFCPSimService struct{}
+type pfcpSimService struct{}
 
-func (P PFCPSimService) Configure(ctx context.Context, request *pb.ConfigureRequest) (*pb.Response, error) {
+func NewPFCPSimService(iface string) *pfcpSimService {
+	interfaceName = iface
+	return &pfcpSimService{}
+}
+
+func (P pfcpSimService) Configure(ctx context.Context, request *pb.ConfigureRequest) (*pb.Response, error) {
 	if net.ParseIP(request.UpfN3Address) == nil {
 		errMsg := fmt.Sprintf("Error while parsing UPF N3 address: %v", request.UpfN3Address)
 		log.Error(errMsg)
@@ -49,7 +54,7 @@ func (P PFCPSimService) Configure(ctx context.Context, request *pb.ConfigureRequ
 	}, nil
 }
 
-func (P PFCPSimService) Associate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
+func (P pfcpSimService) Associate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
 	if !isConfigured() {
 		log.Error("Server is not configured")
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
@@ -77,7 +82,7 @@ func (P PFCPSimService) Associate(ctx context.Context, empty *pb.EmptyRequest) (
 	}, nil
 }
 
-func (P PFCPSimService) Disassociate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
+func (P pfcpSimService) Disassociate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
 	if !isConfigured() {
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
 	}
@@ -100,7 +105,7 @@ func (P PFCPSimService) Disassociate(ctx context.Context, empty *pb.EmptyRequest
 	}, nil
 }
 
-func (P PFCPSimService) CreateSession(ctx context.Context, request *pb.CreateSessionRequest) (*pb.Response, error) {
+func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSessionRequest) (*pb.Response, error) {
 	if !isConfigured() {
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
 	}
@@ -197,6 +202,7 @@ func (P PFCPSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				Build(),
 
 			// application QER
+			// TODO make rates configurable by pfcpctl
 			session.NewQERBuilder().
 				WithID(appQerID).
 				WithMethod(session.Create).
@@ -224,7 +230,7 @@ func (P PFCPSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 	}, nil
 }
 
-func (P PFCPSimService) ModifySession(ctx context.Context, request *pb.ModifySessionRequest) (*pb.Response, error) {
+func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySessionRequest) (*pb.Response, error) {
 	if !isConfigured() {
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
 	}
@@ -275,7 +281,7 @@ func (P PFCPSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 	}, nil
 }
 
-func (P PFCPSimService) DeleteSession(ctx context.Context, request *pb.DeleteSessionRequest) (*pb.Response, error) {
+func (P pfcpSimService) DeleteSession(ctx context.Context, request *pb.DeleteSessionRequest) (*pb.Response, error) {
 	if !isConfigured() {
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
 	}
