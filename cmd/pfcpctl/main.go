@@ -44,6 +44,8 @@ func main() {
 	ueAddrPool := getopt.StringLong("ue-pool", 'u', "", "The IPv4 prefix from which UE addresses will be drawn.")
 	nodeBAddr := getopt.StringLong("nb-addr", 'g', "", "The IPv4 address of the NodeB")
 	remotePeer := getopt.StringLong("remote-peer", 'r', "", "The remote PFCP Agent address")
+	bufferFlag := getopt.BoolLong("buffer", 'b', "If set, modified sessions will contain the buffer flag set to 1")
+	notifyCPFlag := getopt.BoolLong("notifycp", 'm', "If set, modified sessions will contain the notifyCP flag set to 1")
 
 	optHelp := getopt.BoolLong("help", 0, "Help")
 
@@ -107,6 +109,8 @@ func main() {
 			BaseID:        int32(*baseId),
 			NodeBAddress:  *nodeBAddr,
 			UeAddressPool: *ueAddrPool,
+			BufferFlag:    *bufferFlag,
+			NotifyCPFlag:  *notifyCPFlag,
 		})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
