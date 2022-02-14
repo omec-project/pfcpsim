@@ -25,6 +25,19 @@ jobs:
         with:
           path: ./VERSION
 
+      - name: Build protobuf
+        id: check
+        run: |
+          make build-proto
+          echo "::set-output name=PORCELAIN::`git status --porcelain`"
+      # Verify that protobuf is in sync with changes
+      - name: Check protobuf is sync
+        if: ${{ steps.check.outputs.PORCELAIN }} != ""
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('Please run "make build-proto" and commit changes to compiled protobuf')
+
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
@@ -33,6 +46,7 @@ jobs:
 
       - name: Build with Docker
         uses: docker/build-push-action@v2
+        if: steps.check.outputs.PORCELAIN == ""
         with:
           context: .
           push: true
