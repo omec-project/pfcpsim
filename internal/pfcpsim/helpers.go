@@ -43,8 +43,8 @@ func isRemotePeerConnected() bool {
 	return remotePeerConnected
 }
 
-// getLocalAddress retrieves the IP of the first non-loopback interface.
-// Returns IP address of interfaceName, if specified.
+// getLocalAddress returns the first IP address of the interfaceName, if specified,
+// otherwise returns the IP address of the first non-loopback interface
 // Returns error if fail occurs at any stage.
 func getLocalAddress(interfaceName string) (net.IP, error) {
 	addrs, err := net.InterfaceAddrs()
