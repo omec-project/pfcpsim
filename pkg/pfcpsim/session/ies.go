@@ -13,9 +13,7 @@ const (
 	notSet direction = iota
 	uplink
 	downlink
-)
 
-const (
 	Create IEMethod = iota
 	Update
 	Delete

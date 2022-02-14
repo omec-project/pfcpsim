@@ -20,7 +20,7 @@ func TestFARBuilderShouldPanic(t *testing.T) {
 				WithAction(ActionDrop),
 			expected: &farBuilder{
 				method:      Create,
-				applyAction: ActionDrop,
+				applyAction: []uint8{ActionDrop},
 			},
 			description: "Invalid FAR: No ID provided",
 		},
@@ -33,7 +33,7 @@ func TestFARBuilderShouldPanic(t *testing.T) {
 
 			expected: &farBuilder{
 				farID:       2,
-				applyAction: ActionDrop,
+				applyAction: []uint8{ActionDrop},
 				teid:        100,
 			},
 			description: "Invalid FAR: Providing TEID without DownlinkIP",
@@ -45,10 +45,28 @@ func TestFARBuilderShouldPanic(t *testing.T) {
 				WithDownlinkIP("10.0.0.1"),
 			expected: &farBuilder{
 				farID:       1,
-				applyAction: ActionForward,
+				applyAction: []uint8{ActionForward},
 				downlinkIP:  "10.0.0.1",
 			},
 			description: "Invalid FAR: Providing DownlinkIP without TEID",
+		},
+		{
+			input: NewFARBuilder().WithMethod(Create).
+				WithID(1).
+				WithAction(ActionForward).
+				WithAction(ActionDrop).
+				WithAction(ActionBuffer).
+				WithAction(ActionNotify).
+				WithDownlinkIP("10.0.0.1").
+				WithTEID(100),
+			expected: &farBuilder{
+				farID:       1,
+				method:      Create,
+				applyAction: []uint8{ActionForward, ActionDrop, ActionBuffer, ActionNotify},
+				downlinkIP:  "10.0.0.1",
+				teid:        100,
+			},
+			description: "Invalid FAR: Providing both Forward and Drop actions",
 		},
 	} {
 		t.Run(scenario.description, func(t *testing.T) {

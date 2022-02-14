@@ -6,7 +6,7 @@ import (
 
 type farBuilder struct {
 	farID        uint32
-	applyAction  uint8
+	applyAction  []uint8
 	method       IEMethod
 	teid         uint32
 	downlinkIP   string
@@ -17,7 +17,9 @@ type farBuilder struct {
 
 // NewFARBuilder returns a farBuilder.
 func NewFARBuilder() *farBuilder {
-	return &farBuilder{}
+	return &farBuilder{
+		applyAction: make([]uint8, 0),
+	}
 }
 
 func (b *farBuilder) WithID(id uint32) *farBuilder {
@@ -31,7 +33,7 @@ func (b *farBuilder) WithMethod(method IEMethod) *farBuilder {
 }
 
 func (b *farBuilder) WithAction(action uint8) *farBuilder {
-	b.applyAction = action
+	b.applyAction = append(b.applyAction, action)
 	return b
 }
 
@@ -57,6 +59,16 @@ func (b *farBuilder) validate() {
 		panic("Tried building FAR without setting FAR ID")
 	}
 
+	if len(b.applyAction) == 0 {
+		panic("Tried building FAR without providing at least one action")
+	}
+
+	if len(b.applyAction) != 0 {
+		if contains(b.applyAction, ActionDrop) && contains(b.applyAction, ActionForward) {
+			panic("Tried building FAR providing both Forward and Drop actions")
+		}
+	}
+
 	if !b.isInterfaceSet {
 		panic("Tried building FAR without setting a destination interface")
 	}
@@ -71,20 +83,20 @@ func (b *farBuilder) validate() {
 func (b *farBuilder) BuildFAR() *ie.IE {
 	b.validate()
 
-	updateFwdParams := ie.NewForwardingParameters(
+	fwdParams := ie.NewForwardingParameters(
 		ie.NewDestinationInterface(b.dstInterface),
 	)
 
 	createFunc := ie.NewCreateFAR
 	if b.method == Update {
 		createFunc = ie.NewUpdateFAR
-		updateFwdParams = ie.NewUpdateForwardingParameters(
+		fwdParams = ie.NewUpdateForwardingParameters(
 			ie.NewDestinationInterface(b.dstInterface),
 		)
 	}
 
 	if b.downlinkIP != "" && b.teid != 0 {
-		updateFwdParams.Add(
+		fwdParams.Add(
 			// FIXME desc 0x100?
 			ie.NewOuterHeaderCreation(0x100, b.teid, b.downlinkIP, "", 0, 0, 0),
 		)
@@ -92,9 +104,13 @@ func (b *farBuilder) BuildFAR() *ie.IE {
 
 	far := createFunc(
 		ie.NewFARID(b.farID),
-		ie.NewApplyAction(b.applyAction),
-		updateFwdParams,
+		fwdParams,
 	)
+
+	for _, action := range b.applyAction {
+		far.Add(ie.NewApplyAction(action))
+	}
+
 	if b.method == Delete {
 		return ie.NewRemoveFAR(far)
 	}
