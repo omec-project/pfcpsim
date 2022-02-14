@@ -186,6 +186,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		}
 
 		qers := []*ieLib.IE{
+			// TODO make rates configurable by pfcpctl
 			// session QER
 			session.NewQERBuilder().
 				WithID(sessQerID).
@@ -195,7 +196,6 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				Build(),
 
 			// Uplink application QER
-			// TODO make rates configurable by pfcpctl
 			session.NewQERBuilder().
 				WithID(uplinkAppQerID).
 				WithMethod(session.Create).
@@ -205,7 +205,6 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				Build(),
 
 			// Downlink application QER
-			// TODO make rates configurable by pfcpctl
 			session.NewQERBuilder().
 				WithID(downlinkAppQerID).
 				WithMethod(session.Create).
