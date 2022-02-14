@@ -85,7 +85,8 @@ func (b *farBuilder) BuildFAR() *ie.IE {
 
 	if b.downlinkIP != "" && b.teid != 0 {
 		updateFwdParams.Add(
-			ie.NewOuterHeaderCreation(S_TAG, b.teid, b.downlinkIP, "", 0, 0, 0),
+			// FIXME desc 0x100?
+			ie.NewOuterHeaderCreation(0x100, b.teid, b.downlinkIP, "", 0, 0, 0),
 		)
 	}
 
