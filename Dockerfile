@@ -16,15 +16,12 @@ COPY . ./
 RUN CGO_ENABLED=0 go build -o /bin/pfcpctl cmd/pfcpctl/main.go
 RUN CGO_ENABLED=0 go build -o /bin/pfcpsim cmd/pfcpsim/main.go
 
-# Stage pfcpctl: runtime image of pfcpsim, containing also pfcpctl
-FROM golang:alpine AS pfcpsim
-
-RUN apk update && apk add net-tools && apk add --no-cache bash
+# Stage pfcpsim: runtime image of pfcpsim, containing also pfcpctl
+FROM alpine AS pfcpsim
 
 COPY --from=builder /bin/pfcpctl /bin
 COPY --from=builder /bin/pfcpsim /bin
 
-# Make pfcpctl and pfcpsim globally available
 RUN echo "export PATH=/bin:${PATH}" >> /root/.bashrc
 
-ENTRYPOINT [ "/bin/pfcpsim" ]
+ENTRYPOINT [ "pfcpsim" ]
