@@ -17,7 +17,7 @@ jobs:
         run: |
           make test
 
-      - name: Go Coverage Badge
+      - name: Create go test coverage file
         uses: tj-actions/coverage-badge-go@v1.1
         with:
           filename: .coverage/coverage-unit.txt
@@ -28,8 +28,16 @@ jobs:
         with:
           files: README.md
 
-      - name: Push changes
-        if: steps.verify-changed-files.outputs.files_changed == 'true'
+      - name: Check for write permission
+       id: permissions
+       uses: scherermichael-oss/action-has-permission@master
+       with:
+         required-permission: write
+       env:
+         GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Push changes to update coverage badge
+        if: steps.verify-changed-files.outputs.files_changed == 'true' && steps.permissions.outputs.has-permission
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ github.token }}
