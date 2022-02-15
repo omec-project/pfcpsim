@@ -29,11 +29,11 @@ jobs:
           files: README.md
 
       - name: Check for write permission
-       id: permissions
-       uses: scherermichael-oss/action-has-permission@master
-       with:
+        id: permissions
+        uses: scherermichael-oss/action-has-permission@master
+        with:
          required-permission: write
-       env:
+        env:
          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Push changes to update coverage badge
