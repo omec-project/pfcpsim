@@ -3,7 +3,7 @@ name: Unit tests
 on: [pull_request, push]
 
 jobs:
-  unit-test-pfcpiface:
+  unit-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.4.0
