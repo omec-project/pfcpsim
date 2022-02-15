@@ -29,7 +29,7 @@ jobs:
           echo "::set-output name=PORCELAIN::`git status --porcelain`"
       # Verify that protobuf is in sync with changes
       - name: Check protobuf is sync
-        if: ${{ ${{ steps.check.outputs.PORCELAIN }} != "" }}
+        if: ${{ steps.check.outputs.PORCELAIN != "" }}
         uses: actions/github-script@v3
         with:
           script: |
