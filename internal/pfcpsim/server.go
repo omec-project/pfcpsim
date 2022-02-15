@@ -246,13 +246,23 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
 
+	actions := []uint8{session.ActionForward}
+
+	if request.NotifyCPFlag {
+		actions = append(actions, session.ActionNotify)
+	}
+
+	if request.BufferFlag {
+		actions = append(actions, session.ActionBuffer)
+	}
+
 	for i := baseID; i < (count*2 + baseID); i = i + 2 {
 		newFARs := []*ieLib.IE{
 			// Downlink FAR
 			session.NewFARBuilder().
 				WithID(uint32(i + 1)). // Same FARID that was generated in create sessions
 				WithMethod(session.Update).
-				WithAction(session.ActionForward).
+				WithAction(actions...).
 				WithDstInterface(ieLib.DstInterfaceAccess).
 				WithTEID(uint32(i + 1)).
 				WithDownlinkIP(nodeBaddress).

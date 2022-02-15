@@ -6,7 +6,7 @@ import (
 
 type farBuilder struct {
 	farID        uint32
-	applyAction  uint8
+	actions      []uint8
 	method       IEMethod
 	teid         uint32
 	downlinkIP   string
@@ -36,8 +36,8 @@ func (b *farBuilder) WithMethod(method IEMethod) *farBuilder {
 	return b
 }
 
-func (b *farBuilder) WithAction(action uint8) *farBuilder {
-	b.applyAction = action
+func (b *farBuilder) WithAction(action ...uint8) *farBuilder {
+	b.actions = append(b.actions, action...)
 	return b
 }
 
@@ -61,6 +61,16 @@ func (b *farBuilder) WithDownlinkIP(downlinkIP string) *farBuilder {
 func (b *farBuilder) validate() {
 	if b.farID == 0 {
 		panic("Tried building FAR without setting FAR ID")
+	}
+
+	if len(b.actions) == 0 {
+		panic("Tried building FAR without setting at least one action")
+	}
+
+	if len(b.actions) != 0 {
+		if contains(b.actions, ActionDrop) && contains(b.actions, ActionForward) {
+			panic("Tried building FAR with both forward and drop actions")
+		}
 	}
 
 	if !b.isInterfaceSet {
@@ -98,9 +108,12 @@ func (b *farBuilder) BuildFAR() *ie.IE {
 
 	far := createFunc(
 		ie.NewFARID(b.farID),
-		ie.NewApplyAction(b.applyAction),
 		fwdParams,
 	)
+
+	for _, action := range b.actions {
+		far.Add(ie.NewApplyAction(action))
+	}
 
 	if b.method == Delete {
 		return ie.NewRemoveFAR(far)
