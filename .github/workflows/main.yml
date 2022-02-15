@@ -29,7 +29,7 @@ jobs:
           echo "::set-output name=PORCELAIN::`git status --porcelain`"
       # Verify that protobuf is in sync with changes
       - name: Check protobuf is sync
-        if: ${{ steps.check.outputs.PORCELAIN }} != ''
+        if: ${{ steps.check.outputs.PORCELAIN != '' }}
         uses: actions/github-script@v3
         with:
           script: |
@@ -43,6 +43,10 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Get short SHA
+        id: short_sha
+        run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
+
       - name: Build with Docker
         uses: docker/build-push-action@v2
         with:
@@ -50,7 +54,7 @@ jobs:
           # build on feature branches, push only on main branch
           push: ${{ github.ref == 'refs/heads/main' }}
           tags: |
-            ${{ env.DOCKER_REPO }}:-${{ steps.get_version.outputs.contents }}
+            ${{ env.DOCKER_REPO }}:${{ steps.get_version.outputs.contents }}
             ${{ env.DOCKER_REPO }}:latest
-            ${{ env.DOCKER_REPO }}:${GITHUB_SHA::7}
+            ${{ env.DOCKER_REPO }}:${{ steps.short_sha.outputs.sha8 }}
           target: 'pfcpsim'
