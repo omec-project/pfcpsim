@@ -16,6 +16,7 @@ jobs:
       - name: Run unit tests for PFCPSim
         run: |
           make test
+          go tool cover -func=.coverage/coverage-unit.txt -o=.coverage/coverage-unit.txt
 
       - name: Get coverage file from previous step
         uses: tj-actions/coverage-badge-go@v1.1
