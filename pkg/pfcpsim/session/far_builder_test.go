@@ -90,6 +90,21 @@ func TestFARBuilder(t *testing.T) {
 			input: NewFARBuilder().
 				WithID(1).
 				WithMethod(Create).
+				WithAction(ActionForward).
+				WithDstInterface(ie.DstInterfaceAccess),
+			expected: ie.NewCreateFAR(
+				ie.NewFARID(1),
+				ie.NewForwardingParameters(
+					ie.NewDestinationInterface(ie.DstInterfaceAccess),
+				),
+				ie.NewApplyAction(ActionForward),
+			),
+			description: "Valid FAR",
+		},
+		{
+			input: NewFARBuilder().
+				WithID(1).
+				WithMethod(Create).
 				WithAction(ActionDrop).
 				WithAction(ActionBuffer).
 				WithDstInterface(ie.DstInterfaceAccess).
@@ -111,6 +126,8 @@ func TestFARBuilder(t *testing.T) {
 				WithID(1).
 				WithMethod(Create).
 				WithAction(ActionForward).
+				WithAction(ActionBuffer).
+				WithAction(ActionNotify).
 				WithDstInterface(ie.DstInterfaceAccess),
 			expected: ie.NewCreateFAR(
 				ie.NewFARID(1),
@@ -118,8 +135,10 @@ func TestFARBuilder(t *testing.T) {
 					ie.NewDestinationInterface(ie.DstInterfaceAccess),
 				),
 				ie.NewApplyAction(ActionForward),
+				ie.NewApplyAction(ActionBuffer),
+				ie.NewApplyAction(ActionNotify),
 			),
-			description: "Valid FAR",
+			description: "Valid FAR 3 actions",
 		},
 	} {
 		t.Run(scenario.description, func(t *testing.T) {
