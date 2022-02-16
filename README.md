@@ -4,26 +4,23 @@
 pfcpsim is a simulator to interact with PFCP agents. Can be used to simulate a 4G SGW-C / 5G SMF.
 
 ## Overview
+
 pfcpsim is designed to work within a containerized environment. The docker image comes with both client (`pfcpctl`) and server (`pfcpsim`).
 
 `PFCPClient` is embedded in a gRPC Server. Interaction between pfcpsim and pfcpctl is performed through RPCs, as shown in the following schema: 
 
-![Alt text](docs/images/schema.svg?raw=true "schema")
+![Alt text](docs/images/schema.svg)
 
 ## Getting Started
-#### 1. Build the container locally (You can skip this once docker image is published by the CI):
-```bash
-make build-pfcpsim
-```
 
-#### 2. Create the container:
+#### 1. Create the container. Images are available on [Dockerhub](https://hub.docker.com/r/opennetworking/pfcpsim/tags):
 ```bash
-docker container run --rm -d --name pfcpsim pfcpsim:0.1.0-dev -p 12345 --interface <interface-name>
+docker container run --rm -d --name pfcpsim pfcpsim:<image_tag> -p 12345 --interface <interface-name>
 ```
  - `-p` (**optional**, default is 54321): to set a custom gRPC listening port
  - `--interface` (**optional**, default is first non-loopback interface): to specify a specific interface from which retrieve local IP address
 
-#### 3. Use `pfcpctl` to configure server's remote peer address and N3 interface address:
+#### 2. Use `pfcpctl` to configure server's remote peer address and N3 interface address:
 ```bash
 docker exec pfcpsim pfcpctl --server localhost:12345 -c configure --n3-addr <N3-interface-address> --remote-peer <PFCP-server-address>
 ```
@@ -34,12 +31,12 @@ docker exec pfcpsim pfcpctl --server localhost:12345 -c configure --n3-addr <N3-
 
 To list all the available commands just append `--help`, when executing `pfcpctl`.
 
-#### 4. `associate` command will connect to remote peer set in the previous configuration step and perform an association.
+#### 3. `associate` command will connect to remote peer set in the previous configuration step and perform an association.
 ```bash
 docker exec pfcpsim pfcpctl --server localhost:12345 -c associate
 ```
 
-#### 5. Create 5 sessions
+#### 4. Create 5 sessions
 ```bash
 docker exec pfcpsim pfcpctl --server localhost:12345 -c create --count 5 --baseID 2 --ue-pool <CIDR-IP-pool> --nb-addr <NodeB-address>
 ```
@@ -48,12 +45,12 @@ docker exec pfcpsim pfcpctl --server localhost:12345 -c create --count 5 --baseI
  - `--ue-pool` the IP pool from which UE addresses will be generated (e.g. `17.0.0.0/24`)
  - `--nb-addr` the nodeB address 
 
-#### 6. Delete the sessions
+#### 5. Delete the sessions
 ```bash
 docker exec pfcpsim pfcpctl --server localhost:12345 -c delete --count 5 --baseID 2
 ```
 
-#### 7. `disassociate` command will perform disassociation and close connection with remote peer.
+#### 6. `disassociate` command will perform disassociation and close connection with remote peer.
 ```bash
 docker exec pfcpsim pfcpctl --server localhost:12345 -c disassociate
 ```
