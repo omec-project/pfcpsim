@@ -114,7 +114,7 @@ func TestFARBuilder(t *testing.T) {
 				WithDownlinkIP("10.0.0.1"),
 			expected: ie.NewCreateFAR(
 				ie.NewFARID(1),
-				ie.NewApplyAction(ActionForward | ActionBuffer),
+				ie.NewApplyAction(ActionForward|ActionBuffer),
 				ie.NewForwardingParameters(
 					ie.NewDestinationInterface(ie.DstInterfaceAccess),
 					ie.NewOuterHeaderCreation(S_TAG, 12, "10.0.0.1", "", 0, 0, 0),
@@ -130,7 +130,7 @@ func TestFARBuilder(t *testing.T) {
 				WithDstInterface(ie.DstInterfaceAccess),
 			expected: ie.NewCreateFAR(
 				ie.NewFARID(1),
-				ie.NewApplyAction(ActionForward | ActionBuffer | ActionNotify),
+				ie.NewApplyAction(ActionForward|ActionBuffer|ActionNotify),
 				ie.NewForwardingParameters(
 					ie.NewDestinationInterface(ie.DstInterfaceAccess),
 				),

@@ -5,15 +5,15 @@ import (
 )
 
 type farBuilder struct {
-	farID       uint32
-	applyAction uint8
-	method      IEMethod
+	farID        uint32
+	applyAction  uint8
+	method       IEMethod
 	teid         uint32
 	downlinkIP   string
 	dstInterface uint8
 
 	zeroBasedOuterHeader bool
-	isActionSet bool
+	isActionSet          bool
 	isInterfaceSet       bool
 }
 
@@ -70,7 +70,7 @@ func (b *farBuilder) validate() {
 		panic("Tried building FAR without setting a destination interface")
 	}
 
-	if b.applyAction == ActionDrop | ActionForward {
+	if b.applyAction == ActionDrop|ActionForward {
 		panic("Tried building FAR with actions' ActionDrop and ActionForward flags")
 	}
 
