@@ -29,6 +29,9 @@ golint:
 test: .coverage
 	go test	-race -coverprofile=.coverage/coverage-unit.txt -covermode=atomic -v ./...
 
+reuse-lint:
+		docker run --rm -v ${CURRENT_DIR}:/up4 -w /up4 omecproject/reuse-verify:latest reuse lint
+
 build-proto:
 	@echo "Compiling proto files..."
 	docker run --rm -v $(CURDIR)/api:/source -w /source jaegertracing/protobuf:0.3.1 \
