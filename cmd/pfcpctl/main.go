@@ -39,13 +39,13 @@ func main() {
 	cmd := getopt.StringLong("command", 'c', "", helpMsg)
 	count := getopt.IntLong("count", 'n', 1, "The number of sessions to create/modify/delete")
 	srvAddr := getopt.StringLong("server", 's', defaultgRPCServerAddress, "The gRPC address of pfcpsim")
-	baseId := getopt.IntLong("baseID", 'b', 1, "First ID used to generate all other ID fields.")
+	baseId := getopt.IntLong("baseID", 'i', 1, "First ID used to generate all other ID fields.")
 	n3Addr := getopt.StringLong("n3-addr", 'a', "", "The IPv4 address of the UPF's N3 interface")
 	ueAddrPool := getopt.StringLong("ue-pool", 'u', "", "The IPv4 prefix from which UE addresses will be drawn.")
 	nodeBAddr := getopt.StringLong("nb-addr", 'g', "", "The IPv4 address of the NodeB")
 	remotePeer := getopt.StringLong("remote-peer", 'r', "", "The remote PFCP Agent address")
 
-	bufferFlag := getopt.BoolLong("buffer", 'f', "If set, downlink FARs will have the buffer flag set to true")
+	bufferFlag := getopt.BoolLong("buffer", 'b', "If set, downlink FARs will have the buffer flag set to true")
 	notifyCPFlag := getopt.BoolLong("notifycp", 'm', "If set, downlink FARs will have the notify CP flag set to true")
 
 	optHelp := getopt.BoolLong("help", 0, "Help")
