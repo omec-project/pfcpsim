@@ -13,6 +13,7 @@ type farBuilder struct {
 	dstInterface uint8
 
 	zeroBasedOuterHeader bool
+	isActionSet          bool
 	isInterfaceSet       bool
 }
 
@@ -37,7 +38,9 @@ func (b *farBuilder) WithMethod(method IEMethod) *farBuilder {
 }
 
 func (b *farBuilder) WithAction(action uint8) *farBuilder {
+	b.isActionSet = true
 	b.applyAction = action
+
 	return b
 }
 
@@ -67,13 +70,21 @@ func (b *farBuilder) validate() {
 		panic("Tried building FAR without setting a destination interface")
 	}
 
+	if b.applyAction == ActionDrop|ActionForward {
+		panic("Tried building FAR with actions' ActionDrop and ActionForward flags")
+	}
+
+	if !b.isActionSet {
+		panic("Tried building FAR without setting an action")
+	}
+
 	if (b.downlinkIP != "" && b.teid == 0 || b.downlinkIP == "" && b.teid != 0) && !b.zeroBasedOuterHeader {
 		panic("Tried building FAR providing only partial parameters. Check downlink IP or TEID")
 	}
 }
 
-// BuildFAR returns by default a downlinkFAR if MarkAsUplink was invoked.
-// Returns a DownlinkFAR if MarkAsDownlink was invoked.
+// BuildFAR returns a downlinkFAR if MarkAsDownlink was invoked.
+// Returns an UplinkFAR if MarkAsUplink was invoked.
 func (b *farBuilder) BuildFAR() *ie.IE {
 	b.validate()
 
@@ -91,7 +102,7 @@ func (b *farBuilder) BuildFAR() *ie.IE {
 
 	if b.zeroBasedOuterHeader {
 		fwdParams.Add(ie.NewOuterHeaderCreation(S_TAG, 0, "0.0.0.0", "", 0, 0, 0))
-	} else {
+	} else if b.teid != 0 && b.downlinkIP != "" { //TODO revisit code and improve its structure
 		// TEID and DownlinkIP are provided
 		fwdParams.Add(ie.NewOuterHeaderCreation(S_TAG, b.teid, b.downlinkIP, "", 0, 0, 0))
 	}

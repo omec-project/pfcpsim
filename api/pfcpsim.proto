@@ -22,6 +22,8 @@ message ModifySessionRequest {
   int32 baseID = 2;
   string nodeBAddress = 3;
   string ueAddressPool = 4;
+  bool bufferFlag = 5;
+  bool notifyCPFlag = 6;
 }
 
 message ConfigureRequest {

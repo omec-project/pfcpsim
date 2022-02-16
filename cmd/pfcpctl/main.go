@@ -45,6 +45,9 @@ func main() {
 	nodeBAddr := getopt.StringLong("nb-addr", 'g', "", "The IPv4 address of the NodeB")
 	remotePeer := getopt.StringLong("remote-peer", 'r', "", "The remote PFCP Agent address")
 
+	bufferFlag := getopt.BoolLong("buffer", 'b', "If set, downlink FARs will have the buffer flag set to true")
+	notifyCPFlag := getopt.BoolLong("notifycp", 'm', "If set, downlink FARs will have the notify CP flag set to true")
+
 	optHelp := getopt.BoolLong("help", 0, "Help")
 
 	getopt.Parse()
@@ -107,6 +110,8 @@ func main() {
 			BaseID:        int32(*baseId),
 			NodeBAddress:  *nodeBAddr,
 			UeAddressPool: *ueAddrPool,
+			BufferFlag:    *bufferFlag,
+			NotifyCPFlag:  *notifyCPFlag,
 		})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
