@@ -96,14 +96,14 @@ func TestFARBuilder(t *testing.T) {
 				WithTEID(12).
 				WithDownlinkIP("10.0.0.1"),
 			expected: ie.NewCreateFAR(
-					ie.NewFARID(1),
-					ie.NewForwardingParameters(
-						ie.NewDestinationInterface(ie.DstInterfaceAccess),
-						ie.NewOuterHeaderCreation(S_TAG, 12, "10.0.0.1", "", 0, 0, 0),
-					),
+				ie.NewFARID(1),
+				ie.NewForwardingParameters(
+					ie.NewDestinationInterface(ie.DstInterfaceAccess),
+					ie.NewOuterHeaderCreation(S_TAG, 12, "10.0.0.1", "", 0, 0, 0),
+				),
 				ie.NewApplyAction(ActionDrop),
 				ie.NewApplyAction(ActionBuffer),
-				),
+			),
 			description: "Valid FAR with 2 actions",
 		},
 		{
