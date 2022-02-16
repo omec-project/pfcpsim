@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/wmnsk/go-pfcp/ie"
 )
 
 func TestFARBuilderShouldPanic(t *testing.T) {
@@ -72,6 +74,56 @@ func TestFARBuilderShouldPanic(t *testing.T) {
 		t.Run(scenario.description, func(t *testing.T) {
 			assert.Panics(t, func() { scenario.input.BuildFAR() })
 			assert.Equal(t, scenario.input, scenario.expected)
+		})
+	}
+}
+
+func TestFARBuilder(t *testing.T) {
+	type testCase struct {
+		input       *farBuilder
+		expected    *ie.IE
+		description string
+	}
+
+	for _, scenario := range []testCase{
+		{
+			input: NewFARBuilder().
+				WithID(1).
+				WithMethod(Create).
+				WithAction(ActionDrop).
+				WithAction(ActionBuffer).
+				WithDstInterface(ie.DstInterfaceAccess).
+				WithTEID(12).
+				WithDownlinkIP("10.0.0.1"),
+			expected: ie.NewCreateFAR(
+					ie.NewFARID(1),
+					ie.NewForwardingParameters(
+						ie.NewDestinationInterface(ie.DstInterfaceAccess),
+						ie.NewOuterHeaderCreation(S_TAG, 12, "10.0.0.1", "", 0, 0, 0),
+					),
+				ie.NewApplyAction(ActionDrop),
+				ie.NewApplyAction(ActionBuffer),
+				),
+			description: "Valid FAR with 2 actions",
+		},
+		{
+			input: NewFARBuilder().
+				WithID(1).
+				WithMethod(Create).
+				WithAction(ActionForward).
+				WithDstInterface(ie.DstInterfaceAccess),
+			expected: ie.NewCreateFAR(
+				ie.NewFARID(1),
+				ie.NewForwardingParameters(
+					ie.NewDestinationInterface(ie.DstInterfaceAccess),
+				),
+				ie.NewApplyAction(ActionForward),
+			),
+			description: "Valid FAR",
+		},
+	} {
+		t.Run(scenario.description, func(t *testing.T) {
+			require.Equal(t, scenario.expected, scenario.input.BuildFAR())
 		})
 	}
 }

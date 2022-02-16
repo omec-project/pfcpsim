@@ -101,7 +101,7 @@ func (b *farBuilder) BuildFAR() *ie.IE {
 
 	if b.zeroBasedOuterHeader {
 		fwdParams.Add(ie.NewOuterHeaderCreation(S_TAG, 0, "0.0.0.0", "", 0, 0, 0))
-	} else {
+	} else if b.teid != 0 && b.downlinkIP != "" {
 		// TEID and DownlinkIP are provided
 		fwdParams.Add(ie.NewOuterHeaderCreation(S_TAG, b.teid, b.downlinkIP, "", 0, 0, 0))
 	}
