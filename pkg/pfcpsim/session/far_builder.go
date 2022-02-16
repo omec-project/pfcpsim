@@ -5,14 +5,15 @@ import (
 )
 
 type farBuilder struct {
-	farID        uint32
-	actions      []uint8
-	method       IEMethod
+	farID       uint32
+	applyAction uint8
+	method      IEMethod
 	teid         uint32
 	downlinkIP   string
 	dstInterface uint8
 
 	zeroBasedOuterHeader bool
+	isActionSet bool
 	isInterfaceSet       bool
 }
 
@@ -36,8 +37,10 @@ func (b *farBuilder) WithMethod(method IEMethod) *farBuilder {
 	return b
 }
 
-func (b *farBuilder) WithAction(action ...uint8) *farBuilder {
-	b.actions = append(b.actions, action...)
+func (b *farBuilder) WithAction(action uint8) *farBuilder {
+	b.isActionSet = true
+	b.applyAction = action
+
 	return b
 }
 
@@ -63,18 +66,12 @@ func (b *farBuilder) validate() {
 		panic("Tried building FAR without setting FAR ID")
 	}
 
-	if len(b.actions) == 0 {
-		panic("Tried building FAR without setting at least one action")
-	}
-
-	if len(b.actions) != 0 {
-		if contains(b.actions, ActionDrop) && contains(b.actions, ActionForward) {
-			panic("Tried building FAR with both forward and drop actions")
-		}
-	}
-
 	if !b.isInterfaceSet {
 		panic("Tried building FAR without setting a destination interface")
+	}
+
+	if !b.isActionSet {
+		panic("Tried building FAR without setting an action")
 	}
 
 	if (b.downlinkIP != "" && b.teid == 0 || b.downlinkIP == "" && b.teid != 0) && !b.zeroBasedOuterHeader {
@@ -108,12 +105,9 @@ func (b *farBuilder) BuildFAR() *ie.IE {
 
 	far := createFunc(
 		ie.NewFARID(b.farID),
+		ie.NewApplyAction(b.applyAction),
 		fwdParams,
 	)
-
-	for _, action := range b.actions {
-		far.Add(ie.NewApplyAction(action))
-	}
 
 	if b.method == Delete {
 		return ie.NewRemoveFAR(far)
