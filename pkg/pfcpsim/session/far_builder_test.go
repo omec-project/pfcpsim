@@ -57,21 +57,22 @@ func TestFARBuilderShouldPanic(t *testing.T) {
 			},
 			description: "Invalid FAR: Providing DownlinkIP without TEID",
 		},
-		//{ //FIXME
-		//	input: NewFARBuilder().WithMethod(Create).
-		//		WithID(1).
-		//		WithAction(ActionForward | ActionDrop).
-		//		WithDownlinkIP("10.0.0.1").
-		//		WithTEID(100),
-		//	expected: &farBuilder{
-		//		farID:       1,
-		//		method:      Create,
-		//		applyAction: ActionForward | ActionDrop,
-		//		downlinkIP:  "10.0.0.1",
-		//		teid:        100,
-		//	},
-		//	description: "Invalid FAR: Providing both forward and drop actions",
-		//},
+		{
+			input: NewFARBuilder().WithMethod(Create).
+				WithID(1).
+				WithAction(ActionForward | ActionDrop).
+				WithDownlinkIP("10.0.0.1").
+				WithTEID(100),
+			expected: &farBuilder{
+				farID:       1,
+				method:      Create,
+				applyAction: ActionForward | ActionDrop,
+				isActionSet: true,
+				downlinkIP:  "10.0.0.1",
+				teid:        100,
+			},
+			description: "Invalid FAR: Providing both forward and drop actions",
+		},
 	} {
 		t.Run(scenario.description, func(t *testing.T) {
 			assert.Panics(t, func() { scenario.input.BuildFAR() })

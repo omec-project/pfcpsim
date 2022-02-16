@@ -70,6 +70,10 @@ func (b *farBuilder) validate() {
 		panic("Tried building FAR without setting a destination interface")
 	}
 
+	if b.applyAction == ActionDrop | ActionForward {
+		panic("Tried building FAR with actions' ActionDrop and ActionForward flags")
+	}
+
 	if !b.isActionSet {
 		panic("Tried building FAR without setting an action")
 	}
