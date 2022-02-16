@@ -82,8 +82,8 @@ func (b *farBuilder) validate() {
 	}
 }
 
-// BuildFAR returns by default a downlinkFAR if MarkAsUplink was invoked.
-// Returns a DownlinkFAR if MarkAsDownlink was invoked.
+// BuildFAR returns a downlinkFAR if MarkAsDownlink was invoked.
+// Returns an UplinkFAR if MarkAsUplink was invoked.
 func (b *farBuilder) BuildFAR() *ie.IE {
 	b.validate()
 
