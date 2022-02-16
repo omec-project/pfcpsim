@@ -51,6 +51,23 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
+          push: false
+          load: true
+          tags: |
+            ${{ env.DOCKER_REPO }}:${{ steps.get_version.outputs.contents }}
+            ${{ env.DOCKER_REPO }}:latest
+            ${{ env.DOCKER_REPO }}:${{ steps.short_sha.outputs.sha8 }}
+          target: 'pfcpsim'
+
+      - name: Test docker build
+        run: |
+          docker run --rm ${{ env.DOCKER_REPO }}:latest --help
+          docker run --rm --entrypoint pfcpctl ${{ env.DOCKER_REPO }}:latest --help
+
+      - name: Push to registry
+        uses: docker/build-push-action@v2
+        with:
+          context: .
           # build on feature branches, push only on main branch
           push: ${{ github.ref == 'refs/heads/main' }}
           tags: |
