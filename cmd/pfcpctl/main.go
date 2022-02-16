@@ -39,7 +39,7 @@ func main() {
 	cmd := getopt.StringLong("command", 'c', "", helpMsg)
 	count := getopt.IntLong("count", 'n', 1, "The number of sessions to create/modify/delete")
 	srvAddr := getopt.StringLong("server", 's', defaultgRPCServerAddress, "The gRPC address of pfcpsim")
-	baseId := getopt.IntLong("baseID", 'b', 1, "First ID used to generate all other ID fields.")
+	baseId := getopt.IntLong("baseID", 'i', 1, "First ID used to generate all other ID fields.")
 	n3Addr := getopt.StringLong("n3-addr", 'a', "", "The IPv4 address of the UPF's N3 interface")
 	ueAddrPool := getopt.StringLong("ue-pool", 'u', "", "The IPv4 prefix from which UE addresses will be drawn.")
 	nodeBAddr := getopt.StringLong("nb-addr", 'g', "", "The IPv4 address of the NodeB")
