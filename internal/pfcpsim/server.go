@@ -246,14 +246,16 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
 
-	actions := session.ActionForward
+	var actions uint8
 
-	if request.NotifyCPFlag {
+	if request.BufferFlag || request.NotifyCPFlag {
+		// We currently support only both flags set
 		actions |= session.ActionNotify
-	}
-
-	if request.BufferFlag {
 		actions |= session.ActionBuffer
+	} else {
+		// If no flag was passed, default action is Forward
+		// TODO make actions to be configurable by cli
+		actions |= session.ActionForward
 	}
 
 	for i := baseID; i < (count*2 + baseID); i = i + 2 {
