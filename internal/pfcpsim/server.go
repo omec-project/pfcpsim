@@ -246,7 +246,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
 
-	var actions uint8
+	actions := uint8(0)
 
 	if request.BufferFlag || request.NotifyCPFlag {
 		// We currently support only both flags set
