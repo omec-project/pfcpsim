@@ -235,7 +235,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
 	}
 
-	// TODO handle buffer, notifyCP flags and 5G as well
+	// TODO add 5G mode
 	baseID := int(request.BaseID)
 	count := int(request.Count)
 	nodeBaddress := request.NodeBAddress
