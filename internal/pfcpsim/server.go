@@ -254,7 +254,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 		actions |= session.ActionBuffer
 	} else {
 		// If no flag was passed, default action is Forward
-		// TODO make actions to be configurable by cli
+		// TODO make actions configurable by cli
 		actions |= session.ActionForward
 	}
 
