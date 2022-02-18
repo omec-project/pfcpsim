@@ -66,8 +66,7 @@ func main() {
 			RemotePeerAddress: *remotePeer,
 		})
 		if err != nil {
-			log.Errorf("Error while configuring: %v", err)
-			os.Exit(1)
+			log.Fatalf("Error while configuring: %v", err)
 		}
 
 		log.Info(res.Message)
@@ -75,8 +74,7 @@ func main() {
 	case "disassociate":
 		res, err := simClient.Disassociate(context.Background(), &pb.EmptyRequest{})
 		if err != nil {
-			log.Errorf("Error while disassociating: %v", err)
-			os.Exit(1)
+			log.Fatalf("Error while disassociating: %v", err)
 		}
 
 		log.Infof(res.Message)
@@ -84,8 +82,7 @@ func main() {
 	case "associate":
 		res, err := simClient.Associate(context.Background(), &pb.EmptyRequest{})
 		if err != nil {
-			log.Errorf("Error while associating: %v", err)
-			os.Exit(1)
+			log.Fatalf("Error while associating: %v", err)
 		}
 
 		log.Infof(res.Message)
@@ -98,8 +95,7 @@ func main() {
 			UeAddressPool: *ueAddrPool,
 		})
 		if err != nil {
-			log.Errorf("Error while associating: %v", err)
-			os.Exit(1)
+			log.Fatalf("Error while associating: %v", err)
 		}
 
 		log.Infof(res.Message)
@@ -114,8 +110,7 @@ func main() {
 			NotifyCPFlag:  *notifyCPFlag,
 		})
 		if err != nil {
-			log.Errorf("Error while associating: %v", err)
-			os.Exit(1)
+			log.Fatalf("Error while associating: %v", err)
 		}
 
 		log.Infof(res.Message)
@@ -126,15 +121,13 @@ func main() {
 			BaseID: int32(*baseId),
 		})
 		if err != nil {
-			log.Errorf("Error while associating: %v", err)
-			os.Exit(1)
+			log.Fatalf("Error while associating: %v", err)
 		}
 
 		log.Infof(res.Message)
 
 	default:
-		log.Error("Command not recognized")
-		os.Exit(1)
+		log.Fatalf("Command not recognized")
 
 	}
 }
