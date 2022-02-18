@@ -35,6 +35,18 @@ func NewPFCPSimService(iface string) *pfcpSimService {
 	return &pfcpSimService{}
 }
 
+func checkServerStatus() (*pb.Response, error){
+	if !isConfigured() {
+		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
+	}
+
+	if !isRemotePeerConnected() {
+		return &pb.Response{}, status.Error(codes.Aborted, "Server is not associated")
+	}
+
+	return nil, nil
+}
+
 func (P pfcpSimService) Configure(ctx context.Context, request *pb.ConfigureRequest) (*pb.Response, error) {
 	if net.ParseIP(request.UpfN3Address) == nil {
 		errMsg := fmt.Sprintf("Error while parsing UPF N3 address: %v", request.UpfN3Address)
@@ -83,8 +95,8 @@ func (P pfcpSimService) Associate(ctx context.Context, empty *pb.EmptyRequest) (
 }
 
 func (P pfcpSimService) Disassociate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
-	if !isConfigured() {
-		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
+	if res, err := checkServerStatus(); res != nil || err != nil {
+		return res, err
 	}
 
 	if err := sim.TeardownAssociation(); err != nil {
@@ -106,8 +118,8 @@ func (P pfcpSimService) Disassociate(ctx context.Context, empty *pb.EmptyRequest
 }
 
 func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSessionRequest) (*pb.Response, error) {
-	if !isConfigured() {
-		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
+	if res, err := checkServerStatus(); res != nil || err != nil {
+		return res, err
 	}
 
 	baseID := int(request.BaseID)
@@ -232,8 +244,8 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 }
 
 func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySessionRequest) (*pb.Response, error) {
-	if !isConfigured() {
-		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
+	if res, err := checkServerStatus(); res != nil || err != nil {
+		return res, err
 	}
 
 	// TODO add 5G mode
@@ -300,8 +312,8 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 }
 
 func (P pfcpSimService) DeleteSession(ctx context.Context, request *pb.DeleteSessionRequest) (*pb.Response, error) {
-	if !isConfigured() {
-		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
+	if res, err := checkServerStatus(); res != nil || err != nil {
+		return res, err
 	}
 
 	baseID := int(request.BaseID)
