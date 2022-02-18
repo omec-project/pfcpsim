@@ -149,6 +149,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				AddQERID(uplinkAppQerID).
 				WithN3Address(upfN3Address).
 				WithSDFFilter(defaultSDFfilter).
+				WithPrecedence(100).
 				MarkAsUplink().
 				BuildPDR(),
 
