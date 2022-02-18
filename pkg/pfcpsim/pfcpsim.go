@@ -146,7 +146,6 @@ func (c *PFCPClient) ConnectN4(remoteAddr string) error {
 	c.conn = conn
 
 	go c.receiveFromN4()
-	go c.HandleSessionReportStatus()
 
 	return nil
 }

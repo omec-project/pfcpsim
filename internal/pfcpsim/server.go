@@ -192,8 +192,8 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 			session.NewQERBuilder().
 				WithID(sessQerID).
 				WithMethod(session.Create).
-				WithUplinkMBR(50000).
-				WithDownlinkMBR(50000).
+				WithUplinkMBR(60000).
+				WithDownlinkMBR(60000).
 				Build(),
 
 			// Uplink application QER
