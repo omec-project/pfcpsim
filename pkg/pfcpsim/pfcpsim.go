@@ -115,9 +115,13 @@ func (c *PFCPClient) receiveFromN4() {
 
 		if hbResp, ok := msg.(*message.HeartbeatResponse); ok {
 			c.heartbeatsChan <- hbResp
-		} else {
-			c.recvChan <- msg
 		}
+
+		if _, ok := msg.(*message.SessionReportRequest); ok {
+			continue // Discard message
+		}
+
+		c.recvChan <- msg
 	}
 }
 
@@ -142,6 +146,7 @@ func (c *PFCPClient) ConnectN4(remoteAddr string) error {
 	c.conn = conn
 
 	go c.receiveFromN4()
+	go c.HandleSessionReportStatus()
 
 	return nil
 }
