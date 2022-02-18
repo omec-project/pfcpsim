@@ -178,7 +178,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 			// DownlinkFAR
 			session.NewFARBuilder().
 				WithID(downlinkFarID).
-				WithAction(session.ActionDrop).
+				WithAction(session.ActionForward).
 				WithMethod(session.Create).
 				WithDstInterface(ieLib.DstInterfaceAccess).
 				WithZeroBasedOuterHeaderCreation().
