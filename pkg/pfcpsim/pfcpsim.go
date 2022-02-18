@@ -113,9 +113,9 @@ func (c *PFCPClient) receiveFromN4() {
 			continue
 		}
 
-		switch msg.(type) {
+		switch msg := msg.(type) {
 		case *message.HeartbeatResponse:
-			c.heartbeatsChan <- msg.(*message.HeartbeatResponse)
+			c.heartbeatsChan <- msg
 
 		case *message.SessionReportRequest:
 			// Ignore message
