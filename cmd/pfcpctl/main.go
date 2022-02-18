@@ -67,7 +67,7 @@ func main() {
 		})
 		if err != nil {
 			log.Errorf("Error while configuring: %v", err)
-			break
+			os.Exit(1)
 		}
 
 		log.Info(res.Message)
@@ -76,7 +76,7 @@ func main() {
 		res, err := simClient.Disassociate(context.Background(), &pb.EmptyRequest{})
 		if err != nil {
 			log.Errorf("Error while disassociating: %v", err)
-			break
+			os.Exit(1)
 		}
 
 		log.Infof(res.Message)
@@ -85,7 +85,7 @@ func main() {
 		res, err := simClient.Associate(context.Background(), &pb.EmptyRequest{})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
-			break
+			os.Exit(1)
 		}
 
 		log.Infof(res.Message)
@@ -99,7 +99,7 @@ func main() {
 		})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
-			break
+			os.Exit(1)
 		}
 
 		log.Infof(res.Message)
@@ -115,7 +115,7 @@ func main() {
 		})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
-			break
+			os.Exit(1)
 		}
 
 		log.Infof(res.Message)
@@ -127,14 +127,14 @@ func main() {
 		})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
-			break
+			os.Exit(1)
 		}
 
 		log.Infof(res.Message)
 
 	default:
 		log.Error("Command not recognized")
-		break
+		os.Exit(1)
 
 	}
 }
