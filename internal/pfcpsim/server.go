@@ -258,6 +258,12 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 	}
 
 	for i := baseID; i < (count*2 + baseID); i = i + 2 {
+		teid := uint32(i + 1)
+
+		if request.BufferFlag || request.NotifyCPFlag {
+			teid = 0 // When buffering, TEID = 0.
+		}
+
 		newFARs := []*ieLib.IE{
 			// Downlink FAR
 			session.NewFARBuilder().
@@ -265,7 +271,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 				WithMethod(session.Update).
 				WithAction(actions).
 				WithDstInterface(ieLib.DstInterfaceAccess).
-				WithTEID(uint32(i + 1)).
+				WithTEID(teid).
 				WithDownlinkIP(nodeBaddress).
 				BuildFAR(),
 		}
