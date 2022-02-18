@@ -235,7 +235,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
 	}
 
-	// TODO handle buffer, notifyCP flags and 5G as well
+	// TODO add 5G mode
 	baseID := int(request.BaseID)
 	count := int(request.Count)
 	nodeBaddress := request.NodeBAddress
@@ -246,14 +246,15 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
 
-	actions := session.ActionForward
+	var actions uint8 = 0
 
-	if request.NotifyCPFlag {
+	if request.BufferFlag || request.NotifyCPFlag {
+		// We currently support only both flags set
 		actions |= session.ActionNotify
-	}
-
-	if request.BufferFlag {
 		actions |= session.ActionBuffer
+	} else {
+		// If no flag was passed, default action is Forward
+		actions |= session.ActionForward
 	}
 
 	for i := baseID; i < (count*2 + baseID); i = i + 2 {
