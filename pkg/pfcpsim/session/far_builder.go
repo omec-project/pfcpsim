@@ -77,7 +77,6 @@ func (b *farBuilder) validate() {
 	if !b.isActionSet {
 		panic("Tried building FAR without setting an action")
 	}
-
 }
 
 // BuildFAR returns a downlinkFAR if MarkAsDownlink was invoked.
