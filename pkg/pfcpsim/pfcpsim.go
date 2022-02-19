@@ -113,9 +113,13 @@ func (c *PFCPClient) receiveFromN4() {
 			continue
 		}
 
-		if hbResp, ok := msg.(*message.HeartbeatResponse); ok {
-			c.heartbeatsChan <- hbResp
-		} else {
+		switch msg := msg.(type) {
+		case *message.HeartbeatResponse:
+			c.heartbeatsChan <- msg
+
+		case *message.SessionReportRequest:
+			// Ignore message
+		default:
 			c.recvChan <- msg
 		}
 	}

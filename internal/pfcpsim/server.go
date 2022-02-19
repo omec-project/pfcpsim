@@ -35,6 +35,18 @@ func NewPFCPSimService(iface string) *pfcpSimService {
 	return &pfcpSimService{}
 }
 
+func checkServerStatus()  error{
+	if !isConfigured() {
+		return status.Error(codes.Aborted, "Server is not configured")
+	}
+
+	if !isRemotePeerConnected() {
+		return status.Error(codes.Aborted, "Server is not associated")
+	}
+
+	return nil
+}
+
 func (P pfcpSimService) Configure(ctx context.Context, request *pb.ConfigureRequest) (*pb.Response, error) {
 	if net.ParseIP(request.UpfN3Address) == nil {
 		errMsg := fmt.Sprintf("Error while parsing UPF N3 address: %v", request.UpfN3Address)
@@ -83,8 +95,8 @@ func (P pfcpSimService) Associate(ctx context.Context, empty *pb.EmptyRequest) (
 }
 
 func (P pfcpSimService) Disassociate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
-	if !isConfigured() {
-		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
+	if err := checkServerStatus(); err != nil {
+		return &pb.Response{}, err
 	}
 
 	if err := sim.TeardownAssociation(); err != nil {
@@ -106,8 +118,8 @@ func (P pfcpSimService) Disassociate(ctx context.Context, empty *pb.EmptyRequest
 }
 
 func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSessionRequest) (*pb.Response, error) {
-	if !isConfigured() {
-		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
+	if err := checkServerStatus(); err != nil {
+		return &pb.Response{}, err
 	}
 
 	baseID := int(request.BaseID)
@@ -149,6 +161,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				AddQERID(uplinkAppQerID).
 				WithN3Address(upfN3Address).
 				WithSDFFilter(defaultSDFfilter).
+				WithPrecedence(100).
 				MarkAsUplink().
 				BuildPDR(),
 
@@ -191,8 +204,8 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 			session.NewQERBuilder().
 				WithID(sessQerID).
 				WithMethod(session.Create).
-				WithUplinkMBR(50000).
-				WithDownlinkMBR(50000).
+				WithUplinkMBR(60000).
+				WithDownlinkMBR(60000).
 				Build(),
 
 			// Uplink application QER
@@ -231,8 +244,8 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 }
 
 func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySessionRequest) (*pb.Response, error) {
-	if !isConfigured() {
-		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
+	if err := checkServerStatus(); err != nil {
+		return &pb.Response{}, err
 	}
 
 	// TODO add 5G mode
@@ -258,6 +271,12 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 	}
 
 	for i := baseID; i < (count*2 + baseID); i = i + 2 {
+		teid := uint32(i + 1)
+
+		if request.BufferFlag || request.NotifyCPFlag {
+			teid = 0 // When buffering, TEID = 0.
+		}
+
 		newFARs := []*ieLib.IE{
 			// Downlink FAR
 			session.NewFARBuilder().
@@ -265,7 +284,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 				WithMethod(session.Update).
 				WithAction(actions).
 				WithDstInterface(ieLib.DstInterfaceAccess).
-				WithTEID(uint32(i + 1)).
+				WithTEID(teid).
 				WithDownlinkIP(nodeBaddress).
 				BuildFAR(),
 		}
@@ -293,8 +312,8 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 }
 
 func (P pfcpSimService) DeleteSession(ctx context.Context, request *pb.DeleteSessionRequest) (*pb.Response, error) {
-	if !isConfigured() {
-		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
+	if err := checkServerStatus(); err != nil {
+		return &pb.Response{}, err
 	}
 
 	baseID := int(request.BaseID)
