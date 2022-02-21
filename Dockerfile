@@ -22,6 +22,8 @@ RUN CGO_ENABLED=1 go build -o /bin/pfcpsim cmd/pfcpsim/main.go
 # Stage pfcpsim: runtime image of pfcpsim, containing also pfcpctl
 FROM alpine AS pfcpsim
 
+RUN apk update && apk add libc-dev libpcap-dev
+
 COPY --from=builder /bin/pfcpctl /bin
 COPY --from=builder /bin/pfcpsim /bin
 
