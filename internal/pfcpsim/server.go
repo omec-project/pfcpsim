@@ -22,8 +22,9 @@ import (
 
 const (
 	// FIXME: the SDF Filter is not spec-compliant. We should fix it once SD-Core supports the spec-compliant format.
-	// TODO make SDF filter configurable using the cli
-	defaultSDFfilter = "permit out ip from 0.0.0.0/0 to assigned 80-80"
+	// TODO improve SDF filter configurability by pfcpctl (e.g. set app filter port)
+	appFilteringSDFFilter = "permit out ip from 0.0.0.0/0 to assigned 81-81"
+	wildcardSDFFilter     = "permit out ip from 0.0.0.0/0 to assigned"
 )
 
 // pfcpSimService implements the Protobuf interface and keeps a connection to a remote PFCP Agent peer.
@@ -132,6 +133,12 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 	}
 
+	var SDFFilter = wildcardSDFFilter
+
+	if request.UseAppFilterSDF {
+		SDFFilter = appFilteringSDFFilter
+	}
+
 	for i := baseID; i < (count*2 + baseID); i = i + 2 {
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i)
@@ -160,7 +167,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				AddQERID(sessQerID).
 				AddQERID(uplinkAppQerID).
 				WithN3Address(upfN3Address).
-				WithSDFFilter(defaultSDFfilter).
+				WithSDFFilter(SDFFilter).
 				WithPrecedence(100).
 				MarkAsUplink().
 				BuildPDR(),
@@ -171,7 +178,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				WithMethod(session.Create).
 				WithPrecedence(100).
 				WithUEAddress(ueAddress.String()).
-				WithSDFFilter(defaultSDFfilter).
+				WithSDFFilter(SDFFilter).
 				AddQERID(sessQerID).
 				AddQERID(downlinkAppQerID).
 				WithFARID(downlinkFarID).
