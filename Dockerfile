@@ -16,7 +16,8 @@ VOLUME $(go env GOCACHE):/root/.cache/go-build
 
 COPY . ./
 RUN CGO_ENABLED=0 go build -o /bin/pfcpctl cmd/pfcpctl/main.go
-RUN CGO_ENABLED=0 go build -o /bin/pfcpsim cmd/pfcpsim/main.go
+# libpcap requires enabled CGO and gcc
+RUN CGO_ENABLED=1 go build -o /bin/pfcpsim cmd/pfcpsim/main.go
 
 # Stage pfcpsim: runtime image of pfcpsim, containing also pfcpctl
 FROM alpine AS pfcpsim
