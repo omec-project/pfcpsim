@@ -13,6 +13,11 @@ jobs:
       DOCKER_REPO: 'opennetworking/pfcpsim'
 
     steps:
+      - name: install required libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpcap-dev -y
+
       - name: Checkout this repository
         uses: actions/checkout@v2
 
