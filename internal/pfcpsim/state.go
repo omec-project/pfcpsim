@@ -21,7 +21,6 @@ var (
 	interfaceName string
 	pcapPath string
 	snifferDoneChannel chan bool
-	waitGroup *sync.WaitGroup
 	isSnifferStarted bool
 
 	// Emulates 5G SMF/ 4G SGW
@@ -53,7 +52,7 @@ func stopSniffer() {
 	}
 
 	snifferDoneChannel <- true
-
+	isSnifferStarted = false
 }
 
 func insertSession(index int, session *pfcpsim.PFCPSession) {
