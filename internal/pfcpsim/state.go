@@ -19,11 +19,42 @@ var (
 	upfN3Address      string
 
 	interfaceName string
+	pcapPath string
+	snifferDoneChannel chan bool
+	waitGroup *sync.WaitGroup
+	isSnifferStarted bool
 
 	// Emulates 5G SMF/ 4G SGW
 	sim                 *pfcpsim.PFCPClient
 	remotePeerConnected bool
 )
+
+func init() {
+	snifferDoneChannel = make(chan bool)
+}
+
+func startSniffer() {
+	if isSnifferStarted {
+		return
+	}
+	isSnifferStarted = true
+
+	go func() {
+		err := sniffer(snifferDoneChannel)
+		if err != nil {
+			return
+		}
+	}()
+}
+
+func stopSniffer() {
+	if !isSnifferStarted {
+		return
+	}
+
+	snifferDoneChannel <- true
+
+}
 
 func insertSession(index int, session *pfcpsim.PFCPSession) {
 	lockActiveSessions.Lock()

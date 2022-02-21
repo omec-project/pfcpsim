@@ -30,8 +30,9 @@ const (
 // Its state is handled in internal/pfcpsim/state.go
 type pfcpSimService struct{}
 
-func NewPFCPSimService(iface string) *pfcpSimService {
+func NewPFCPSimService(iface string, pcap string) *pfcpSimService {
 	interfaceName = iface
+	pcapPath = pcap
 	return &pfcpSimService{}
 }
 

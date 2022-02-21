@@ -24,7 +24,7 @@ const (
 	defaultgRPCServerPort = "54321"
 )
 
-func startServer(apiDoneChannel chan bool, iFace string, port string, group *sync.WaitGroup) {
+func startServer(apiDoneChannel chan bool, iFace string, port string, pcapOutput string , group *sync.WaitGroup) {
 	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%v", port))
 	if err != nil {
 		log.Fatalf("API gRPC Server failed to listen: %v", err)
@@ -32,7 +32,7 @@ func startServer(apiDoneChannel chan bool, iFace string, port string, group *syn
 
 	grpcServer := grpc.NewServer()
 
-	pb.RegisterPFCPSimServer(grpcServer, pfcpsim.NewPFCPSimService(iFace))
+	pb.RegisterPFCPSimServer(grpcServer, pfcpsim.NewPFCPSimService(iFace, pcapOutput))
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
@@ -56,6 +56,8 @@ func main() {
 	port := getopt.StringLong("port", 'p', defaultgRPCServerPort, "the gRPC Server port to listen")
 	iFaceName := getopt.StringLong("interface", 'i', "", "Defines the local address. If left blank,"+
 		" the IP will be taken from the first non-loopback interface")
+	pcapOutput := getopt.StringLong("pcap-path", 'w', "", "If set, start sniffing packets and " +
+		"save to provided pcap file.")
 
 	optHelp := getopt.BoolLong("help", 0, "Help")
 
@@ -80,7 +82,7 @@ func main() {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 
-	go startServer(doneChannel, *iFaceName, *port, &wg)
+	go startServer(doneChannel, *iFaceName, *port, *pcapOutput, &wg)
 	log.Debugf("Started API gRPC Service")
 
 	wg.Wait()
