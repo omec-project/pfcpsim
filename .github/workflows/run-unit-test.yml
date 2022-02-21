@@ -6,6 +6,11 @@ jobs:
   unit-test:
     runs-on: ubuntu-latest
     steps:
+      - name: install required libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install libc-dev libpcap-dev -y
+
       - uses: actions/checkout@v2.4.0
       - uses: actions/setup-go@v2
 
