@@ -89,6 +89,8 @@ func (P pfcpSimService) Associate(ctx context.Context, empty *pb.EmptyRequest) (
 	infoMsg := "Association established"
 	log.Info(infoMsg)
 
+	startSniffer() //TODO evaluate the definition of a new RPC for sniffer
+
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
 		Message:    infoMsg,
@@ -108,6 +110,8 @@ func (P pfcpSimService) Disassociate(ctx context.Context, empty *pb.EmptyRequest
 	sim.DisconnectN4()
 
 	remotePeerConnected = false
+
+	stopSniffer()
 
 	infoMsg := "Association teardown completed and connection to remote peer closed"
 	log.Info(infoMsg)
