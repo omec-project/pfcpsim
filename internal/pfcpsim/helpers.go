@@ -99,7 +99,7 @@ func getFirstNonLoopbackInterface() (string, net.IP, error){
 		}
 
 		for _, addr := range addrs {
-			if ipnet, ok := addr.(*net.IPAddr); ok && !ipnet.IP.IsLoopback() {
+			if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 				if ipnet.IP.To4() != nil {
 					return i.Name, ipnet.IP, nil
 				}
