@@ -27,7 +27,15 @@ golint:
 	mkdir -p $(CURDIR)/.coverage
 
 test: .coverage
-	go test	-race -coverprofile=.coverage/coverage-unit.txt -covermode=atomic -v ./...
+	docker run --rm -v $(CURDIR):/app -w /app golang:1.17 \
+			/bin/sh -c 'apt-get update; apt-get install libc-dev libpcap-dev -y' && \
+    		go test \
+    			-race \
+    			-failfast \
+    			-coverprofile=.coverage/coverage.out \
+    			-covermode=atomic \
+    			-v \
+    			./...
 
 reuse-lint:
 	docker run --rm -v ${CURRENT_DIR}:/up4 -w /up4 omecproject/reuse-verify:latest reuse lint
