@@ -36,7 +36,6 @@ func startSniffer() {
 	if isSnifferStarted {
 		return
 	}
-	isSnifferStarted = true
 
 	go func() {
 		err := sniffer(snifferDoneChannel)
@@ -44,6 +43,8 @@ func startSniffer() {
 			return
 		}
 	}()
+
+	isSnifferStarted = true
 }
 
 func stopSniffer() {
@@ -51,8 +52,14 @@ func stopSniffer() {
 		return
 	}
 
-	snifferDoneChannel <- true
-	isSnifferStarted = false
+	select {
+	case snifferDoneChannel <- true:
+		isSnifferStarted = false
+		return
+	default:
+		// Sniffer was not started
+		isSnifferStarted = false
+	}
 }
 
 func insertSession(index int, session *pfcpsim.PFCPSession) {
