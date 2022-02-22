@@ -47,7 +47,7 @@ func main() {
 
 	bufferFlag := getopt.BoolLong("buffer", 'b', "If set, downlink FARs will have the buffer flag set to true")
 	notifyCPFlag := getopt.BoolLong("notifycp", 'm', "If set, downlink FARs will have the notify CP flag set to true")
-	setAppFilterSDF := getopt.BoolLong("no-wildcard", 'w', "If set, downlink FARs will have a SDF filter with app filtering ports")
+	setAppFilterSDF := getopt.StringLong("app-filter-SDF", 'f', "Allows to set a custom SDF filter to override wildcard SDF filter, on session creation")
 
 	optHelp := getopt.BoolLong("help", 0, "Help")
 
@@ -97,7 +97,7 @@ func main() {
 			BaseID:        int32(*baseId),
 			NodeBAddress:  *nodeBAddr,
 			UeAddressPool: *ueAddrPool,
-			UseAppFilterSDF: *setAppFilterSDF,
+			FilterSDF: *setAppFilterSDF,
 		})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)

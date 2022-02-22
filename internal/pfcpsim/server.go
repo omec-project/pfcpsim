@@ -22,8 +22,6 @@ import (
 
 const (
 	// FIXME: the SDF Filter is not spec-compliant. We should fix it once SD-Core supports the spec-compliant format.
-	// TODO improve SDF filter configurability by pfcpctl (e.g. set app filter port)
-	appFilteringSDFFilter = "permit out ip from 0.0.0.0/0 to assigned 81-81"
 	wildcardSDFFilter     = "permit out ip from 0.0.0.0/0 to assigned"
 )
 
@@ -135,8 +133,8 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 
 	var SDFFilter = wildcardSDFFilter
 
-	if request.UseAppFilterSDF {
-		SDFFilter = appFilteringSDFFilter
+	if request.FilterSDF != "" {
+		SDFFilter = request.FilterSDF
 	}
 
 	for i := baseID; i < (count*2 + baseID); i = i + 2 {

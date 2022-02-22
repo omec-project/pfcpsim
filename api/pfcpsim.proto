@@ -13,7 +13,7 @@ message CreateSessionRequest {
   int32 baseID = 2;
   string nodeBAddress = 3;
   string ueAddressPool = 4;
-  bool useAppFilterSDF = 5;
+  string filterSDF = 5;
 }
 
 message ModifySessionRequest {
