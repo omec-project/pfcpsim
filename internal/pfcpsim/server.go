@@ -128,8 +128,8 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 
 	var SDFFilter = ""
 
-	if request.FilterSDF != "" {
-		SDFFilter = request.FilterSDF
+	if request.SdfFilter != "" {
+		SDFFilter = request.SdfFilter
 	}
 
 	for i := baseID; i < (count*2 + baseID); i = i + 2 {
