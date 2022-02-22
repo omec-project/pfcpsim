@@ -20,11 +20,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const (
-	// FIXME: the SDF Filter is not spec-compliant. We should fix it once SD-Core supports the spec-compliant format.
-	wildcardSDFFilter     = "permit out ip from 0.0.0.0/0 to assigned"
-)
-
 // pfcpSimService implements the Protobuf interface and keeps a connection to a remote PFCP Agent peer.
 // Its state is handled in internal/pfcpsim/state.go
 type pfcpSimService struct{}
@@ -34,7 +29,7 @@ func NewPFCPSimService(iface string) *pfcpSimService {
 	return &pfcpSimService{}
 }
 
-func checkServerStatus()  error{
+func checkServerStatus() error {
 	if !isConfigured() {
 		return status.Error(codes.Aborted, "Server is not configured")
 	}
@@ -131,7 +126,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 	}
 
-	var SDFFilter = wildcardSDFFilter
+	var SDFFilter = ""
 
 	if request.FilterSDF != "" {
 		SDFFilter = request.FilterSDF
