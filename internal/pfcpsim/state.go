@@ -28,14 +28,12 @@ var (
 	remotePeerConnected bool
 )
 
-func init() {
-	snifferDoneChannel = make(chan bool)
-}
-
 func startSniffer() {
 	if isSnifferStarted {
 		return
 	}
+
+	snifferDoneChannel = make(chan bool)
 
 	go func() {
 		err := sniffer(snifferDoneChannel)
@@ -55,10 +53,12 @@ func stopSniffer() {
 	select {
 	case snifferDoneChannel <- true:
 		isSnifferStarted = false
+		close(snifferDoneChannel)
 		return
 	default:
 		// Sniffer was not started
 		isSnifferStarted = false
+		close(snifferDoneChannel)
 	}
 }
 

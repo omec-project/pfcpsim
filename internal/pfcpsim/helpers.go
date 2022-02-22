@@ -86,6 +86,8 @@ func getLocalAddress(ifaceName string) (net.IP, error) {
 	return IpAddress, nil
 }
 
+// getFirstNonLoopbackInterface returns the first non-loopback interface name and IP address.
+// returns error if failure happens at any stage.
 func getFirstNonLoopbackInterface() (string, net.IP, error){
 	ifaces, err := net.Interfaces()
 	if err != nil {
@@ -111,7 +113,7 @@ func getFirstNonLoopbackInterface() (string, net.IP, error){
 }
 
 // sniffer starts sniffing on interfaceName.
-// if pcapPath is empty, sniffer returns immediately.
+// if pcapPath is empty, returns immediately.
 func sniffer(doneChannel chan bool) error {
 	if pcapPath == "" {
 		return nil
