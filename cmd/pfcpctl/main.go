@@ -42,11 +42,12 @@ func main() {
 	baseId := getopt.IntLong("baseID", 'i', 1, "First ID used to generate all other ID fields.")
 	n3Addr := getopt.StringLong("n3-addr", 'a', "", "The IPv4 address of the UPF's N3 interface")
 	ueAddrPool := getopt.StringLong("ue-pool", 'u', "", "The IPv4 prefix from which UE addresses will be drawn.")
-	nodeBAddr := getopt.StringLong("nb-addr", 'g', "", "The IPv4 address of the NodeB")
+	nodeBAddr := getopt.StringLong("gnb-addr", 'g', "", "The IPv4 address of the NodeB")
 	remotePeer := getopt.StringLong("remote-peer", 'r', "", "The remote PFCP Agent address")
 
 	bufferFlag := getopt.BoolLong("buffer", 'b', "If set, downlink FARs will have the buffer flag set to true")
 	notifyCPFlag := getopt.BoolLong("notifycp", 'm', "If set, downlink FARs will have the notify CP flag set to true")
+	sdfFilter := getopt.StringLong("sdf-filter", 'f', "" ,"Allows to set a custom SDF filter")
 
 	optHelp := getopt.BoolLong("help", 0, "Help")
 
@@ -96,6 +97,7 @@ func main() {
 			BaseID:        int32(*baseId),
 			NodeBAddress:  *nodeBAddr,
 			UeAddressPool: *ueAddrPool,
+			SdfFilter:     *sdfFilter,
 		})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)

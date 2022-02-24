@@ -20,12 +20,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const (
-	// FIXME: the SDF Filter is not spec-compliant. We should fix it once SD-Core supports the spec-compliant format.
-	// TODO make SDF filter configurable using the cli
-	defaultSDFfilter = "permit out ip from 0.0.0.0/0 to assigned 80-80"
-)
-
 // pfcpSimService implements the Protobuf interface and keeps a connection to a remote PFCP Agent peer.
 // Its state is handled in internal/pfcpsim/state.go
 type pfcpSimService struct{}
@@ -35,7 +29,7 @@ func NewPFCPSimService(iface string) *pfcpSimService {
 	return &pfcpSimService{}
 }
 
-func checkServerStatus()  error{
+func checkServerStatus() error {
 	if !isConfigured() {
 		return status.Error(codes.Aborted, "Server is not configured")
 	}
@@ -132,6 +126,12 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 	}
 
+	var SDFFilter = ""
+
+	if request.SdfFilter != "" {
+		SDFFilter = request.SdfFilter
+	}
+
 	for i := baseID; i < (count*2 + baseID); i = i + 2 {
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i)
@@ -160,7 +160,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				AddQERID(sessQerID).
 				AddQERID(uplinkAppQerID).
 				WithN3Address(upfN3Address).
-				WithSDFFilter(defaultSDFfilter).
+				WithSDFFilter(SDFFilter).
 				WithPrecedence(100).
 				MarkAsUplink().
 				BuildPDR(),
@@ -171,7 +171,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				WithMethod(session.Create).
 				WithPrecedence(100).
 				WithUEAddress(ueAddress.String()).
-				WithSDFFilter(defaultSDFfilter).
+				WithSDFFilter(SDFFilter).
 				AddQERID(sessQerID).
 				AddQERID(downlinkAppQerID).
 				WithFARID(downlinkFarID).
