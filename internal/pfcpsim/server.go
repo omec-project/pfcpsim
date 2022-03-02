@@ -127,6 +127,11 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 	}
 
 	var SDFFilter = ""
+	var qfi uint8 = 0
+
+	if request.Qfi != 0 {
+		qfi = uint8(request.Qfi)
+	}
 
 	if request.SdfFilter != "" {
 		SDFFilter = request.SdfFilter
@@ -212,7 +217,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 			session.NewQERBuilder().
 				WithID(uplinkAppQerID).
 				WithMethod(session.Create).
-				WithQFI(0x08).
+				WithQFI(qfi).
 				WithUplinkMBR(50000).
 				WithDownlinkMBR(30000).
 				Build(),
@@ -221,7 +226,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 			session.NewQERBuilder().
 				WithID(downlinkAppQerID).
 				WithMethod(session.Create).
-				WithQFI(0x08).
+				WithQFI(qfi).
 				WithUplinkMBR(50000).
 				WithDownlinkMBR(30000).
 				Build(),
