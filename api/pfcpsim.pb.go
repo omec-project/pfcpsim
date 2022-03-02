@@ -44,7 +44,7 @@ type CreateSessionRequest struct {
 	NodeBAddress  string `protobuf:"bytes,3,opt,name=nodeBAddress,proto3" json:"nodeBAddress,omitempty"`
 	UeAddressPool string `protobuf:"bytes,4,opt,name=ueAddressPool,proto3" json:"ueAddressPool,omitempty"`
 	SdfFilter     string `protobuf:"bytes,5,opt,name=sdfFilter,proto3" json:"sdfFilter,omitempty"`
-	Qfi           int32  `protobuf:"varint,6,opt,name=qfi,proto3" json:"qfi,omitempty"`
+	Qfi           int32  `protobuf:"varint,6,opt,name=qfi,proto3" json:"qfi,omitempty"` // Should be uint8
 }
 
 func (x *CreateSessionRequest) Reset() {
