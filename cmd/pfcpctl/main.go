@@ -48,6 +48,7 @@ func main() {
 	bufferFlag := getopt.BoolLong("buffer", 'b', "If set, downlink FARs will have the buffer flag set to true")
 	notifyCPFlag := getopt.BoolLong("notifycp", 'm', "If set, downlink FARs will have the notify CP flag set to true")
 	sdfFilter := getopt.StringLong("sdf-filter", 'f', "" ,"Allows to set a custom SDF filter")
+	qfi := getopt.Int32Long("qfi", 'q', 0, "Allows to set a custom QFI value for QERs. Max value 64")
 
 	optHelp := getopt.BoolLong("help", 0, "Help")
 
@@ -55,6 +56,10 @@ func main() {
 	if *optHelp {
 		getopt.Usage()
 		os.Exit(0)
+	}
+
+	if *qfi > 64 {
+		log.Fatalf("QFI value cannot exceed 64.")
 	}
 
 	simClient, conn := connect(*srvAddr)
@@ -98,6 +103,7 @@ func main() {
 			NodeBAddress:  *nodeBAddr,
 			UeAddressPool: *ueAddrPool,
 			SdfFilter:     *sdfFilter,
+			Qfi: *qfi,
 		})
 		if err != nil {
 			log.Errorf("Error while associating: %v", err)
