@@ -58,6 +58,10 @@ func main() {
 		os.Exit(0)
 	}
 
+	if *qfi > 255 {
+		log.Fatalf("QFI value cannot exceed 255.")
+	}
+
 	simClient, conn := connect(*srvAddr)
 	defer conn.Close()
 
