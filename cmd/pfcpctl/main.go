@@ -6,8 +6,11 @@ package main
 import (
 	"context"
 	"os"
+	"path"
 
+	"github.com/jessevdk/go-flags"
 	pb "github.com/omec-project/pfcpsim/api"
+	"github.com/omec-project/pfcpsim/internal/pfcpctl/commands"
 	"github.com/pborman/getopt/v2"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -29,6 +32,13 @@ func connect(serverAddr string) (pb.PFCPSimClient, *grpc.ClientConn) {
 }
 
 func main() {
+
+	parser := flags.NewNamedParser(path.Base(os.Args[0]),
+		flags.HelpFlag|flags.PassDoubleDash|flags.PassAfterNonOption)
+
+	commands.RegisterSessionCommands(parser)
+
+
 	// TODO improve parser
 	helpMsg := "'configure': Configure Server " +
 		"\n 'disassociate': Teardown Association and disconnect from remote peer" +
