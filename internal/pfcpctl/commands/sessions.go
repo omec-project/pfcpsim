@@ -1,10 +1,36 @@
 package commands
 
-import "github.com/jessevdk/go-flags"
+import (
+	"fmt"
 
-type ServiceCreate struct {}
-type ServiceModify struct {}
-type ServiceDelete struct {}
+	"github.com/jessevdk/go-flags"
+)
+
+type ServiceCreate struct {
+	Args struct {
+		Count int `command:"count"`
+	} `required:"yes"`
+
+	Options struct {
+		BaseID int `command:"baseID"`
+		UePool string `command:"ue-pool"`
+		GnBAddress string `command:"gnb-addr"`
+		SDFfilter string `command:"sdf_filter"`
+		Qfi uint8 `command:"qfi"`
+	}
+}
+
+type ServiceModify struct {
+	Count int `command:"count"`
+	BaseID int `command:"baseID"`
+	UePool string `command:"ue-pool"`
+	GnBAddress string `command:"gnb-addr"`
+}
+
+type ServiceDelete struct {
+	Count int `command:"count"`
+	BaseID int `command:"baseID"`
+}
 
 type ServiceOptions struct {
 	//List ServiceList `command:"list"`
@@ -14,17 +40,23 @@ type ServiceOptions struct {
 }
 
 func RegisterSessionCommands(parser *flags.Parser) {
-	_, _ = parser.AddCommand("session", "Sessions Commands", "Commands to crete/modify/delete sessions", &ServiceOptions{})
+	_, _ = parser.AddCommand("session", "Handle sessions", "Command to create/modify/delete sessions", &ServiceOptions{})
 }
 
-func (s *ServiceCreate) Execute() {
+func (s *ServiceCreate) Execute(args []string) error {
+	fmt.Println("Selected create service")
 
+	return nil
 }
 
-func (s *ServiceModify) Execute() {
+func (s *ServiceModify) Execute(args []string) error {
+	fmt.Println("Selected modify service")
 
+	return nil
 }
 
-func (s *ServiceDelete) Execute() {
+func (s *ServiceDelete) Execute(args []string) error {
+	fmt.Println("Selected delete service")
 
+	return nil
 }
