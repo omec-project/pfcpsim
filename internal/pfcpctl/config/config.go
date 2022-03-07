@@ -7,6 +7,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	defaultgRPCServerAddress = "localhost:54321"
+)
+
 var GlobalOptions struct {
 	Server string `short:"s" long:"server" default:"" value-name:"SERVER:PORT" description:"IP/Host and port of pfcpsim gRPC Server"`
 }
@@ -16,7 +20,7 @@ type GlobalConfigSpec struct {
 }
 
 var GlobalConfig = GlobalConfigSpec{
-	Server: "localhost:54321",
+	Server: defaultgRPCServerAddress,
 }
 
 func ProcessGlobalOptions() {

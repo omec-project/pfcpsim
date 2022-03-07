@@ -1,9 +1,10 @@
 package commands
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/jessevdk/go-flags"
+	pb "github.com/omec-project/pfcpsim/api"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -46,23 +47,63 @@ func RegisterSessionCommands(parser *flags.Parser) {
 }
 
 func (s *ServiceCreate) Execute(args []string) error {
-	fmt.Printf("Selected create service, with options:\n count: %d , baseID: %d", s.Args.Count, s.Args.BaseID)
-
 	if s.Args.QFI > 64 {
 		log.Fatalf("QFI cannot be greater than 64. Provided QFI: %v", s.Args.QFI)
 	}
+
+	client, _ := connect()
+
+	res, err := client.CreateSession(context.Background(), &pb.CreateSessionRequest{
+		Count:         int32(s.Args.Count),
+		BaseID:        int32(s.Args.BaseID),
+		NodeBAddress:  s.Args.GnBAddress,
+		UeAddressPool: s.Args.UePool,
+		SdfFilter:     s.Args.SDFfilter,
+		Qfi: int32(s.Args.QFI),
+	})
+
+	if err != nil {
+		log.Fatalf("Error while associating: %v", err)
+	}
+
+	log.Infof(res.Message)
 
 	return nil
 }
 
 func (s *ServiceModify) Execute(args []string) error {
-	fmt.Println("Selected modify service")
+	client, _ := connect()
+
+	res, err := client.ModifySession(context.Background(), &pb.ModifySessionRequest{
+		Count:         int32(s.Args.Count),
+		BaseID:        int32(s.Args.BaseID),
+		NodeBAddress:  s.Args.GnBAddress,
+		UeAddressPool: s.Args.UePool,
+		BufferFlag:    s.Args.bufferFlag,
+		NotifyCPFlag:  s.Args.notifyCPFlag,
+	})
+
+	if err != nil {
+		log.Fatalf("Error while associating: %v", err)
+	}
+
+	log.Infof(res.Message)
 
 	return nil
 }
 
 func (s *ServiceDelete) Execute(args []string) error {
-	fmt.Println("Selected delete service")
+	client, _ := connect()
+
+	res, err := client.DeleteSession(context.Background(), &pb.DeleteSessionRequest{
+		Count:  int32(s.Count),
+		BaseID: int32(s.BaseID),
+	})
+	if err != nil {
+		log.Fatalf("Error while associating: %v", err)
+	}
+
+	log.Infof(res.Message)
 
 	return nil
 }
