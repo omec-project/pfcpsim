@@ -4,47 +4,53 @@ import (
 	"fmt"
 
 	"github.com/jessevdk/go-flags"
+	log "github.com/sirupsen/logrus"
 )
 
-type ServiceCreate struct {
-	Args struct {
-		Count int `command:"count"`
-	} `required:"yes"`
+type commonArgs struct {
+	Count int `short:"c" long:"count" default:"1" description:"The number of sessions to create"`
+	BaseID int `short:"i" long:"baseID"  default:"1" description:"The base ID to use"`
+	UePool string `short:"u" long:"ue-pool" default:"17.0.0.0/24" description:"The UE pool address"`
+	GnBAddress string `short:"g" long:"gnb-addr" description:"The UE pool address"`
+	SDFfilter string `short:"s" long:"sdf-filter" description:"The SDF Filter to use"`
+	QFI uint8 `short:"q" long:"qfi" description:"The QFI value for QERs. Max value 64."`
+}
 
-	Options struct {
-		BaseID int `command:"baseID"`
-		UePool string `command:"ue-pool"`
-		GnBAddress string `command:"gnb-addr"`
-		SDFfilter string `command:"sdf_filter"`
-		Qfi uint8 `command:"qfi"`
+type ServiceCreate struct {
+	Args struct{
+		commonArgs
 	}
 }
 
 type ServiceModify struct {
-	Count int `command:"count"`
-	BaseID int `command:"baseID"`
-	UePool string `command:"ue-pool"`
-	GnBAddress string `command:"gnb-addr"`
+	Args struct {
+		commonArgs
+		bufferFlag bool `short:"b" long:"buffer" description:"If set, downlink FARs will have the buffer flag set to true"`
+		notifyCPFlag bool `short:"n" long:"notifyCP" description:"If set, downlink FARs will have the notify CP flag set to true"`
+	}
 }
 
 type ServiceDelete struct {
-	Count int `command:"count"`
-	BaseID int `command:"baseID"`
+	Count int
+	BaseID int
 }
 
-type ServiceOptions struct {
-	//List ServiceList `command:"list"`
+type SessionOptions struct {
 	Create ServiceCreate `command:"create"`
 	Modify ServiceModify `command:"modify"`
 	Delete ServiceDelete `command:"delete"`
 }
 
 func RegisterSessionCommands(parser *flags.Parser) {
-	_, _ = parser.AddCommand("session", "Handle sessions", "Command to create/modify/delete sessions", &ServiceOptions{})
+	_, _ = parser.AddCommand("session", "Handle sessions", "Command to create/modify/delete sessions", &SessionOptions{})
 }
 
 func (s *ServiceCreate) Execute(args []string) error {
-	fmt.Println("Selected create service")
+	fmt.Printf("Selected create service, with options:\n count: %d , baseID: %d", s.Args.Count, s.Args.BaseID)
+
+	if s.Args.QFI > 64 {
+		log.Fatalf("QFI cannot be greater than 64. Provided QFI: %v", s.Args.QFI)
+	}
 
 	return nil
 }
