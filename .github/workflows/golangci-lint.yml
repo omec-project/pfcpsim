@@ -2,7 +2,12 @@
 # Copyright 2022-present Open Networking Foundation
 
 name: golangci-lint
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
 jobs:
   golangci:
     name: lint

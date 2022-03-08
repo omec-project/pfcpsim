@@ -2,7 +2,11 @@
 # Copyright 2022-present Open Networking Foundation
 
 name: Publish pfcpsim
-on: [pull_request, push]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
   build:
