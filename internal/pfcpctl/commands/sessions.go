@@ -17,13 +17,13 @@ type commonArgs struct {
 	QFI uint8 `short:"q" long:"qfi" description:"The QFI value for QERs. Max value 64."`
 }
 
-type ServiceCreate struct {
+type sessionCreate struct {
 	Args struct{
 		commonArgs
 	}
 }
 
-type ServiceModify struct {
+type sessionModify struct {
 	Args struct {
 		commonArgs
 		bufferFlag bool `short:"b" long:"buffer" description:"If set, downlink FARs will have the buffer flag set to true"`
@@ -31,22 +31,22 @@ type ServiceModify struct {
 	}
 }
 
-type ServiceDelete struct {
+type sessionDelete struct {
 	Count int
 	BaseID int
 }
 
 type SessionOptions struct {
-	Create ServiceCreate `command:"create"`
-	Modify ServiceModify `command:"modify"`
-	Delete ServiceDelete `command:"delete"`
+	Create sessionCreate `command:"create"`
+	Modify sessionModify `command:"modify"`
+	Delete sessionDelete `command:"delete"`
 }
 
 func RegisterSessionCommands(parser *flags.Parser) {
 	_, _ = parser.AddCommand("session", "Handle sessions", "Command to create/modify/delete sessions", &SessionOptions{})
 }
 
-func (s *ServiceCreate) Execute(args []string) error {
+func (s *sessionCreate) Execute(args []string) error {
 	if s.Args.QFI > 64 {
 		log.Fatalf("QFI cannot be greater than 64. Provided QFI: %v", s.Args.QFI)
 	}
@@ -71,7 +71,7 @@ func (s *ServiceCreate) Execute(args []string) error {
 	return nil
 }
 
-func (s *ServiceModify) Execute(args []string) error {
+func (s *sessionModify) Execute(args []string) error {
 	client, _ := connect()
 
 	res, err := client.ModifySession(context.Background(), &pb.ModifySessionRequest{
@@ -92,7 +92,7 @@ func (s *ServiceModify) Execute(args []string) error {
 	return nil
 }
 
-func (s *ServiceDelete) Execute(args []string) error {
+func (s *sessionDelete) Execute(args []string) error {
 	client, _ := connect()
 
 	res, err := client.DeleteSession(context.Background(), &pb.DeleteSessionRequest{
