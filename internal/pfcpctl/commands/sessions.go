@@ -32,8 +32,10 @@ type sessionModify struct {
 }
 
 type sessionDelete struct {
-	Count int `short:"c" long:"count" default:"1" description:"The number of sessions to create"`
-	BaseID int `short:"i" long:"baseID"  default:"1" description:"The base ID to use"`
+	Args struct{
+		Count int `short:"c" long:"count" default:"1" description:"The number of sessions to create"`
+		BaseID int `short:"i" long:"baseID"  default:"1" description:"The base ID to use"`
+	}
 }
 
 type SessionOptions struct {
@@ -96,8 +98,8 @@ func (s *sessionDelete) Execute(args []string) error {
 	client := connect()
 
 	res, err := client.DeleteSession(context.Background(), &pb.DeleteSessionRequest{
-		Count:  int32(s.Count),
-		BaseID: int32(s.BaseID),
+		Count:  int32(s.Args.Count),
+		BaseID: int32(s.Args.BaseID),
 	})
 	if err != nil {
 		log.Fatalf("Error while associating: %v", err)
