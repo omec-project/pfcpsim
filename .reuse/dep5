@@ -7,6 +7,6 @@ Files: api/**/*.pb.go
 Copyright: 2022-present Open Networking Foundation
 License: Apache-2.0
 
-Files: VERSION LICENSES/LICENSE README.md go.mod go.sum docs/images/schema.svg
+Files: VERSION README.md go.mod go.sum docs/images/schema.svg
 Copyright: 2022-present Open Networking Foundation
 License: Apache-2.0
