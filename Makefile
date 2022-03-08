@@ -30,7 +30,7 @@ test: .coverage
 	go test	-race -coverprofile=.coverage/coverage-unit.txt -covermode=atomic -v ./...
 
 reuse-lint:
-	docker run --rm -v ${CURRENT_DIR}:/up4 -w /up4 omecproject/reuse-verify:latest reuse lint
+	docker run --rm -v $(CURDIR):/pfcpsim -w /pfcpsim omecproject/reuse-verify:latest reuse lint
 
 build-proto:
 	@echo "Compiling proto files..."
