@@ -193,8 +193,6 @@ func (c *PFCPClient) SendAssociationSetupRequest(ie ...*ieLib.IE) error {
 // SendAssociationTeardownRequest sends PFCP Teardown Request towards a peer.
 // A caller should make sure that the PFCP connection is established before invoking this function.
 func (c *PFCPClient) SendAssociationTeardownRequest(ie ...*ieLib.IE) error {
-	c.resetSequenceNumber()
-
 	teardownReq := message.NewAssociationReleaseRequest(0,
 		ieLib.NewNodeID(c.conn.RemoteAddr().String(), "", ""),
 	)
