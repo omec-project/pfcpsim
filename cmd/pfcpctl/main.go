@@ -13,8 +13,6 @@ import (
 	"github.com/omec-project/pfcpsim/internal/pfcpctl/config"
 )
 
-
-
 func main() {
 	parser := flags.NewNamedParser(path.Base(os.Args[0]),
 		flags.HelpFlag|flags.PassDoubleDash|flags.PassAfterNonOption)
