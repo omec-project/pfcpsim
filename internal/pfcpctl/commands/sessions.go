@@ -32,8 +32,8 @@ type sessionModify struct {
 }
 
 type sessionDelete struct {
-	Count int
-	BaseID int
+	Count int `short:"c" long:"count" default:"1" description:"The number of sessions to create"`
+	BaseID int `short:"i" long:"baseID"  default:"1" description:"The base ID to use"`
 }
 
 type SessionOptions struct {
