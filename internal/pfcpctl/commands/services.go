@@ -27,7 +27,7 @@ func RegisterServiceCommands(parser *flags.Parser) {
 }
 
 func (c *configureRemoteAddresses) Execute(args []string) error {
-	client, _ := connect()
+	client := connect()
 
 	res, err := client.Configure(context.Background(), &pb.ConfigureRequest{
 		UpfN3Address:      c.N3InterfaceAddress,
@@ -43,7 +43,7 @@ func (c *configureRemoteAddresses) Execute(args []string) error {
 }
 
 func (c *associate) Execute(args []string) error {
-	client, _ := connect()
+	client := connect()
 
 	res, err := client.Associate(context.Background(), &pb.EmptyRequest{})
 	if err != nil {
@@ -56,7 +56,7 @@ func (c *associate) Execute(args []string) error {
 }
 
 func (c *disassociate) Execute(args []string) error {
-	client, _ := connect()
+	client := connect()
 
 	res, err := client.Associate(context.Background(), &pb.EmptyRequest{})
 	if err != nil {

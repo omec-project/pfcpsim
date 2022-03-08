@@ -51,7 +51,7 @@ func (s *sessionCreate) Execute(args []string) error {
 		log.Fatalf("QFI cannot be greater than 64. Provided QFI: %v", s.Args.QFI)
 	}
 
-	client, _ := connect()
+	client := connect()
 
 	res, err := client.CreateSession(context.Background(), &pb.CreateSessionRequest{
 		Count:         int32(s.Args.Count),
@@ -72,7 +72,7 @@ func (s *sessionCreate) Execute(args []string) error {
 }
 
 func (s *sessionModify) Execute(args []string) error {
-	client, _ := connect()
+	client := connect()
 
 	res, err := client.ModifySession(context.Background(), &pb.ModifySessionRequest{
 		Count:         int32(s.Args.Count),
@@ -93,7 +93,7 @@ func (s *sessionModify) Execute(args []string) error {
 }
 
 func (s *sessionDelete) Execute(args []string) error {
-	client, _ := connect()
+	client := connect()
 
 	res, err := client.DeleteSession(context.Background(), &pb.DeleteSessionRequest{
 		Count:  int32(s.Count),
