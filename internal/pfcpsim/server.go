@@ -124,18 +124,19 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 	}
 
-	var SDFFilter = ""
+	//var SDFFilter = "" //FIXME
 	var qfi uint8 = 0
 
 	if request.Qfi != 0 {
 		qfi = uint8(request.Qfi)
 	}
 
-	if request.SdfFilter != "" {
-		SDFFilter = request.SdfFilter
-	}
+	//if len(request.SdfFilter) == 0 != "" {
+	//	SDFFilter = request.SdfFilter
+	//}
 
-	for i := baseID; i < (count*2 + baseID); i = i + 2 {
+
+	for i := baseID; i < (count*2 + baseID); i = i + 2 { //FIXME increment step should take into account the number of SDF Filters
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i)
 
@@ -145,43 +146,12 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		uplinkFarID := uint32(i)
 		downlinkFarID := uint32(i + 1)
 
-		uplinkPdrID := uint16(i)
-		dowlinkPdrID := uint16(i + 1)
-
 		sessQerID := uint32(i + 3)
 
 		uplinkAppQerID := uint32(i)
 		downlinkAppQerID := uint32(i + 1)
 
-		pdrs := []*ieLib.IE{
-			// UplinkPDR
-			session.NewPDRBuilder().
-				WithID(uplinkPdrID).
-				WithMethod(session.Create).
-				WithTEID(uplinkTEID).
-				WithFARID(uplinkFarID).
-				AddQERID(sessQerID).
-				AddQERID(uplinkAppQerID).
-				WithN3Address(upfN3Address).
-				WithSDFFilter(SDFFilter).
-				WithPrecedence(100).
-				MarkAsUplink().
-				BuildPDR(),
-
-			// DownlinkPDR
-			session.NewPDRBuilder().
-				WithID(dowlinkPdrID).
-				WithMethod(session.Create).
-				WithPrecedence(100).
-				WithUEAddress(ueAddress.String()).
-				WithSDFFilter(SDFFilter).
-				AddQERID(sessQerID).
-				AddQERID(downlinkAppQerID).
-				WithFARID(downlinkFarID).
-				MarkAsDownlink().
-				BuildPDR(),
-		}
-
+		pdrs := []*ieLib.IE{} // Updated below
 		fars := []*ieLib.IE{
 			// UplinkFAR
 			session.NewFARBuilder().
@@ -228,6 +198,42 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				WithUplinkMBR(50000).
 				WithDownlinkMBR(30000).
 				Build(),
+		}
+
+		j := i
+		for _, sdf := range request.SdfFilter {
+			// Create as many Uplink and Downlink PDRs as provided SDF filters
+			uplinkPDRID := uint16(j)
+			downlinkPDRID := uint16(j + 1)
+			precedence := uint32(j)
+
+			uplinkPDR := session.NewPDRBuilder().
+				WithID(uplinkPDRID).
+				WithMethod(session.Create).
+				WithTEID(uplinkTEID).
+				WithFARID(uplinkFarID).
+				AddQERID(sessQerID).
+				AddQERID(uplinkAppQerID).
+				WithN3Address(upfN3Address).
+				WithSDFFilter(sdf).
+				WithPrecedence(precedence).
+				MarkAsUplink().
+				BuildPDR()
+
+			downlinkPDR := session.NewPDRBuilder().
+				WithID(downlinkPDRID).
+				WithMethod(session.Create).
+				WithPrecedence(precedence).
+				WithUEAddress(ueAddress.String()).
+				WithSDFFilter(sdf).
+				AddQERID(sessQerID).
+				AddQERID(downlinkAppQerID).
+				WithFARID(downlinkFarID).
+				MarkAsDownlink().
+				BuildPDR()
+
+			pdrs = append(pdrs, uplinkPDR)
+			pdrs = append(pdrs, downlinkPDR)
 		}
 
 		sess, err := sim.EstablishSession(pdrs, fars, qers)
