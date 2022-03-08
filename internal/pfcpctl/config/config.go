@@ -37,7 +37,7 @@ func ProcessGlobalOptions() {
 
 	// Generate error messages for required settings
 	if GlobalConfig.Server == "" {
-		log.Fatal("Server is not set. Please update config file or use the -s option")
+		log.Fatal("Server is not set. Please use the -s option")
 	}
 
 	//Try to resolve hostname if provided for the server
