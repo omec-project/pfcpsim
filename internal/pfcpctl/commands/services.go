@@ -18,7 +18,6 @@ type configureRemoteAddresses struct {
 	N3InterfaceAddress string `short:"n" long:"n3-addr" default:"" description:"The IPv4 address of the UPF's N3 interface"`
 }
 
-
 type serviceOptions struct {
 	Associate    associate                `command:"associate"`
 	Disassociate disassociate             `command:"disassociate"`
