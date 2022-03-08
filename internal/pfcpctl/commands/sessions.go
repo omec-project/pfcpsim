@@ -26,8 +26,8 @@ type sessionCreate struct {
 type sessionModify struct {
 	Args struct {
 		commonArgs
-		bufferFlag bool `short:"b" long:"buffer" description:"If set, downlink FARs will have the buffer flag set to true"`
-		notifyCPFlag bool `short:"n" long:"notifyCP" description:"If set, downlink FARs will have the notify CP flag set to true"`
+		BufferFlag bool `short:"b" long:"buffer" description:"If set, downlink FARs will have the buffer flag set to true"`
+		NotifyCPFlag bool `short:"n" long:"notifycp" description:"If set, downlink FARs will have the notify CP flag set to true"`
 	}
 }
 
@@ -81,8 +81,8 @@ func (s *sessionModify) Execute(args []string) error {
 		BaseID:        int32(s.Args.BaseID),
 		NodeBAddress:  s.Args.GnBAddress,
 		UeAddressPool: s.Args.UePool,
-		BufferFlag:    s.Args.bufferFlag,
-		NotifyCPFlag:  s.Args.notifyCPFlag,
+		BufferFlag:    s.Args.BufferFlag,
+		NotifyCPFlag:  s.Args.NotifyCPFlag,
 	})
 
 	if err != nil {
