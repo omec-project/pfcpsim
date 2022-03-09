@@ -51,8 +51,8 @@ type PFCPClient struct {
 
 func NewPFCPClient(localAddr string) *PFCPClient {
 	client := &PFCPClient{
-		sequenceNumber: 0,
-		localAddr:      localAddr,
+		sequenceNumber:  0,
+		localAddr:       localAddr,
 		responseTimeout: DefaultResponseTimeout,
 	}
 
