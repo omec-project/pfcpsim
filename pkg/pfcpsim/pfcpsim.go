@@ -17,6 +17,7 @@ import (
 const (
 	PFCPStandardPort       = 8805
 	DefaultHeartbeatPeriod = 5
+	DefaultResponseTimeout = 5 * time.Second
 )
 
 // PFCPClient enables to simulate a client sending PFCP messages towards the UPF.
@@ -43,12 +44,16 @@ type PFCPClient struct {
 
 	localAddr string
 	conn      *net.UDPConn
+
+	// responseTimeout timeout to wait for PFCP response (default: 5 seconds)
+	responseTimeout time.Duration
 }
 
 func NewPFCPClient(localAddr string) *PFCPClient {
 	client := &PFCPClient{
 		sequenceNumber: 0,
 		localAddr:      localAddr,
+		responseTimeout: DefaultResponseTimeout,
 	}
 
 	client.ctx = context.Background()
@@ -56,6 +61,10 @@ func NewPFCPClient(localAddr string) *PFCPClient {
 	client.recvChan = make(chan message.Message)
 
 	return client
+}
+
+func (c *PFCPClient) SetPFCPResponseTimeout(timeout time.Duration) {
+	c.responseTimeout = timeout
 }
 
 func (c *PFCPClient) getNextSequenceNumber() uint32 {
@@ -158,20 +167,23 @@ func (c *PFCPClient) DisconnectN4() {
 	c.conn.Close()
 }
 
-func (c *PFCPClient) PeekNextHeartbeatResponse(timeout time.Duration) (*message.HeartbeatResponse, error) {
+func (c *PFCPClient) PeekNextHeartbeatResponse() (*message.HeartbeatResponse, error) {
 	select {
 	case msg := <-c.heartbeatsChan:
 		return msg, nil
-	case <-time.After(timeout * time.Second):
+	case <-time.After(c.responseTimeout):
 		return nil, NewTimeoutExpiredError()
 	}
 }
 
-func (c *PFCPClient) PeekNextResponse(timeout time.Duration) (message.Message, error) {
+// PeekNextResponse can be used to wait for a next PFCP message from a peer.
+// It's a blocking operation, which is timed out after c.responseTimeout period (5 seconds by default).
+// Use SetPFCPResponseTimeout() to configure a custom timeout.
+func (c *PFCPClient) PeekNextResponse() (message.Message, error) {
 	select {
 	case msg := <-c.recvChan:
 		return msg, nil
-	case <-time.After(timeout * time.Second):
+	case <-time.After(c.responseTimeout):
 		return nil, NewTimeoutExpiredError()
 	}
 }
@@ -281,7 +293,7 @@ func (c *PFCPClient) SendAndRecvHeartbeat() error {
 		return err
 	}
 
-	_, err = c.PeekNextHeartbeatResponse(5)
+	_, err = c.PeekNextHeartbeatResponse()
 	if err != nil {
 		c.setAssociationStatus(false)
 		return err
@@ -300,7 +312,7 @@ func (c *PFCPClient) SetupAssociation() error {
 		return err
 	}
 
-	resp, err := c.PeekNextResponse(DefaultHeartbeatPeriod)
+	resp, err := c.PeekNextResponse()
 	if err != nil {
 		return err
 	}
@@ -338,7 +350,7 @@ func (c *PFCPClient) TeardownAssociation() error {
 		return err
 	}
 
-	resp, err := c.PeekNextResponse(5)
+	resp, err := c.PeekNextResponse()
 	if err != nil {
 		return err
 	}
@@ -368,7 +380,7 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 		return nil, err
 	}
 
-	resp, err := c.PeekNextResponse(5)
+	resp, err := c.PeekNextResponse()
 	if err != nil {
 		return nil, NewTimeoutExpiredError(err)
 	}
@@ -405,7 +417,7 @@ func (c *PFCPClient) ModifySession(sess *PFCPSession, pdrs []*ieLib.IE, fars []*
 		return err
 	}
 
-	resp, err := c.PeekNextResponse(5)
+	resp, err := c.PeekNextResponse()
 	if err != nil {
 		return NewTimeoutExpiredError(err)
 	}
@@ -430,7 +442,7 @@ func (c *PFCPClient) DeleteSession(sess *PFCPSession) error {
 		return err
 	}
 
-	resp, err := c.PeekNextResponse(5)
+	resp, err := c.PeekNextResponse()
 	if err != nil {
 		return err
 	}
