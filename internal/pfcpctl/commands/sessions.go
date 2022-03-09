@@ -68,7 +68,7 @@ func (s *sessionCreate) Execute(args []string) error {
 	})
 
 	if err != nil {
-		log.Fatalf("Error while associating: %v", err)
+		log.Fatalf("Error while creating sessions: %v", err)
 	}
 
 	log.Infof(res.Message)
@@ -89,7 +89,7 @@ func (s *sessionModify) Execute(args []string) error {
 	})
 
 	if err != nil {
-		log.Fatalf("Error while associating: %v", err)
+		log.Fatalf("Error while modifying sessions: %v", err)
 	}
 
 	log.Infof(res.Message)
@@ -105,7 +105,7 @@ func (s *sessionDelete) Execute(args []string) error {
 		BaseID: int32(s.Args.BaseID),
 	})
 	if err != nil {
-		log.Fatalf("Error while associating: %v", err)
+		log.Fatalf("Error while deleting sessions: %v", err)
 	}
 
 	log.Infof(res.Message)
