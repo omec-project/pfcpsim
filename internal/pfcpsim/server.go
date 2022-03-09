@@ -234,6 +234,8 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 
 			pdrs = append(pdrs, uplinkPDR)
 			pdrs = append(pdrs, downlinkPDR)
+
+			j = j + 2
 		}
 
 		sess, err := sim.EstablishSession(pdrs, fars, qers)
