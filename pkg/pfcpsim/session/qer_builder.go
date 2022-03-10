@@ -15,6 +15,8 @@ type qerBuilder struct {
 	isGbrSet bool
 	ulGbr    uint64
 	dlGbr    uint64
+	ulQerGate uint8
+	dlQerGate uint8
 
 	isIDSet bool
 }
@@ -64,6 +66,13 @@ func (b *qerBuilder) WithDownlinkGBR(dlGbr uint64) *qerBuilder {
 	return b
 }
 
+func (b *qerBuilder) WithGateRates(uplinkRate, downlinkRate uint8) *qerBuilder {
+	b.ulQerGate = uplinkRate
+	b.dlQerGate = downlinkRate
+
+	return b
+}
+
 func (b *qerBuilder) validate() {
 	if !b.isIDSet {
 		panic("Tried to build a QER without setting the QER ID")
@@ -86,8 +95,7 @@ func (b *qerBuilder) Build() *ie.IE {
 	qer := createFunc(
 		ie.NewQERID(b.qerID),
 		ie.NewQFI(b.qfi),
-		// FIXME: we don't support gating, always OPEN
-		ie.NewGateStatus(0, 0),
+		ie.NewGateStatus(b.ulQerGate, b.dlQerGate),
 	)
 
 	if b.isMbrSet {
