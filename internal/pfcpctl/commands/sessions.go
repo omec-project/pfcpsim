@@ -5,6 +5,7 @@ package commands
 
 import (
 	"context"
+	"strings"
 
 	"github.com/jessevdk/go-flags"
 	pb "github.com/omec-project/pfcpsim/api"
@@ -16,7 +17,7 @@ type commonArgs struct {
 	BaseID int `short:"i" long:"baseID"  default:"1" description:"The base ID to use"`
 	UePool string `short:"u" long:"ue-pool" default:"17.0.0.0/24" description:"The UE pool address"`
 	GnBAddress string `short:"g" long:"gnb-addr" description:"The UE pool address"`
-	SDFfilter []string `short:"s" long:"sdf-filter" description:"The SDF Filter to use. Note that each entered SDF Filter will have incremental Precedence set in pfcpsim."`
+	AppFilterString string `short:"a" long:"app-filter" description:"Specify an application filter. Format: '<Protocol>:<IP>/<SubnetMask>:<Port>-<Port>:<action>' . e.g.  'udp:10.0.0.0/8:80-88:allow'"`
 	QFI uint8 `short:"q" long:"qfi" description:"The QFI value for QERs. Max value 64."`
 	GateStatus bool `short:"t" long:"gate-status" description:"If set, the QER gate status will be CLOSED"`
 }
@@ -59,6 +60,16 @@ func (s *sessionCreate) Execute(args []string) error {
 
 	client := connect()
 	defer disconnect()
+
+	if s.Args.AppFilterString != "" {
+		splittedString := strings.Split(s.Args.AppFilterString, ":")
+		if len (splittedString) != 4 {
+			log.Fatalf("Provided an incorrect/incomplete app filter string: %v", s.Args.AppFilterString)
+		}
+
+		proto, ipNetAddr, portRange, action := splittedString[0], splittedString[1], splittedString[2], splittedString[3]
+		//FIXME incomplete
+	}
 
 	res, err := client.CreateSession(context.Background(), &pb.CreateSessionRequest{
 		Count:         int32(s.Args.Count),

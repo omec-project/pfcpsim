@@ -17,6 +17,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+// e.g. --app-filter udp:10.0.0.0/8:80-88:allow. allow will select the gate-status to open. deny closed.
+const SDFFilterFormat = "permit out %s from %s to assigned %d-%d"
 
 // pfcpSimService implements the Protobuf interface and keeps a connection to a remote PFCP Agent peer.
 // Its state is handled in internal/pfcpsim/state.go
@@ -125,10 +127,15 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 	}
 
 
-	var SDFFilter = ""
+	var SDFFilter = fmt.Sprintf(SDFFilterFormat,
+		request.Protocol,
+		request.DestinationIPCIDR,
+		request.LowerPortRange,
+		request.UpperPortRange,
+	)
 	var qfi, gateStatus uint8 = 0, ieLib.GateStatusOpen
 
-	if request.GateStatus {
+	if request.SetGateStatusToClosed {
 		gateStatus = ieLib.GateStatusClosed
 	}
 
