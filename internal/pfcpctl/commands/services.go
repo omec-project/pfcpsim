@@ -30,11 +30,13 @@ func RegisterServiceCommands(parser *flags.Parser) {
 
 func (c *configureRemoteAddresses) Execute(args []string) error {
 	client := connect()
+	defer disconnect()
 
 	res, err := client.Configure(context.Background(), &pb.ConfigureRequest{
 		UpfN3Address:      c.N3InterfaceAddress,
 		RemotePeerAddress: c.RemotePeerAddress,
 	})
+
 	if err != nil {
 		log.Fatalf("Error while configuring remote addresses: %v", err)
 	}
@@ -46,6 +48,7 @@ func (c *configureRemoteAddresses) Execute(args []string) error {
 
 func (c *associate) Execute(args []string) error {
 	client := connect()
+	defer disconnect()
 
 	res, err := client.Associate(context.Background(), &pb.EmptyRequest{})
 	if err != nil {
@@ -59,8 +62,9 @@ func (c *associate) Execute(args []string) error {
 
 func (c *disassociate) Execute(args []string) error {
 	client := connect()
+	defer disconnect()
 
-	res, err := client.Associate(context.Background(), &pb.EmptyRequest{})
+	res, err := client.Disassociate(context.Background(), &pb.EmptyRequest{})
 	if err != nil {
 		log.Fatalf("Error while disassociating: %v", err)
 	}
