@@ -6,16 +6,16 @@ package session
 import "github.com/wmnsk/go-pfcp/ie"
 
 type qerBuilder struct {
-	method   IEMethod
-	qerID    uint32
-	qfi      uint8
-	isMbrSet bool
-	ulMbr    uint64
-	dlMbr    uint64
-	isGbrSet bool
-	ulGbr    uint64
+	method     IEMethod
+	qerID      uint32
+	qfi        uint8
+	isMbrSet   bool
+	ulMbr      uint64
+	dlMbr      uint64
+	isGbrSet   bool
+	ulGbr      uint64
 	dlGbr      uint64
-	gateStatus GateStatus
+	gateStatus uint8
 
 	isIDSet bool
 }
