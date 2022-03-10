@@ -6,15 +6,16 @@ package session
 import "github.com/wmnsk/go-pfcp/ie"
 
 type qerBuilder struct {
-	method   IEMethod
-	qerID    uint32
-	qfi      uint8
-	isMbrSet bool
-	ulMbr    uint64
-	dlMbr    uint64
-	isGbrSet bool
-	ulGbr    uint64
-	dlGbr    uint64
+	method     IEMethod
+	qerID      uint32
+	qfi        uint8
+	isMbrSet   bool
+	ulMbr      uint64
+	dlMbr      uint64
+	isGbrSet   bool
+	ulGbr      uint64
+	dlGbr      uint64
+	gateStatus uint8
 
 	isIDSet bool
 }
@@ -64,6 +65,12 @@ func (b *qerBuilder) WithDownlinkGBR(dlGbr uint64) *qerBuilder {
 	return b
 }
 
+func (b *qerBuilder) WithGateStatus(status uint8) *qerBuilder {
+	b.gateStatus = status
+
+	return b
+}
+
 func (b *qerBuilder) validate() {
 	if !b.isIDSet {
 		panic("Tried to build a QER without setting the QER ID")
@@ -83,11 +90,15 @@ func (b *qerBuilder) Build() *ie.IE {
 		createFunc = ie.NewUpdateQER
 	}
 
+	gate := ie.NewGateStatus(0, 0) //Open
+	if b.gateStatus == ie.GateStatusClosed {
+		gate = ie.NewGateStatus(1, 1)
+	}
+
 	qer := createFunc(
 		ie.NewQERID(b.qerID),
 		ie.NewQFI(b.qfi),
-		// FIXME: we don't support gating, always OPEN
-		ie.NewGateStatus(0, 0),
+		gate,
 	)
 
 	if b.isMbrSet {

@@ -18,6 +18,7 @@ type commonArgs struct {
 	GnBAddress string `short:"g" long:"gnb-addr" description:"The UE pool address"`
 	SDFfilter []string `short:"s" long:"sdf-filter" description:"The SDF Filter to use. Note that each entered SDF Filter will have incremental Precedence set in pfcpsim."`
 	QFI uint8 `short:"q" long:"qfi" description:"The QFI value for QERs. Max value 64."`
+	GateStatus bool `short:"t" long:"gate-status" description:"If set, the QER gate status will be CLOSED"`
 }
 
 type sessionCreate struct {
@@ -57,6 +58,7 @@ func (s *sessionCreate) Execute(args []string) error {
 	}
 
 	client := connect()
+	defer disconnect()
 
 	res, err := client.CreateSession(context.Background(), &pb.CreateSessionRequest{
 		Count:         int32(s.Args.Count),
@@ -65,6 +67,7 @@ func (s *sessionCreate) Execute(args []string) error {
 		UeAddressPool: s.Args.UePool,
 		SdfFilter:     s.Args.SDFfilter,
 		Qfi: int32(s.Args.QFI),
+		GateStatus: s.Args.GateStatus,
 	})
 
 	if err != nil {
@@ -78,6 +81,7 @@ func (s *sessionCreate) Execute(args []string) error {
 
 func (s *sessionModify) Execute(args []string) error {
 	client := connect()
+	defer disconnect()
 
 	res, err := client.ModifySession(context.Background(), &pb.ModifySessionRequest{
 		Count:         int32(s.Args.Count),
@@ -99,6 +103,7 @@ func (s *sessionModify) Execute(args []string) error {
 
 func (s *sessionDelete) Execute(args []string) error {
 	client := connect()
+	defer disconnect()
 
 	res, err := client.DeleteSession(context.Background(), &pb.DeleteSessionRequest{
 		Count:  int32(s.Args.Count),
