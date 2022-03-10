@@ -125,7 +125,11 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 	}
 
 	var SDFFilter = ""
-	var qfi uint8 = 0
+	var qfi, gateStatus uint8 = 0, ieLib.GateStatusOpen
+
+	if request.GateStatus {
+		gateStatus = ieLib.GateStatusClosed
+	}
 
 	if request.Qfi != 0 {
 		qfi = uint8(request.Qfi)
@@ -209,6 +213,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				WithMethod(session.Create).
 				WithUplinkMBR(60000).
 				WithDownlinkMBR(60000).
+				WithGateStatus(gateStatus).
 				Build(),
 
 			// Uplink application QER
