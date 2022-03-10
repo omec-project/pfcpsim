@@ -14,8 +14,8 @@ type qerBuilder struct {
 	dlMbr    uint64
 	isGbrSet bool
 	ulGbr    uint64
-	dlGbr    uint64
-	gateStatus gateStatus
+	dlGbr      uint64
+	gateStatus GateStatus
 
 	isIDSet bool
 }
@@ -65,7 +65,7 @@ func (b *qerBuilder) WithDownlinkGBR(dlGbr uint64) *qerBuilder {
 	return b
 }
 
-func (b *qerBuilder) WithGateStatus(status gateStatus) *qerBuilder {
+func (b *qerBuilder) WithGateStatus(status uint8) *qerBuilder {
 	b.gateStatus = status
 
 	return b
@@ -91,7 +91,7 @@ func (b *qerBuilder) Build() *ie.IE {
 	}
 
 	gate := ie.NewGateStatus(0, 0) //Open
-	if b.gateStatus == GateClosed {
+	if b.gateStatus == ie.GateStatusClosed {
 		gate = ie.NewGateStatus(1, 1)
 	}
 

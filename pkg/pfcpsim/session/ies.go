@@ -8,7 +8,6 @@ type IEMethod uint8
 // Definitions for session rules
 
 type direction int
-type gateStatus int
 
 const (
 	notSet direction = iota
@@ -23,9 +22,6 @@ const (
 	ActionDrop    uint8 = 0x1
 	ActionBuffer  uint8 = 0x4
 	ActionNotify  uint8 = 0x8
-
-	GateOpen gateStatus = iota
-	GateClosed
 
 	S_TAG = 0x100 // Refer to table 8.2.56-1 in PFCP specs Release 16
 )
