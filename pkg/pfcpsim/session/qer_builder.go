@@ -90,9 +90,9 @@ func (b *qerBuilder) Build() *ie.IE {
 		createFunc = ie.NewUpdateQER
 	}
 
-	gate := ie.NewGateStatus(0, 0) //Open
+	gate := ie.NewGateStatus(ie.GateStatusOpen, ie.GateStatusOpen)
 	if b.gateStatus == ie.GateStatusClosed {
-		gate = ie.NewGateStatus(1, 1)
+		gate = ie.NewGateStatus(ie.GateStatusClosed, ie.GateStatusClosed)
 	}
 
 	qer := createFunc(

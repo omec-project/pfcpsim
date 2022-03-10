@@ -135,7 +135,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 	)
 	var qfi, gateStatus uint8 = 0, ieLib.GateStatusOpen
 
-	if request.SetGateStatusToClosed {
+	if request.GateClosed {
 		gateStatus = ieLib.GateStatusClosed
 	}
 

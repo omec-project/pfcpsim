@@ -16,7 +16,7 @@ message CreateSessionRequest {
 //  string sdfFilter = 5;
   int32 qfi = 6; // Should be uint8
   // **** SDF filter-related fields **** //
-  bool setGateStatusToClosed = 7; // If set, the application QERs will have the Gate status to closed.
+  bool gateClosed = 7; // If set, the application QERs will have the Gate status to closed.
   string protocol = 8;
   string destinationIPCIDR = 9; // must be in CIDR notation e.g. 192.168.0.1/24
   int32 lowerPortRange = 10;
