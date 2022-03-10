@@ -66,7 +66,7 @@ func (b *qerBuilder) WithDownlinkGBR(dlGbr uint64) *qerBuilder {
 	return b
 }
 
-func (b *qerBuilder) WithGateRates(uplinkRate, downlinkRate uint8) *qerBuilder {
+func (b *qerBuilder) WithGateStatus(uplinkRate, downlinkRate uint8) *qerBuilder {
 	b.ulQerGate = uplinkRate
 	b.dlQerGate = downlinkRate
 
