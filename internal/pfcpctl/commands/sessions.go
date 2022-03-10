@@ -18,7 +18,7 @@ type commonArgs struct {
 	GnBAddress string `short:"g" long:"gnb-addr" description:"The (g/e)nodeB address"`
 	SDFfilter string `short:"s" long:"sdf-filter" description:"The SDF Filter to use"`
 	QFI uint8 `short:"q" long:"qfi" description:"The QFI value for QERs. Max value 64."`
-	GateStatus bool `short:"t" long:"gate-status" description:"If set, the QER gate status will be CLOSED"`
+	GateStatus bool `short:"t" long:"gate-closed" description:"If set, the application QER gate status will be CLOSED"`
 }
 
 type sessionCreate struct {
