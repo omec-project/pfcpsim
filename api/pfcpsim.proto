@@ -15,7 +15,6 @@ message CreateSessionRequest {
   string ueAddressPool = 4;
   string appFilter = 5;
   int32 qfi = 6; // Should be uint8
-  bool gateClosed = 7; // If set, the application QERs will have the Gate status to closed.
 }
 
 message ModifySessionRequest {

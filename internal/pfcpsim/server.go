@@ -136,10 +136,6 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		log.Infof("Successfully parsed application filter. SDF Filter: %v", SDFFilter)
 	}
 
-	if request.GateClosed {
-		gateStatus = ieLib.GateStatusClosed
-	}
-
 	if request.Qfi != 0 {
 		qfi = uint8(request.Qfi)
 	}
