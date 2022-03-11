@@ -15,6 +15,7 @@ message CreateSessionRequest {
   string ueAddressPool = 4;
   string sdfFilter = 5;
   int32 qfi = 6; // Should be uint8
+  bool gateClosed = 7;
 }
 
 message ModifySessionRequest {

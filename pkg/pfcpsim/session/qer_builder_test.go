@@ -54,7 +54,20 @@ func TestQERBuilder(t *testing.T) {
 				ie.NewQFI(2),
 				ie.NewGateStatus(0, 0),
 			),
-			description: "Valid Create QER",
+			description: "Valid Create QER with gate open",
+		},
+		{
+			input: NewQERBuilder().
+				WithID(1).
+				WithMethod(Create).
+				WithQFI(2).
+				WithGateStatus(ie.GateStatusClosed),
+			expected: ie.NewCreateQER(
+				ie.NewQERID(1),
+				ie.NewQFI(2),
+				ie.NewGateStatus(1, 1),
+			),
+			description: "Valid Create QER with Gate closed",
 		},
 		{
 			input: NewQERBuilder().

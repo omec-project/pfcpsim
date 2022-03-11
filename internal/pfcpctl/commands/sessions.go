@@ -17,7 +17,8 @@ type commonArgs struct {
 	UePool string `short:"u" long:"ue-pool" default:"17.0.0.0/24" description:"The UE pool address"`
 	GnBAddress string `short:"g" long:"gnb-addr" description:"The (g/e)nodeB address"`
 	SDFfilter string `short:"s" long:"sdf-filter" description:"The SDF Filter to use"`
-	QFI uint8 `short:"q" long:"qfi" description:"The QFI value for QERs. Max value 64."`
+	QFI        uint8 `short:"q" long:"qfi" description:"The QFI value for QERs. Max value 64."`
+	GateClosed bool  `short:"t" long:"gate-closed" description:"If set, the application QER gate status will be CLOSED"`
 }
 
 type sessionCreate struct {
@@ -66,6 +67,7 @@ func (s *sessionCreate) Execute(args []string) error {
 		UeAddressPool: s.Args.UePool,
 		SdfFilter:     s.Args.SDFfilter,
 		Qfi: int32(s.Args.QFI),
+		GateClosed: s.Args.GateClosed,
 	})
 
 	if err != nil {
