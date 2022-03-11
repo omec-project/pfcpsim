@@ -44,9 +44,16 @@ func Test_parseAppFilter(t *testing.T) {
 				gateStatus: ie.GateStatusClosed,
 			},
 		},
-		{name: "incorrect app filter",
+		{name: "incorrect app filter bad protocol",
 			args: &args{
 				filterString: "test:10.0.0.0/8:80-80:allow",
+			},
+			want:    &want{},
+			wantErr: true,
+		},
+		{name: "incorrect app filter bad IP format",
+			args: &args{
+				filterString: "ip:10/8:80-80:allow",
 			},
 			want:    &want{},
 			wantErr: true,
