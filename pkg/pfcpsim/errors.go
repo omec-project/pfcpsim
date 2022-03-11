@@ -42,6 +42,13 @@ func NewNotEnoughSessionsError(err ...error) *pfcpSimError {
 	}
 }
 
+func NewInvalidFormatError(what string, err ...error) *pfcpSimError {
+	return &pfcpSimError{
+		message: fmt.Sprintf("Invalid format: %v", what),
+		error:   err,
+	}
+}
+
 func NewNoValidInterfaceError(err ...error) *pfcpSimError {
 	return &pfcpSimError{
 		message: "No valid interface found",

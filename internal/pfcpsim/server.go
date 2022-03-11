@@ -127,16 +127,17 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 	var SDFFilter = ""
 	var qfi, gateStatus uint8 = 0, ieLib.GateStatusOpen
 
-	if request.GateClosed {
-		gateStatus = ieLib.GateStatusClosed
+	if request.AppFilter != "" {
+		SDFFilter, gateStatus, err = parseAppFilter(request.AppFilter)
+		if err != nil {
+			return &pb.Response{}, status.Error(codes.Aborted, err.Error())
+		}
+
+		log.Infof("Successfully parsed application filter. SDF Filter: %v", SDFFilter)
 	}
 
 	if request.Qfi != 0 {
 		qfi = uint8(request.Qfi)
-	}
-
-	if request.SdfFilter != "" {
-		SDFFilter = request.SdfFilter
 	}
 
 	for i := baseID; i < (count*2 + baseID); i = i + 2 {
@@ -150,7 +151,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		downlinkFarID := uint32(i + 1)
 
 		uplinkPdrID := uint16(i)
-		dowlinkPdrID := uint16(i + 1)
+		downlinkPdrID := uint16(i + 1)
 
 		sessQerID := uint32(i + 3)
 
@@ -174,7 +175,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 
 			// DownlinkPDR
 			session.NewPDRBuilder().
-				WithID(dowlinkPdrID).
+				WithID(downlinkPdrID).
 				WithMethod(session.Create).
 				WithPrecedence(100).
 				WithUEAddress(ueAddress.String()).
