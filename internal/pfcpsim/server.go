@@ -17,8 +17,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-// e.g. --app-filter udp:10.0.0.0/8:80-88:allow. allow will select the gate-status to open. deny closed.
-const SDFFilterFormat = "permit out %s from %s to assigned %d-%d"
 
 // pfcpSimService implements the Protobuf interface and keeps a connection to a remote PFCP Agent peer.
 // Its state is handled in internal/pfcpsim/state.go
@@ -126,14 +124,17 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 	}
 
-
-	var SDFFilter = fmt.Sprintf(SDFFilterFormat,
-		request.Protocol,
-		request.DestinationIPCIDR,
-		request.LowerPortRange,
-		request.UpperPortRange,
-	)
+	var SDFFilter = ""
 	var qfi, gateStatus uint8 = 0, ieLib.GateStatusOpen
+
+	if request.AppFilter != "" {
+		SDFFilter, gateStatus, err = parseAppFilter(request.AppFilter)
+		if err != nil {
+			return &pb.Response{}, status.Error(codes.Aborted, err.Error())
+		}
+
+		log.Infof("Successfully parsed application filter. SDF Filter: %v", SDFFilter)
+	}
 
 	if request.GateClosed {
 		gateStatus = ieLib.GateStatusClosed
@@ -143,12 +144,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		qfi = uint8(request.Qfi)
 	}
 
-	//if len(request.SdfFilter) == 0 != "" {
-	//	SDFFilter = request.SdfFilter
-	//}
-
-
-	for i := baseID; i < (count*2 + baseID); i = i + 2 { //FIXME increment step should take into account the number of SDF Filters
+	for i := baseID; i < (count*2 + baseID); i = i + 2 {
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i)
 
@@ -158,12 +154,43 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		uplinkFarID := uint32(i)
 		downlinkFarID := uint32(i + 1)
 
+		uplinkPdrID := uint16(i)
+		downlinkPdrID := uint16(i + 1)
+
 		sessQerID := uint32(i + 3)
 
 		uplinkAppQerID := uint32(i)
 		downlinkAppQerID := uint32(i + 1)
 
-		pdrs := []*ieLib.IE{} // Updated below
+		pdrs := []*ieLib.IE{
+			// UplinkPDR
+			session.NewPDRBuilder().
+				WithID(uplinkPdrID).
+				WithMethod(session.Create).
+				WithTEID(uplinkTEID).
+				WithFARID(uplinkFarID).
+				AddQERID(sessQerID).
+				AddQERID(uplinkAppQerID).
+				WithN3Address(upfN3Address).
+				WithSDFFilter(SDFFilter).
+				WithPrecedence(100).
+				MarkAsUplink().
+				BuildPDR(),
+
+			// DownlinkPDR
+			session.NewPDRBuilder().
+				WithID(downlinkPdrID).
+				WithMethod(session.Create).
+				WithPrecedence(100).
+				WithUEAddress(ueAddress.String()).
+				WithSDFFilter(SDFFilter).
+				AddQERID(sessQerID).
+				AddQERID(downlinkAppQerID).
+				WithFARID(downlinkFarID).
+				MarkAsDownlink().
+				BuildPDR(),
+		}
+
 		fars := []*ieLib.IE{
 			// UplinkFAR
 			session.NewFARBuilder().
@@ -212,44 +239,6 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				WithDownlinkMBR(30000).
 				WithGateStatus(gateStatus).
 				Build(),
-		}
-
-		j := i
-		for _, sdf := range request.SdfFilter {
-			// Create as many Uplink and Downlink PDRs as provided SDF filters
-			uplinkPDRID := uint16(j)
-			downlinkPDRID := uint16(j + 1)
-			precedence := uint32(j)
-
-			uplinkPDR := session.NewPDRBuilder().
-				WithID(uplinkPDRID).
-				WithMethod(session.Create).
-				WithTEID(uplinkTEID).
-				WithFARID(uplinkFarID).
-				AddQERID(sessQerID).
-				AddQERID(uplinkAppQerID).
-				WithN3Address(upfN3Address).
-				WithSDFFilter(sdf).
-				WithPrecedence(precedence).
-				MarkAsUplink().
-				BuildPDR()
-
-			downlinkPDR := session.NewPDRBuilder().
-				WithID(downlinkPDRID).
-				WithMethod(session.Create).
-				WithPrecedence(precedence).
-				WithUEAddress(ueAddress.String()).
-				WithSDFFilter(sdf).
-				AddQERID(sessQerID).
-				AddQERID(downlinkAppQerID).
-				WithFARID(downlinkFarID).
-				MarkAsDownlink().
-				BuildPDR()
-
-			pdrs = append(pdrs, uplinkPDR)
-			pdrs = append(pdrs, downlinkPDR)
-
-			j = j + 2
 		}
 
 		sess, err := sim.EstablishSession(pdrs, fars, qers)
