@@ -13,7 +13,8 @@ import (
 	"github.com/wmnsk/go-pfcp/ie"
 )
 
-const sdfFilterFormat = "permit out %v from %v to assigned %v-%v"
+const sdfFilterFormatWPort = "permit out %v from %v to assigned %v-%v"
+const sdfFilterFormatWOPort = "permit out %v from %v to assigned"
 
 func connectPFCPSim() error {
 	if sim == nil {
@@ -89,41 +90,47 @@ func parseAppFilter(filter string) (string, uint8, error) {
 
 	proto, ipNetAddr, portRange, action := result[0], result[1], result[2], result[3]
 
+	var gateStatus uint8
+	switch action {
+	case "allow":
+		gateStatus = ie.GateStatusOpen
+	case "deny":
+		gateStatus = ie.GateStatusClosed
+	default:
+		return "", 0, pfcpsim.NewInvalidFormatError("Action. Please make sure to use 'allow' or 'deny'")
+	}
+
 	if !(proto == "ip" || proto == "udp" || proto == "tcp") {
 		return "", 0, pfcpsim.NewInvalidFormatError("Unsupported or unknown protocol.")
 	}
 
-	_, _, err := net.ParseCIDR(ipNetAddr)
-	if err != nil {
-		return "", 0, pfcpsim.NewInvalidFormatError("IP and subnet mask.", err)
+	if ipNetAddr != "any" {
+		_, _, err := net.ParseCIDR(ipNetAddr)
+		if err != nil {
+			return "", 0, pfcpsim.NewInvalidFormatError("IP and subnet mask.", err)
+		}
 	}
+	if portRange != "any" {
+		portList := strings.Split(portRange, "-")
+		if !(len(portList) == 2) {
+			return "", 0, pfcpsim.NewInvalidFormatError("Port range. Please make sure to use dash '-' to separate the two ports")
+		}
 
-	portList := strings.Split(portRange, "-")
-	if !(len(portList) == 2) {
-		return "", 0, pfcpsim.NewInvalidFormatError("Port range. Please make sure to use dash '-' to separate the two ports")
+		lowerPort, err := strconv.Atoi(portList[0])
+		if err != nil {
+			return "", 0, pfcpsim.NewInvalidFormatError("Port range.", err)
+		}
+
+		upperPort, err := strconv.Atoi(portList[1])
+		if err != nil {
+			return "", 0, pfcpsim.NewInvalidFormatError("Port range.", err)
+		}
+
+		if lowerPort > upperPort {
+			return "", 0, pfcpsim.NewInvalidFormatError("Port range. Lower port is greater than upper port")
+		}
+		return fmt.Sprintf(sdfFilterFormatWPort, proto, ipNetAddr, lowerPort, upperPort), gateStatus, nil
+	} else {
+		return fmt.Sprintf(sdfFilterFormatWOPort, proto, ipNetAddr), gateStatus, nil
 	}
-
-	lowerPort, err := strconv.Atoi(portList[0])
-	if err != nil {
-		return "", 0, pfcpsim.NewInvalidFormatError("Port range.", err)
-	}
-
-	upperPort, err := strconv.Atoi(portList[1])
-	if err != nil {
-		return "", 0, pfcpsim.NewInvalidFormatError("Port range.", err)
-	}
-
-	if lowerPort > upperPort {
-		return "", 0, pfcpsim.NewInvalidFormatError("Port range. Lower port is greater than upper port")
-	}
-
-	if !(action == "allow" || action == "deny") {
-		return "", 0, pfcpsim.NewInvalidFormatError("Action. Please make sure to use 'allow' or 'deny'")
-	}
-
-	if action == "allow" {
-		return fmt.Sprintf(sdfFilterFormat, proto, ipNetAddr, lowerPort, upperPort), ie.GateStatusOpen, nil
-	}
-
-	return fmt.Sprintf(sdfFilterFormat, proto, ipNetAddr, lowerPort, upperPort), ie.GateStatusClosed, nil
 }
