@@ -44,6 +44,42 @@ func Test_parseAppFilter(t *testing.T) {
 				gateStatus: ie.GateStatusClosed,
 			},
 		},
+		{name: "Correct app filter with deny-all policy",
+			args: &args{
+				filterString: "ip:0.0.0.0/0:any:deny",
+			},
+			want: &want{
+				SDFFilter:  "permit out ip from 0.0.0.0/0 to assigned",
+				gateStatus: ie.GateStatusClosed,
+			},
+		},
+		{name: "Correct app filter with deny-all policy 2",
+			args: &args{
+				filterString: "ip:any:any:deny",
+			},
+			want: &want{
+				SDFFilter:  "permit out ip from any to assigned",
+				gateStatus: ie.GateStatusClosed,
+			},
+		},
+		{name: "Correct app filter with allow-all policy",
+			args: &args{
+				filterString: "ip:any:any:allow",
+			},
+			want: &want{
+				SDFFilter:  "permit out ip from any to assigned",
+				gateStatus: ie.GateStatusOpen,
+			},
+		},
+		{name: "Correct app filter with allow-all policy 2",
+			args: &args{
+				filterString: "ip:0.0.0.0/0:any:allow",
+			},
+			want: &want{
+				SDFFilter:  "permit out ip from 0.0.0.0/0 to assigned",
+				gateStatus: ie.GateStatusOpen,
+			},
+		},
 		{name: "incorrect app filter bad protocol",
 			args: &args{
 				filterString: "test:10.0.0.0/8:80-80:allow",
