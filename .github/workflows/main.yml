@@ -21,10 +21,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Read version file
-        id: get_version
-        uses: andstor/file-reader-action@v1
-        with:
-          path: ./VERSION
+        run: echo VERSION=$(cat ./VERSION) >> $GITHUB_ENV
 
       - name: Build protobuf
         id: check
@@ -48,8 +45,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Get short SHA
-        id: short_sha
-        run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
+        run: echo GIT_SHA_SHORT=$(git rev-parse --short HEAD) >> $GITHUB_ENV
 
       - name: Build with Docker
         uses: docker/build-push-action@v2
@@ -58,9 +54,9 @@ jobs:
           push: false
           load: true
           tags: |
-            ${{ env.DOCKER_REPO }}:${{ steps.get_version.outputs.contents }}
+            ${{ env.DOCKER_REPO }}:${{ env.VERSION }}
             ${{ env.DOCKER_REPO }}:latest
-            ${{ env.DOCKER_REPO }}:${{ steps.short_sha.outputs.sha8 }}
+            ${{ env.DOCKER_REPO }}:${{ env.GIT_SHA_SHORT }}
           target: 'pfcpsim'
 
       - name: Test docker build
@@ -75,7 +71,7 @@ jobs:
           # build on feature branches, push only on main branch
           push: ${{ github.ref == 'refs/heads/main' }}
           tags: |
-            ${{ env.DOCKER_REPO }}:${{ steps.get_version.outputs.contents }}
+            ${{ env.DOCKER_REPO }}:${{ env.VERSION }}
             ${{ env.DOCKER_REPO }}:latest
-            ${{ env.DOCKER_REPO }}:${{ steps.short_sha.outputs.sha8 }}
+            ${{ env.DOCKER_REPO }}:${{ env.GIT_SHA_SHORT }}
           target: 'pfcpsim'
