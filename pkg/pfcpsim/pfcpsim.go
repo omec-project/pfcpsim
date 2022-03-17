@@ -317,7 +317,17 @@ func (c *PFCPClient) SetupAssociation() error {
 		return err
 	}
 
-	if _, ok := resp.(*message.AssociationSetupResponse); !ok {
+	assocResp, ok := resp.(*message.AssociationSetupResponse)
+	if !ok {
+		return NewInvalidResponseError()
+	}
+
+	cause, err := assocResp.Cause.Cause()
+	if err != nil {
+		return NewInvalidResponseError(err)
+	}
+
+	if cause != ieLib.CauseRequestAccepted {
 		return NewInvalidResponseError()
 	}
 
