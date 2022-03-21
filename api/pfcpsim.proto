@@ -13,7 +13,7 @@ message CreateSessionRequest {
   int32 baseID = 2;
   string nodeBAddress = 3;
   string ueAddressPool = 4;
-  string appFilter = 5;
+  repeated string appFilters = 5;
   int32 qfi = 6; // Should be uint8
 }
 

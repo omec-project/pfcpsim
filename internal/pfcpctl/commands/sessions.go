@@ -12,12 +12,12 @@ import (
 )
 
 type commonArgs struct {
-	Count           int    `short:"c" long:"count" default:"1" description:"The number of sessions to create"`
-	BaseID          int    `short:"i" long:"baseID"  default:"1" description:"The base ID to use"`
-	UePool          string `short:"u" long:"ue-pool" default:"17.0.0.0/24" description:"The UE pool address"`
-	GnBAddress      string `short:"g" long:"gnb-addr" description:"The UE pool address"`
-	AppFilterString string `short:"a" long:"app-filter" description:"Specify an application filter. Format: '{ip | udp | tcp}:{IPv4 Prefix | any}:{<lower-L4-port>-<upper-L4-port> | any}:{allow | deny}' . e.g. 'udp:10.0.0.0/8:80-88:allow'"`
-	QFI             uint8  `short:"q" long:"qfi" description:"The QFI value for QERs. Max value 64."`
+	Count           int      `short:"c" long:"count" default:"1" description:"The number of sessions to create"`
+	BaseID          int      `short:"i" long:"baseID"  default:"1" description:"The base ID to use"`
+	UePool          string   `short:"u" long:"ue-pool" default:"17.0.0.0/24" description:"The UE pool address"`
+	GnBAddress      string   `short:"g" long:"gnb-addr" description:"The UE pool address"`
+	AppFilterString []string `short:"a" long:"app-filter" description:"Specify an application filter. Format: '{ip | udp | tcp}:{IPv4 Prefix | any}:{<lower-L4-port>-<upper-L4-port> | any}:{allow | deny}' . e.g. 'udp:10.0.0.0/8:80-88:allow'"`
+	QFI             uint8    `short:"q" long:"qfi" description:"The QFI value for QERs. Max value 64."`
 }
 
 type sessionCreate struct {
@@ -59,12 +59,18 @@ func (s *sessionCreate) Execute(args []string) error {
 	client := connect()
 	defer disconnect()
 
+	var appFilters []string
+
+	for _, s := range s.Args.AppFilterString {
+		appFilters = append(appFilters, s)
+	}
+
 	res, err := client.CreateSession(context.Background(), &pb.CreateSessionRequest{
 		Count:         int32(s.Args.Count),
 		BaseID:        int32(s.Args.BaseID),
 		NodeBAddress:  s.Args.GnBAddress,
 		UeAddressPool: s.Args.UePool,
-		AppFilter:     s.Args.AppFilterString,
+		AppFilters:    appFilters,
 		Qfi:           int32(s.Args.QFI),
 	})
 

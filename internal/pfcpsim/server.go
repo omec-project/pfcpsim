@@ -22,6 +22,10 @@ import (
 // Its state is handled in internal/pfcpsim/state.go
 type pfcpSimService struct{}
 
+// SessionStep identifies the step in loops, used while creating/modifying/deleting sessions and rules IDs.
+// It should be high enough to avoid IDs overlap when creating sessions.
+const SessionStep = 10
+
 func NewPFCPSimService(iface string) *pfcpSimService {
 	interfaceName = iface
 	return &pfcpSimService{}
@@ -127,20 +131,11 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 	var SDFFilter = ""
 	var qfi, gateStatus uint8 = 0, ieLib.GateStatusOpen
 
-	if request.AppFilter != "" {
-		SDFFilter, gateStatus, err = parseAppFilter(request.AppFilter)
-		if err != nil {
-			return &pb.Response{}, status.Error(codes.Aborted, err.Error())
-		}
-
-		log.Infof("Successfully parsed application filter. SDF Filter: %v", SDFFilter)
-	}
-
 	if request.Qfi != 0 {
 		qfi = uint8(request.Qfi)
 	}
 
-	for i := baseID; i < (count*2 + baseID); i = i + 2 {
+	for i := baseID; i < (count*SessionStep + baseID); i = i + SessionStep {
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i)
 
@@ -237,6 +232,51 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				Build(),
 		}
 
+		// create as many PDRs as the number of app filters provided through pfcpctl
+		if len(request.AppFilters) > 0 {
+			pdrs = []*ieLib.IE{} // reset pdr slice
+			ID := uint16(i)
+
+			for _, appFilter := range request.AppFilters {
+				SDFFilter, gateStatus, err = parseAppFilter(appFilter)
+				if err != nil {
+					return &pb.Response{}, status.Error(codes.Aborted, err.Error())
+				}
+
+				log.Infof("Successfully parsed application filter. SDF Filter: %v", SDFFilter)
+
+				uplinkPDR := session.NewPDRBuilder().
+					WithID(ID).
+					WithMethod(session.Create).
+					WithTEID(uplinkTEID).
+					WithFARID(uplinkFarID).
+					AddQERID(sessQerID).
+					AddQERID(uplinkAppQerID).
+					WithN3Address(upfN3Address).
+					WithSDFFilter(SDFFilter).
+					WithPrecedence(100).
+					MarkAsUplink().
+					BuildPDR()
+
+				downlinkPDR := session.NewPDRBuilder().
+					WithID(ID + 1).
+					WithMethod(session.Create).
+					WithPrecedence(100).
+					WithUEAddress(ueAddress.String()).
+					WithSDFFilter(SDFFilter).
+					AddQERID(sessQerID).
+					AddQERID(downlinkAppQerID).
+					WithFARID(downlinkFarID).
+					MarkAsDownlink().
+					BuildPDR()
+
+				pdrs = append(pdrs, uplinkPDR)
+				pdrs = append(pdrs, downlinkPDR)
+
+				ID++
+			}
+		}
+
 		sess, err := sim.EstablishSession(pdrs, fars, qers)
 		if err != nil {
 			return &pb.Response{}, status.Error(codes.Internal, err.Error())
@@ -280,7 +320,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 		actions |= session.ActionForward
 	}
 
-	for i := baseID; i < (count*2 + baseID); i = i + 2 {
+	for i := baseID; i < (count*SessionStep + baseID); i = i + SessionStep {
 		teid := uint32(i + 1)
 
 		if request.BufferFlag || request.NotifyCPFlag {
@@ -335,7 +375,7 @@ func (P pfcpSimService) DeleteSession(ctx context.Context, request *pb.DeleteSes
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
 
-	for i := baseID; i < (count*2 + baseID); i = i + 2 {
+	for i := baseID; i < (count*SessionStep + baseID); i = i + SessionStep {
 		sess, ok := getSession(i)
 		if !ok {
 			errMsg := "Session was nil. Check baseID"
