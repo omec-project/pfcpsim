@@ -59,18 +59,12 @@ func (s *sessionCreate) Execute(args []string) error {
 	client := connect()
 	defer disconnect()
 
-	var appFilters []string
-
-	for _, s := range s.Args.AppFilterString {
-		appFilters = append(appFilters, s)
-	}
-
 	res, err := client.CreateSession(context.Background(), &pb.CreateSessionRequest{
 		Count:         int32(s.Args.Count),
 		BaseID:        int32(s.Args.BaseID),
 		NodeBAddress:  s.Args.GnBAddress,
 		UeAddressPool: s.Args.UePool,
-		AppFilters:    appFilters,
+		AppFilters:    s.Args.AppFilterString,
 		Qfi:           int32(s.Args.QFI),
 	})
 
