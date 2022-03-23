@@ -23,7 +23,9 @@ import (
 type pfcpSimService struct{}
 
 // SessionStep identifies the step in loops, used while creating/modifying/deleting sessions and rules IDs.
-// It should be high enough to avoid IDs overlap when creating sessions.
+// It should be high enough to avoid IDs overlap when creating sessions. 5 Applications should be enough.
+// In theory with ROC limitations, we should expect max 8 applications (5 explicit applications + 3 filters
+// to deny traffic to the RFC1918 IPs, in case we have a ALLOW-PUBLIC)
 const SessionStep = 10
 
 func NewPFCPSimService(iface string) *pfcpSimService {
