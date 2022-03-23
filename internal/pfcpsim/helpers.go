@@ -82,6 +82,11 @@ func getLocalAddress(interfaceName string) (net.IP, error) {
 // parseAppFilter parses an application filter. Returns a tuple formed by a formatted SDF filter
 // and a uint8 representing the Application QER gate status. Returns error if fail occurs while validating the filter string.
 func parseAppFilter(filter string) (string, uint8, error) {
+	if filter == "" {
+		// Processing a wildcard filter
+		return "", ie.GateStatusOpen, nil
+	}
+
 	result := strings.Split(filter, ":")
 	if len(result) != 4 {
 		return "", 0, pfcpsim.NewInvalidFormatError("Parser was not able to generate the correct number of arguments." +
