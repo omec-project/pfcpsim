@@ -142,67 +142,11 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		ueAddress := iplib.NextIP(lastUEAddr)
 		lastUEAddr = ueAddress
 
-		uplinkFarID := uint32(i)
-		downlinkFarID := uint32(i + 1)
-
-		uplinkPdrID := uint16(i)
-		downlinkPdrID := uint16(i + 1)
-
 		sessQerID := uint32(i + 3)
 
-		uplinkAppQerID := uint32(i)
-		downlinkAppQerID := uint32(i + 1)
-
-		pdrs := []*ieLib.IE{
-			// UplinkPDR
-			session.NewPDRBuilder().
-				WithID(uplinkPdrID).
-				WithMethod(session.Create).
-				WithTEID(uplinkTEID).
-				WithFARID(uplinkFarID).
-				AddQERID(sessQerID).
-				AddQERID(uplinkAppQerID).
-				WithN3Address(upfN3Address).
-				WithSDFFilter(SDFFilter).
-				WithPrecedence(100).
-				MarkAsUplink().
-				BuildPDR(),
-
-			// DownlinkPDR
-			session.NewPDRBuilder().
-				WithID(downlinkPdrID).
-				WithMethod(session.Create).
-				WithPrecedence(100).
-				WithUEAddress(ueAddress.String()).
-				WithSDFFilter(SDFFilter).
-				AddQERID(sessQerID).
-				AddQERID(downlinkAppQerID).
-				WithFARID(downlinkFarID).
-				MarkAsDownlink().
-				BuildPDR(),
-		}
-
-		fars := []*ieLib.IE{
-			// UplinkFAR
-			session.NewFARBuilder().
-				WithID(uplinkFarID).
-				WithAction(session.ActionForward).
-				WithDstInterface(ieLib.DstInterfaceCore).
-				WithMethod(session.Create).
-				BuildFAR(),
-
-			// DownlinkFAR
-			session.NewFARBuilder().
-				WithID(downlinkFarID).
-				WithAction(session.ActionDrop).
-				WithMethod(session.Create).
-				WithDstInterface(ieLib.DstInterfaceAccess).
-				WithZeroBasedOuterHeaderCreation().
-				BuildFAR(),
-		}
+		var pdrs, fars []*ieLib.IE
 
 		qers := []*ieLib.IE{
-			// TODO make rates configurable by pfcpctl
 			// session QER
 			session.NewQERBuilder().
 				WithID(sessQerID).
@@ -210,32 +154,20 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				WithUplinkMBR(60000).
 				WithDownlinkMBR(60000).
 				Build(),
-
-			// Uplink application QER
-			session.NewQERBuilder().
-				WithID(uplinkAppQerID).
-				WithMethod(session.Create).
-				WithQFI(qfi).
-				WithUplinkMBR(50000).
-				WithDownlinkMBR(30000).
-				WithGateStatus(gateStatus).
-				Build(),
-
-			// Downlink application QER
-			session.NewQERBuilder().
-				WithID(downlinkAppQerID).
-				WithMethod(session.Create).
-				WithQFI(qfi).
-				WithUplinkMBR(50000).
-				WithDownlinkMBR(30000).
-				WithGateStatus(gateStatus).
-				Build(),
 		}
 
-		// create as many PDRs as the number of app filters provided through pfcpctl
+		// create as many PDRs, FARs and App QERs as the number of app filters provided through pfcpctl
 		if len(request.AppFilters) > 0 {
-			pdrs = []*ieLib.IE{} // reset pdr slice
 			ID := uint16(i)
+
+			uplinkPdrID := ID
+			downlinkPdrID := ID + 1
+
+			uplinkFarID := uint32(ID)
+			downlinkFarID := uint32(ID + 1)
+
+			uplinkAppQerID := uint32(ID)
+			downlinkAppQerID := uint32(ID + 1)
 
 			for _, appFilter := range request.AppFilters {
 				SDFFilter, gateStatus, err = parseAppFilter(appFilter)
@@ -246,7 +178,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				log.Infof("Successfully parsed application filter. SDF Filter: %v", SDFFilter)
 
 				uplinkPDR := session.NewPDRBuilder().
-					WithID(ID).
+					WithID(uplinkPdrID).
 					WithMethod(session.Create).
 					WithTEID(uplinkTEID).
 					WithFARID(uplinkFarID).
@@ -259,7 +191,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 					BuildPDR()
 
 				downlinkPDR := session.NewPDRBuilder().
-					WithID(ID + 1).
+					WithID(downlinkPdrID).
 					WithMethod(session.Create).
 					WithPrecedence(100).
 					WithUEAddress(ueAddress.String()).
@@ -272,6 +204,45 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 
 				pdrs = append(pdrs, uplinkPDR)
 				pdrs = append(pdrs, downlinkPDR)
+
+				uplinkFAR := session.NewFARBuilder().
+					WithID(uint32(ID)).
+					WithAction(session.ActionForward).
+					WithDstInterface(ieLib.DstInterfaceCore).
+					WithMethod(session.Create).
+					BuildFAR()
+
+				downlinkFAR := session.NewFARBuilder().
+					WithID(uint32(ID + 1)).
+					WithAction(session.ActionDrop).
+					WithMethod(session.Create).
+					WithDstInterface(ieLib.DstInterfaceAccess).
+					WithZeroBasedOuterHeaderCreation().
+					BuildFAR()
+
+				fars = append(fars, uplinkFAR)
+				fars = append(fars, downlinkFAR)
+
+				uplinkAppQER := session.NewQERBuilder().
+					WithID(uplinkAppQerID).
+					WithMethod(session.Create).
+					WithQFI(qfi).
+					WithUplinkMBR(50000).
+					WithDownlinkMBR(30000).
+					WithGateStatus(gateStatus).
+					Build()
+
+				downlinkAppQER := session.NewQERBuilder().
+					WithID(downlinkAppQerID).
+					WithMethod(session.Create).
+					WithQFI(qfi).
+					WithUplinkMBR(50000).
+					WithDownlinkMBR(30000).
+					WithGateStatus(gateStatus).
+					Build()
+
+				qers = append(qers, uplinkAppQER)
+				qers = append(qers, downlinkAppQER)
 
 				ID++
 			}
