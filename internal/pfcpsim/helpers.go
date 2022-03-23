@@ -100,10 +100,8 @@ func parseAppFilter(filter string) (string, uint8, error) {
 		return "", 0, pfcpsim.NewInvalidFormatError("Action. Please make sure to use 'allow' or 'deny'")
 	}
 
-	if proto != "any" {
-		if !(proto == "ip" || proto == "udp" || proto == "tcp") {
-			return "", 0, pfcpsim.NewInvalidFormatError("Unsupported or unknown protocol.")
-		}
+	if !(proto == "ip" || proto == "udp" || proto == "tcp") {
+		return "", 0, pfcpsim.NewInvalidFormatError("Unsupported or unknown protocol.")
 	}
 
 	if ipNetAddr != "any" {

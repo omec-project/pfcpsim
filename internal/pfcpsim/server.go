@@ -135,6 +135,10 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		qfi = uint8(request.Qfi)
 	}
 
+	if len(request.AppFilters) > SessionStep/2 {
+		return &pb.Response{}, status.Error(codes.Aborted, "Too many application filters")
+	}
+
 	for i := baseID; i < (count*SessionStep + baseID); i = i + SessionStep {
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i)
