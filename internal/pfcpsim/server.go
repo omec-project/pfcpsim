@@ -296,22 +296,28 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 	}
 
 	for i := baseID; i < (count*SessionStep + baseID); i = i + SessionStep {
+		var newFARs []*ieLib.IE
+
+		ID := uint32(i)
 		teid := uint32(i + 1)
 
 		if request.BufferFlag || request.NotifyCPFlag {
 			teid = 0 // When buffering, TEID = 0.
 		}
 
-		newFARs := []*ieLib.IE{
-			// Downlink FAR
-			session.NewFARBuilder().
-				WithID(uint32(i + 1)). // Same FARID that was generated in create sessions
+		for _, _ = range request.AppFilters {
+			downlinkFAR := session.NewFARBuilder().
+				WithID(ID + 1). // Same FARID that was generated in create sessions
 				WithMethod(session.Update).
 				WithAction(actions).
 				WithDstInterface(ieLib.DstInterfaceAccess).
 				WithTEID(teid).
 				WithDownlinkIP(nodeBaddress).
-				BuildFAR(),
+				BuildFAR()
+
+			newFARs = append(newFARs, downlinkFAR)
+
+			ID += 2
 		}
 
 		sess, ok := getSession(i)

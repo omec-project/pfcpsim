@@ -26,6 +26,7 @@ message ModifySessionRequest {
   string ueAddressPool = 4;
   bool bufferFlag = 5;
   bool notifyCPFlag = 6;
+  repeated string appFilters = 7;
 }
 
 message ConfigureRequest {
