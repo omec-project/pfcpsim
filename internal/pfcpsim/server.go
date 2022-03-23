@@ -138,6 +138,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 	}
 
 	if len(request.AppFilters) > SessionStep/2 {
+		log.Errorf("Too many application filters: %v", request.AppFilters)
 		return &pb.Response{}, status.Error(codes.Aborted, "Too many application filters")
 	}
 
@@ -211,14 +212,14 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 			pdrs = append(pdrs, downlinkPDR)
 
 			uplinkFAR := session.NewFARBuilder().
-				WithID(uint32(ID)).
+				WithID(uplinkFarID).
 				WithAction(session.ActionForward).
 				WithDstInterface(ieLib.DstInterfaceCore).
 				WithMethod(session.Create).
 				BuildFAR()
 
 			downlinkFAR := session.NewFARBuilder().
-				WithID(uint32(ID + 1)).
+				WithID(downlinkFarID).
 				WithAction(session.ActionDrop).
 				WithMethod(session.Create).
 				WithDstInterface(ieLib.DstInterfaceAccess).
@@ -293,6 +294,11 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 	} else {
 		// If no flag was passed, default action is Forward
 		actions |= session.ActionForward
+	}
+
+	if len(request.AppFilters) > SessionStep/2 {
+		log.Errorf("Too many application filters: %v", request.AppFilters)
+		return &pb.Response{}, status.Error(codes.Aborted, "Too many application filters")
 	}
 
 	for i := baseID; i < (count*SessionStep + baseID); i = i + SessionStep {
