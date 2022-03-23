@@ -82,11 +82,6 @@ func getLocalAddress(interfaceName string) (net.IP, error) {
 // parseAppFilter parses an application filter. Returns a tuple formed by a formatted SDF filter
 // and a uint8 representing the Application QER gate status. Returns error if fail occurs while validating the filter string.
 func parseAppFilter(filter string) (string, uint8, error) {
-	if filter == "" {
-		// Processing a wildcard filter
-		return "", ie.GateStatusOpen, nil
-	}
-
 	result := strings.Split(filter, ":")
 	if len(result) != 4 {
 		return "", 0, pfcpsim.NewInvalidFormatError("Parser was not able to generate the correct number of arguments." +
@@ -105,8 +100,10 @@ func parseAppFilter(filter string) (string, uint8, error) {
 		return "", 0, pfcpsim.NewInvalidFormatError("Action. Please make sure to use 'allow' or 'deny'")
 	}
 
-	if !(proto == "ip" || proto == "udp" || proto == "tcp") {
-		return "", 0, pfcpsim.NewInvalidFormatError("Unsupported or unknown protocol.")
+	if proto != "any" {
+		if !(proto == "ip" || proto == "udp" || proto == "tcp") {
+			return "", 0, pfcpsim.NewInvalidFormatError("Unsupported or unknown protocol.")
+		}
 	}
 
 	if ipNetAddr != "any" {
@@ -115,6 +112,7 @@ func parseAppFilter(filter string) (string, uint8, error) {
 			return "", 0, pfcpsim.NewInvalidFormatError("IP and subnet mask.", err)
 		}
 	}
+
 	if portRange != "any" {
 		portList := strings.Split(portRange, "-")
 		if !(len(portList) == 2) {
