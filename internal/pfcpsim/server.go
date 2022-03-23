@@ -159,15 +159,6 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		// create as many PDRs, FARs and App QERs as the number of app filters provided through pfcpctl
 		ID := uint16(i)
 
-		uplinkPdrID := ID
-		downlinkPdrID := ID + 1
-
-		uplinkFarID := uint32(ID)
-		downlinkFarID := uint32(ID + 1)
-
-		uplinkAppQerID := uint32(ID)
-		downlinkAppQerID := uint32(ID + 1)
-
 		for _, appFilter := range request.AppFilters {
 			SDFFilter, gateStatus, err = parseAppFilter(appFilter)
 			if err != nil {
@@ -175,6 +166,15 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 			}
 
 			log.Infof("Successfully parsed application filter. SDF Filter: %v", SDFFilter)
+
+			uplinkPdrID := ID
+			downlinkPdrID := ID + 1
+
+			uplinkFarID := uint32(ID)
+			downlinkFarID := uint32(ID + 1)
+
+			uplinkAppQerID := uint32(ID)
+			downlinkAppQerID := uint32(ID + 1)
 
 			uplinkPDR := session.NewPDRBuilder().
 				WithID(uplinkPdrID).
@@ -243,7 +243,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 			qers = append(qers, uplinkAppQER)
 			qers = append(qers, downlinkAppQER)
 
-			ID++
+			ID += 2
 		}
 
 		sess, err := sim.EstablishSession(pdrs, fars, qers)
