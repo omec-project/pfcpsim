@@ -24,10 +24,8 @@ func connect() pb.PFCPSimClient {
 	return pb.NewPFCPSimClient(conn)
 }
 
-func isBaseIDValid(baseID int) {
-	if baseID <= 0 {
-		log.Fatalf("BaseID cannot be 0 or a negative number.")
-	}
+func validateArgs(args *commonArgs) {
+
 }
 
 func disconnect() {

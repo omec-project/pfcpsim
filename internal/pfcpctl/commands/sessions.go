@@ -20,6 +20,16 @@ type commonArgs struct {
 	QFI             uint8    `short:"q" long:"qfi" description:"The QFI value for QERs. Max value 64."`
 }
 
+func (a *commonArgs) validate() {
+	if a.BaseID <= 0 {
+		log.Fatalf("BaseID cannot be 0 or a negative number.")
+	}
+
+	if a.Count <= 0 {
+		log.Fatalf("Count cannot be 0 or a negative number.")
+	}
+}
+
 type sessionCreate struct {
 	Args struct {
 		commonArgs
@@ -36,8 +46,7 @@ type sessionModify struct {
 
 type sessionDelete struct {
 	Args struct {
-		Count  int `short:"c" long:"count" default:"1" description:"The number of sessions to create"`
-		BaseID int `short:"i" long:"baseID"  default:"1" description:"The base ID to use"`
+		commonArgs
 	}
 }
 
@@ -59,7 +68,7 @@ func (s *sessionCreate) Execute(args []string) error {
 	client := connect()
 	defer disconnect()
 
-	isBaseIDValid(s.Args.BaseID)
+	s.Args.validate()
 
 	res, err := client.CreateSession(context.Background(), &pb.CreateSessionRequest{
 		Count:         int32(s.Args.Count),
@@ -83,7 +92,7 @@ func (s *sessionModify) Execute(args []string) error {
 	client := connect()
 	defer disconnect()
 
-	isBaseIDValid(s.Args.BaseID)
+	s.Args.validate()
 
 	res, err := client.ModifySession(context.Background(), &pb.ModifySessionRequest{
 		Count:         int32(s.Args.Count),
@@ -108,7 +117,7 @@ func (s *sessionDelete) Execute(args []string) error {
 	client := connect()
 	defer disconnect()
 
-	isBaseIDValid(s.Args.BaseID)
+	s.Args.validate()
 
 	res, err := client.DeleteSession(context.Background(), &pb.DeleteSessionRequest{
 		Count:  int32(s.Args.Count),
