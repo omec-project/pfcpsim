@@ -304,7 +304,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 	for i := baseID; i < (count*SessionStep + baseID); i = i + SessionStep {
 		var newFARs []*ieLib.IE
 
-		ID := uint32(i)
+		ID := uint32(i + 1)
 		teid := uint32(i + 1)
 
 		if request.BufferFlag || request.NotifyCPFlag {
@@ -313,7 +313,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 
 		for _, _ = range request.AppFilters {
 			downlinkFAR := session.NewFARBuilder().
-				WithID(ID + 1). // Same FARID that was generated in create sessions
+				WithID(ID). // Same FARID that was generated in create sessions
 				WithMethod(session.Update).
 				WithAction(actions).
 				WithDstInterface(ieLib.DstInterfaceAccess).

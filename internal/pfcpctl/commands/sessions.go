@@ -88,6 +88,7 @@ func (s *sessionModify) Execute(args []string) error {
 		UeAddressPool: s.Args.UePool,
 		BufferFlag:    s.Args.BufferFlag,
 		NotifyCPFlag:  s.Args.NotifyCPFlag,
+		AppFilters:    s.Args.AppFilterString,
 	})
 
 	if err != nil {
