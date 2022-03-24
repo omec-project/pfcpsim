@@ -116,9 +116,9 @@ func (P pfcpSimService) Disassociate(ctx context.Context, empty *pb.EmptyRequest
 }
 
 func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSessionRequest) (*pb.Response, error) {
-	if err := checkServerStatus(); err != nil {
-		return &pb.Response{}, err
-	}
+	//if err := checkServerStatus(); err != nil {
+	//	return &pb.Response{}, err
+	//}
 
 	baseID := int(request.BaseID)
 	count := int(request.Count)
@@ -130,8 +130,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 	}
 
-	var SDFFilter = ""
-	var qfi, gateStatus uint8 = 0, ieLib.GateStatusOpen
+	var qfi uint8 = 0
 
 	if request.Qfi != 0 {
 		qfi = uint8(request.Qfi)
@@ -166,7 +165,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		ID := uint16(i)
 
 		for _, appFilter := range request.AppFilters {
-			SDFFilter, gateStatus, err = parseAppFilter(appFilter)
+			SDFFilter, gateStatus, precedence, err := parseAppFilter(appFilter)
 			if err != nil {
 				return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 			}
@@ -191,14 +190,14 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				AddQERID(uplinkAppQerID).
 				WithN3Address(upfN3Address).
 				WithSDFFilter(SDFFilter).
-				WithPrecedence(100).
+				WithPrecedence(precedence).
 				MarkAsUplink().
 				BuildPDR()
 
 			downlinkPDR := session.NewPDRBuilder().
 				WithID(downlinkPdrID).
 				WithMethod(session.Create).
-				WithPrecedence(100).
+				WithPrecedence(precedence).
 				WithUEAddress(ueAddress.String()).
 				WithSDFFilter(SDFFilter).
 				AddQERID(sessQerID).

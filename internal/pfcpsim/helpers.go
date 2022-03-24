@@ -93,15 +93,20 @@ func getLocalAddress(interfaceName string) (net.IP, error) {
 }
 
 // parseAppFilter parses an application filter. Returns a tuple formed by a formatted SDF filter
-// and a uint8 representing the Application QER gate status. Returns error if fail occurs while validating the filter string.
-func parseAppFilter(filter string) (string, uint8, error) {
+// and a uint8 representing the Application QER gate status and a precedence. Returns error if fail occurs while validating the filter string.
+func parseAppFilter(filter string) (string, uint8, uint32, error) {
+	if filter == "" {
+		// parsing a wildcard app filter
+		return "", ie.GateStatusOpen, 100, nil
+	}
+
 	result := strings.Split(filter, ":")
-	if len(result) != 4 {
-		return "", 0, pfcpsim.NewInvalidFormatError("Parser was not able to generate the correct number of arguments." +
+	if len(result) != 5 {
+		return "", 0, 0, pfcpsim.NewInvalidFormatError("Parser was not able to generate the correct number of arguments." +
 			" Please make sure to use the right format")
 	}
 
-	proto, ipNetAddr, portRange, action := result[0], result[1], result[2], result[3]
+	proto, ipNetAddr, portRange, action, precedence := result[0], result[1], result[2], result[3], result[4]
 
 	var gateStatus uint8
 	switch action {
@@ -110,41 +115,48 @@ func parseAppFilter(filter string) (string, uint8, error) {
 	case "deny":
 		gateStatus = ie.GateStatusClosed
 	default:
-		return "", 0, pfcpsim.NewInvalidFormatError("Action. Please make sure to use 'allow' or 'deny'")
+		return "", 0, 0, pfcpsim.NewInvalidFormatError("Action. Please make sure to use 'allow' or 'deny'")
 	}
 
 	if !(proto == "ip" || proto == "udp" || proto == "tcp") {
-		return "", 0, pfcpsim.NewInvalidFormatError("Unsupported or unknown protocol.")
+		return "", 0, 0, pfcpsim.NewInvalidFormatError("Unsupported or unknown protocol.")
 	}
+
+	precedenceConverted, err := strconv.Atoi(precedence)
+	if err != nil {
+		return "", 0, 0, pfcpsim.NewInvalidFormatError("Precedence. Please make sure it is a number", err)
+	}
+
+	precedenceUint := uint32(precedenceConverted)
 
 	if ipNetAddr != "any" {
 		_, _, err := net.ParseCIDR(ipNetAddr)
 		if err != nil {
-			return "", 0, pfcpsim.NewInvalidFormatError("IP and subnet mask.", err)
+			return "", 0, 0, pfcpsim.NewInvalidFormatError("IP and subnet mask.", err)
 		}
 	}
 
 	if portRange != "any" {
 		portList := strings.Split(portRange, "-")
 		if !(len(portList) == 2) {
-			return "", 0, pfcpsim.NewInvalidFormatError("Port range. Please make sure to use dash '-' to separate the two ports")
+			return "", 0, 0, pfcpsim.NewInvalidFormatError("Port range. Please make sure to use dash '-' to separate the two ports")
 		}
 
 		lowerPort, err := strconv.Atoi(portList[0])
 		if err != nil {
-			return "", 0, pfcpsim.NewInvalidFormatError("Port range.", err)
+			return "", 0, 0, pfcpsim.NewInvalidFormatError("Port range.", err)
 		}
 
 		upperPort, err := strconv.Atoi(portList[1])
 		if err != nil {
-			return "", 0, pfcpsim.NewInvalidFormatError("Port range.", err)
+			return "", 0, 0, pfcpsim.NewInvalidFormatError("Port range.", err)
 		}
 
 		if lowerPort > upperPort {
-			return "", 0, pfcpsim.NewInvalidFormatError("Port range. Lower port is greater than upper port")
+			return "", 0, 0, pfcpsim.NewInvalidFormatError("Port range. Lower port is greater than upper port")
 		}
-		return fmt.Sprintf(sdfFilterFormatWPort, proto, ipNetAddr, lowerPort, upperPort), gateStatus, nil
+		return fmt.Sprintf(sdfFilterFormatWPort, proto, ipNetAddr, lowerPort, upperPort), gateStatus, precedenceUint, nil
 	} else {
-		return fmt.Sprintf(sdfFilterFormatWOPort, proto, ipNetAddr), gateStatus, nil
+		return fmt.Sprintf(sdfFilterFormatWOPort, proto, ipNetAddr), gateStatus, precedenceUint, nil
 	}
 }
