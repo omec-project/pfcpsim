@@ -137,9 +137,8 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		qfi = uint8(request.Qfi)
 	}
 
-	if len(request.AppFilters) > SessionStep/2 {
-		log.Errorf("Too many application filters: %v", request.AppFilters)
-		return &pb.Response{}, status.Error(codes.Aborted, "Too many application filters")
+	if err = isNumOfAppFiltersCorrect(request.AppFilters); err != nil {
+		return &pb.Response{}, err
 	}
 
 	for i := baseID; i < (count*SessionStep + baseID); i = i + SessionStep {
@@ -296,9 +295,8 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 		actions |= session.ActionForward
 	}
 
-	if len(request.AppFilters) > SessionStep/2 {
-		log.Errorf("Too many application filters: %v", request.AppFilters)
-		return &pb.Response{}, status.Error(codes.Aborted, "Too many application filters")
+	if err := isNumOfAppFiltersCorrect(request.AppFilters); err != nil {
+		return &pb.Response{}, err
 	}
 
 	for i := baseID; i < (count*SessionStep + baseID); i = i + SessionStep {

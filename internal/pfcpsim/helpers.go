@@ -10,7 +10,10 @@ import (
 	"strings"
 
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
+	log "github.com/sirupsen/logrus"
 	"github.com/wmnsk/go-pfcp/ie"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const sdfFilterFormatWPort = "permit out %v from %v to assigned %v-%v"
@@ -46,6 +49,16 @@ func isConfigured() bool {
 
 func isRemotePeerConnected() bool {
 	return remotePeerConnected
+}
+
+// isNumOfAppFiltersCorrect returns error if the number of the passed filter exceed the max number of supported application filters.
+func isNumOfAppFiltersCorrect(filters []string) error {
+	if len(filters) > SessionStep/2 {
+		log.Errorf("Too many application filters: %v", filters)
+		return status.Error(codes.Aborted, "Too many application filters")
+	}
+
+	return nil
 }
 
 // getLocalAddress returns the first IP address of the interfaceName, if specified,
