@@ -116,9 +116,9 @@ func (P pfcpSimService) Disassociate(ctx context.Context, empty *pb.EmptyRequest
 }
 
 func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSessionRequest) (*pb.Response, error) {
-	if err := checkServerStatus(); err != nil {
-		return &pb.Response{}, err
-	}
+	//if err := checkServerStatus(); err != nil {
+	//	return &pb.Response{}, err
+	//}
 
 	baseID := int(request.BaseID)
 	count := int(request.Count)
@@ -147,7 +147,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		ueAddress := iplib.NextIP(lastUEAddr)
 		lastUEAddr = ueAddress
 
-		sessQerID := uint32(i + 3)
+		sessQerID := uint32(0)
 
 		var pdrs, fars []*ieLib.IE
 
