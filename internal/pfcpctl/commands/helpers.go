@@ -24,6 +24,10 @@ func connect() pb.PFCPSimClient {
 	return pb.NewPFCPSimClient(conn)
 }
 
+func validateArgs(args *commonArgs) {
+
+}
+
 func disconnect() {
 	if conn != nil {
 		conn.Close()

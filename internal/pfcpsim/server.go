@@ -22,6 +22,12 @@ import (
 // Its state is handled in internal/pfcpsim/state.go
 type pfcpSimService struct{}
 
+// SessionStep identifies the step in loops, used while creating/modifying/deleting sessions and rules IDs.
+// It should be high enough to avoid IDs overlap when creating sessions. 5 Applications should be enough.
+// In theory with ROC limitations, we should expect max 8 applications (5 explicit applications + 3 filters
+// to deny traffic to the RFC1918 IPs, in case we have a ALLOW-PUBLIC)
+const SessionStep = 10
+
 func NewPFCPSimService(iface string) *pfcpSimService {
 	interfaceName = iface
 	return &pfcpSimService{}
@@ -124,43 +130,58 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 	}
 
-	var SDFFilter = ""
-	var qfi, gateStatus uint8 = 0, ieLib.GateStatusOpen
-
-	if request.AppFilter != "" {
-		SDFFilter, gateStatus, err = parseAppFilter(request.AppFilter)
-		if err != nil {
-			return &pb.Response{}, status.Error(codes.Aborted, err.Error())
-		}
-
-		log.Infof("Successfully parsed application filter. SDF Filter: %v", SDFFilter)
-	}
+	var qfi uint8 = 0
 
 	if request.Qfi != 0 {
 		qfi = uint8(request.Qfi)
 	}
 
-	for i := baseID; i < (count*2 + baseID); i = i + 2 {
+	if err = isNumOfAppFiltersCorrect(request.AppFilters); err != nil {
+		return &pb.Response{}, err
+	}
+
+	for i := baseID; i < (count*SessionStep + baseID); i = i + SessionStep {
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i)
 
 		ueAddress := iplib.NextIP(lastUEAddr)
 		lastUEAddr = ueAddress
 
-		uplinkFarID := uint32(i)
-		downlinkFarID := uint32(i + 1)
+		sessQerID := uint32(0)
 
-		uplinkPdrID := uint16(i)
-		downlinkPdrID := uint16(i + 1)
+		var pdrs, fars []*ieLib.IE
 
-		sessQerID := uint32(i + 3)
+		qers := []*ieLib.IE{
+			// session QER
+			session.NewQERBuilder().
+				WithID(sessQerID).
+				WithMethod(session.Create).
+				WithUplinkMBR(60000).
+				WithDownlinkMBR(60000).
+				Build(),
+		}
 
-		uplinkAppQerID := uint32(i)
-		downlinkAppQerID := uint32(i + 1)
+		// create as many PDRs, FARs and App QERs as the number of app filters provided through pfcpctl
+		ID := uint16(i)
 
-		pdrs := []*ieLib.IE{
-			// UplinkPDR
-			session.NewPDRBuilder().
+		for _, appFilter := range request.AppFilters {
+			SDFFilter, gateStatus, precedence, err := parseAppFilter(appFilter)
+			if err != nil {
+				return &pb.Response{}, status.Error(codes.Aborted, err.Error())
+			}
+
+			log.Infof("Successfully parsed application filter. SDF Filter: %v", SDFFilter)
+
+			uplinkPdrID := ID
+			downlinkPdrID := ID + 1
+
+			uplinkFarID := uint32(ID)
+			downlinkFarID := uint32(ID + 1)
+
+			uplinkAppQerID := uint32(ID)
+			downlinkAppQerID := uint32(ID + 1)
+
+			uplinkPDR := session.NewPDRBuilder().
 				WithID(uplinkPdrID).
 				WithMethod(session.Create).
 				WithTEID(uplinkTEID).
@@ -169,72 +190,65 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				AddQERID(uplinkAppQerID).
 				WithN3Address(upfN3Address).
 				WithSDFFilter(SDFFilter).
-				WithPrecedence(100).
+				WithPrecedence(precedence).
 				MarkAsUplink().
-				BuildPDR(),
+				BuildPDR()
 
-			// DownlinkPDR
-			session.NewPDRBuilder().
+			downlinkPDR := session.NewPDRBuilder().
 				WithID(downlinkPdrID).
 				WithMethod(session.Create).
-				WithPrecedence(100).
+				WithPrecedence(precedence).
 				WithUEAddress(ueAddress.String()).
 				WithSDFFilter(SDFFilter).
 				AddQERID(sessQerID).
 				AddQERID(downlinkAppQerID).
 				WithFARID(downlinkFarID).
 				MarkAsDownlink().
-				BuildPDR(),
-		}
+				BuildPDR()
 
-		fars := []*ieLib.IE{
-			// UplinkFAR
-			session.NewFARBuilder().
+			pdrs = append(pdrs, uplinkPDR)
+			pdrs = append(pdrs, downlinkPDR)
+
+			uplinkFAR := session.NewFARBuilder().
 				WithID(uplinkFarID).
 				WithAction(session.ActionForward).
 				WithDstInterface(ieLib.DstInterfaceCore).
 				WithMethod(session.Create).
-				BuildFAR(),
+				BuildFAR()
 
-			// DownlinkFAR
-			session.NewFARBuilder().
+			downlinkFAR := session.NewFARBuilder().
 				WithID(downlinkFarID).
 				WithAction(session.ActionDrop).
 				WithMethod(session.Create).
 				WithDstInterface(ieLib.DstInterfaceAccess).
 				WithZeroBasedOuterHeaderCreation().
-				BuildFAR(),
-		}
+				BuildFAR()
 
-		qers := []*ieLib.IE{
-			// TODO make rates configurable by pfcpctl
-			// session QER
-			session.NewQERBuilder().
-				WithID(sessQerID).
-				WithMethod(session.Create).
-				WithUplinkMBR(60000).
-				WithDownlinkMBR(60000).
-				Build(),
+			fars = append(fars, uplinkFAR)
+			fars = append(fars, downlinkFAR)
 
-			// Uplink application QER
-			session.NewQERBuilder().
+			uplinkAppQER := session.NewQERBuilder().
 				WithID(uplinkAppQerID).
 				WithMethod(session.Create).
 				WithQFI(qfi).
 				WithUplinkMBR(50000).
 				WithDownlinkMBR(30000).
 				WithGateStatus(gateStatus).
-				Build(),
+				Build()
 
-			// Downlink application QER
-			session.NewQERBuilder().
+			downlinkAppQER := session.NewQERBuilder().
 				WithID(downlinkAppQerID).
 				WithMethod(session.Create).
 				WithQFI(qfi).
 				WithUplinkMBR(50000).
 				WithDownlinkMBR(30000).
 				WithGateStatus(gateStatus).
-				Build(),
+				Build()
+
+			qers = append(qers, uplinkAppQER)
+			qers = append(qers, downlinkAppQER)
+
+			ID += 2
 		}
 
 		sess, err := sim.EstablishSession(pdrs, fars, qers)
@@ -280,23 +294,33 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 		actions |= session.ActionForward
 	}
 
-	for i := baseID; i < (count*2 + baseID); i = i + 2 {
+	if err := isNumOfAppFiltersCorrect(request.AppFilters); err != nil {
+		return &pb.Response{}, err
+	}
+
+	for i := baseID; i < (count*SessionStep + baseID); i = i + SessionStep {
+		var newFARs []*ieLib.IE
+
+		ID := uint32(i + 1)
 		teid := uint32(i + 1)
 
 		if request.BufferFlag || request.NotifyCPFlag {
 			teid = 0 // When buffering, TEID = 0.
 		}
 
-		newFARs := []*ieLib.IE{
-			// Downlink FAR
-			session.NewFARBuilder().
-				WithID(uint32(i + 1)). // Same FARID that was generated in create sessions
+		for _, _ = range request.AppFilters {
+			downlinkFAR := session.NewFARBuilder().
+				WithID(ID). // Same FARID that was generated in create sessions
 				WithMethod(session.Update).
 				WithAction(actions).
 				WithDstInterface(ieLib.DstInterfaceAccess).
 				WithTEID(teid).
 				WithDownlinkIP(nodeBaddress).
-				BuildFAR(),
+				BuildFAR()
+
+			newFARs = append(newFARs, downlinkFAR)
+
+			ID += 2
 		}
 
 		sess, ok := getSession(i)
@@ -335,7 +359,7 @@ func (P pfcpSimService) DeleteSession(ctx context.Context, request *pb.DeleteSes
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
 
-	for i := baseID; i < (count*2 + baseID); i = i + 2 {
+	for i := baseID; i < (count*SessionStep + baseID); i = i + SessionStep {
 		sess, ok := getSession(i)
 		if !ok {
 			errMsg := "Session was nil. Check baseID"
