@@ -17,6 +17,6 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2.5.2
         with:
-          version: latest
+          version: v1.47.3
           working-directory: pkg/pfcpsim
           args: -v --config ../../.golangci.yml
