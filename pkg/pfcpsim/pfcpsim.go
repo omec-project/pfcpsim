@@ -187,15 +187,27 @@ func (c *PFCPClient) PeekNextResponse() (message.Message, error) {
 	for {
 		select {
 		case resMsg = <-c.recvChan:
+			if isSessionReport(resMsg) {
+				continue
+			}
 			if !delay.Stop() {
 				<-delay.C
 			}
-
 			return resMsg, nil
 		case <-delay.C:
 			return resMsg, NewTimeoutExpiredError()
 		}
 	}
+}
+
+// MsgTypeSessionReportRequest: sent by the UP function to the CP function to report information related to an PFCP session
+// MsgTypeSessionReportResponse: sent by the CP function to the UP function as a reply to the Session Report Request.
+func isSessionReport(msg message.Message) bool {
+	if msg.MessageType() == message.MsgTypeSessionReportRequest ||
+		msg.MessageType() == message.MsgTypeSessionReportResponse {
+		return true
+	}
+	return false
 }
 
 func (c *PFCPClient) SendAssociationSetupRequest(ie ...*ieLib.IE) error {
