@@ -234,7 +234,8 @@ func (c *PFCPClient) SendHeartbeatRequest() error {
 	return c.sendMsg(hbReq)
 }
 
-func (c *PFCPClient) SendSessionEstablishmentRequest(pdrs []*ieLib.IE, fars []*ieLib.IE, qers []*ieLib.IE) error {
+func (c *PFCPClient) SendSessionEstablishmentRequest(pdrs []*ieLib.IE, fars []*ieLib.IE,
+	qers []*ieLib.IE, urrs []*ieLib.IE) error {
 	estReq := message.NewSessionEstablishmentRequest(
 		0,
 		0,
@@ -248,11 +249,12 @@ func (c *PFCPClient) SendSessionEstablishmentRequest(pdrs []*ieLib.IE, fars []*i
 	estReq.CreatePDR = append(estReq.CreatePDR, pdrs...)
 	estReq.CreateFAR = append(estReq.CreateFAR, fars...)
 	estReq.CreateQER = append(estReq.CreateQER, qers...)
+	estReq.CreateURR = append(estReq.CreateURR, urrs...)
 
 	return c.sendMsg(estReq)
 }
 
-func (c *PFCPClient) SendSessionModificationRequest(PeerSEID uint64, pdrs []*ieLib.IE, qers []*ieLib.IE, fars []*ieLib.IE) error {
+func (c *PFCPClient) SendSessionModificationRequest(PeerSEID uint64, pdrs []*ieLib.IE, qers []*ieLib.IE, fars []*ieLib.IE, urrs []*ieLib.IE) error {
 	modifyReq := message.NewSessionModificationRequest(
 		0,
 		0,
@@ -264,6 +266,7 @@ func (c *PFCPClient) SendSessionModificationRequest(PeerSEID uint64, pdrs []*ieL
 	modifyReq.UpdatePDR = append(modifyReq.UpdatePDR, pdrs...)
 	modifyReq.UpdateFAR = append(modifyReq.UpdateFAR, fars...)
 	modifyReq.UpdateQER = append(modifyReq.UpdateQER, qers...)
+	modifyReq.UpdateURR = append(modifyReq.UpdateURR, urrs...)
 
 	return c.sendMsg(modifyReq)
 }
@@ -390,12 +393,13 @@ func (c *PFCPClient) TeardownAssociation() error {
 
 // EstablishSession sends PFCP Session Establishment Request and waits for PFCP Session Establishment Response.
 // Returns a pointer to a new PFCPSession. Returns error if the process fails at any stage.
-func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers []*ieLib.IE) (*PFCPSession, error) {
+func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE,
+	qers []*ieLib.IE, urrs []*ieLib.IE) (*PFCPSession, error) {
 	if !c.isAssociationActive {
 		return nil, NewAssociationInactiveError()
 	}
 
-	err := c.SendSessionEstablishmentRequest(pdrs, fars, qers)
+	err := c.SendSessionEstablishmentRequest(pdrs, fars, qers, urrs)
 	if err != nil {
 		return nil, err
 	}
@@ -427,12 +431,13 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 	return sess, nil
 }
 
-func (c *PFCPClient) ModifySession(sess *PFCPSession, pdrs []*ieLib.IE, fars []*ieLib.IE, qers []*ieLib.IE) error {
+func (c *PFCPClient) ModifySession(sess *PFCPSession, pdrs []*ieLib.IE, fars []*ieLib.IE,
+	qers []*ieLib.IE, urrs []*ieLib.IE) error {
 	if !c.isAssociationActive {
 		return NewAssociationInactiveError()
 	}
 
-	err := c.SendSessionModificationRequest(sess.peerSEID, pdrs, fars, qers)
+	err := c.SendSessionModificationRequest(sess.peerSEID, pdrs, fars, qers, urrs)
 	if err != nil {
 		return err
 	}

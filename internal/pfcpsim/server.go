@@ -152,7 +152,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 
 		sessQerID := uint32(0)
 
-		var pdrs, fars []*ieLib.IE
+		var pdrs, fars, urrs []*ieLib.IE
 
 		qers := []*ieLib.IE{
 			// session QER
@@ -183,6 +183,33 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 
 			uplinkAppQerID := uint32(ID)
 			downlinkAppQerID := uint32(ID + 1)
+
+			urrId := uint32(ID)
+			urr := session.NewURRBuilder().
+				WithID(urrId).
+				WithMethod(session.Create).
+				WithMeasurementMethod(0, 1, 0).
+				WithMeasurementPeriod(1).
+				WithReportingTrigger(session.ReportingTrigger{
+					Flags: session.RPT_TRIG_PERIO,
+				}).
+				Build()
+
+			urrs = append(urrs, urr)
+
+			urr = session.NewURRBuilder().
+				WithID(urrId+1).
+				WithMethod(session.Create).
+				WithMeasurementMethod(0, 1, 0).
+				WithMeasurementPeriod(1).
+				WithReportingTrigger(session.ReportingTrigger{
+					Flags: session.RPT_TRIG_VOLTH | session.RPT_TRIG_VOLQU,
+				}).
+				WithVolumeThreshold(7, 10000, 20000, 30000).
+				WithVolumeQuota(7, 10000, 20000, 30000).
+				Build()
+
+			urrs = append(urrs, urr)
 
 			uplinkPDR := session.NewPDRBuilder().
 				WithID(uplinkPdrID).
@@ -254,7 +281,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 			ID += 2
 		}
 
-		sess, err := sim.EstablishSession(pdrs, fars, qers)
+		sess, err := sim.EstablishSession(pdrs, fars, qers, urrs)
 		if err != nil {
 			return &pb.Response{}, status.Error(codes.Internal, err.Error())
 		}
@@ -305,6 +332,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 
 	for i := baseID; i < (count*SessionStep + baseID); i = i + SessionStep {
 		var newFARs []*ieLib.IE
+		var newURRs []*ieLib.IE
 
 		ID := uint32(i + 1)
 		teid := uint32(i + 1)
@@ -325,6 +353,15 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 
 			newFARs = append(newFARs, downlinkFAR)
 
+			urrId := uint32(ID)
+			urr := session.NewURRBuilder().
+				WithID(urrId).
+				WithMethod(session.Update).
+				WithMeasurementPeriod(2).
+				Build()
+
+			newURRs = append(newURRs, urr)
+
 			ID += 2
 		}
 
@@ -336,7 +373,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 			return &pb.Response{}, status.Error(codes.Internal, errMsg)
 		}
 
-		err := sim.ModifySession(sess, nil, newFARs, nil)
+		err := sim.ModifySession(sess, nil, newFARs, nil, newURRs)
 		if err != nil {
 			return &pb.Response{}, status.Error(codes.Internal, err.Error())
 		}

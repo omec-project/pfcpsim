@@ -3,6 +3,7 @@
 # pfcpsim
 pfcpsim is a simulator to interact with PFCP agents. Can be used to simulate a 4G SGW-C / 5G SMF.
 
+> All related features are implemented according to the 3GPP TS 29.244 V16.3.1(2020-04).
 ## Overview
 
 pfcpsim is designed to work within a containerized environment. The docker image comes with both client (`pfcpctl`) and server (`pfcpsim`).
@@ -13,7 +14,7 @@ pfcpsim is designed to work within a containerized environment. The docker image
 
 ## Getting Started
 
-#### 1. Create the container. Images are available on [Dockerhub](https://hub.docker.com/r/opennetworking/pfcpsim/tags):
+#### 1. Create the container. Images are available on [DockerHub](https://hub.docker.com/r/opennetworking/pfcpsim/tags):
 ```bash
 docker container run --rm -d --name pfcpsim pfcpsim:<image_tag> -p 12345 --interface <interface-name>
 ```
