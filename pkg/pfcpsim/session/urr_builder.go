@@ -108,7 +108,7 @@ func (b *urrBuilder) Build() *ie.IE {
 	urr := createFunc(ie.NewURRID(b.urrID),
 		newMeasurementMethod(b.measurementMethod),
 		ie.NewMeasurementPeriod(b.measurementPeriod),
-		newRptTrig(b.rptTrig),
+		NewRptTrig(b.rptTrig),
 		newVolumeThreshold(b.volumThreshold),
 		newVolumeQuota(b.volumeQuota),
 		newMeasurementInfo(b.measurementInfo),

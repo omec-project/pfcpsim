@@ -3,6 +3,8 @@
 package session
 
 import (
+	"encoding/binary"
+
 	"github.com/wmnsk/go-pfcp/ie"
 )
 
@@ -25,31 +27,39 @@ func newMeasurementInfo(info uint8) *ie.IE {
 // Reporting Triggers IE bits definition
 const (
 	RPT_TRIG_PERIO = 1 << iota
-	RPT_TRIG_VOLTH // Volume Threshold
-	RPT_TRIG_TIMTH // Time Threshold
-	RPT_TRIG_QUHTI // Quota Holding Time
-	RPT_TRIG_START // Start of Traffic
-	RPT_TRIG_STOPT // Stop of Traffic
-	RPT_TRIG_DROTH // Dropped DL Traffic Threshold
-	RPT_TRIG_LIUSA // Linked Usage Reporting
-	RPT_TRIG_VOLQU // Volume Quota
-	RPT_TRIG_TIMQU // Time Quota
-	RPT_TRIG_ENVCL // Envelope Closure
-	RPT_TRIG_MACAR // MAC Addresses Reporting
-	RPT_TRIG_EVETH // Event Threshold
-	RPT_TRIG_EVEQU // Event Quota
-	RPT_TRIG_IPMJL // IP Multicast Join/Leave
+	RPT_TRIG_VOLTH
+	RPT_TRIG_TIMTH
+	RPT_TRIG_QUHTI
+	RPT_TRIG_START
+	RPT_TRIG_STOPT
+	RPT_TRIG_DROTH
+	RPT_TRIG_LIUSA
+	RPT_TRIG_VOLQU
+	RPT_TRIG_TIMQU
+	RPT_TRIG_ENVCL
+	RPT_TRIG_MACAR
+	RPT_TRIG_EVETH
+	RPT_TRIG_EVEQU
+	RPT_TRIG_IPMJL
+	RPT_TRIG_QUVTI
+	RPT_TRIG_REEMR
+	RPT_TRIG_UPINT
 )
 
 type ReportingTrigger struct {
-	Flags uint16
+	Flags uint32
 }
 
-func newRptTrig(rpgTrig ReportingTrigger) *ie.IE {
+func NewRptTrig(rpgTrig ReportingTrigger) *ie.IE {
 	if rpgTrig.Flags == 0 {
 		return nil
 	}
-	return ie.NewReportingTriggers(rpgTrig.Flags)
+	b := make([]byte, 4)
+	binary.LittleEndian.PutUint32(b, rpgTrig.Flags)
+	if b[2] != 0 {
+		return ie.NewReportingTriggers(b[:3]...)
+	}
+	return ie.NewReportingTriggers(b[:2]...)
 }
 
 // Volume Threshold IE

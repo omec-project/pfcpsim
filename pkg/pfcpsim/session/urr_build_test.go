@@ -74,7 +74,9 @@ func TestURRBuilder(t *testing.T) {
 				ie.NewURRID(1),
 				ie.NewMeasurementMethod(0, 1, 0),
 				ie.NewMeasurementPeriod(time.Second),
-				ie.NewReportingTriggers(RPT_TRIG_PERIO),
+				NewRptTrig(ReportingTrigger{
+					Flags: RPT_TRIG_PERIO,
+				}),
 			),
 			description: "Valid Create URR with reporting trigger",
 		},
@@ -103,7 +105,9 @@ func TestURRBuilder(t *testing.T) {
 					ie.NewURRID(1),
 					ie.NewMeasurementMethod(0, 1, 0),
 					ie.NewMeasurementPeriod(2),
-					ie.NewReportingTriggers(RPT_TRIG_PERIO),
+					NewRptTrig(ReportingTrigger{
+						Flags: RPT_TRIG_PERIO,
+					}),
 				),
 			),
 			description: "Valid Delete URR",
