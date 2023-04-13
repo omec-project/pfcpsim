@@ -6,6 +6,7 @@ package pfcpsim
 import (
 	"context"
 	"fmt"
+	"log"
 	"net"
 	"sync"
 	"time"
@@ -188,6 +189,7 @@ func (c *PFCPClient) PeekNextResponse() (message.Message, error) {
 		select {
 		case resMsg = <-c.recvChan:
 			if isSessionReport(resMsg) {
+				log.Println("Ignoring Session Report message")
 				continue
 			}
 			if !delay.Stop() {
