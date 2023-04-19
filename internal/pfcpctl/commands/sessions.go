@@ -66,6 +66,7 @@ func (s *sessionCreate) Execute(args []string) error {
 	}
 
 	client := connect()
+
 	defer disconnect()
 
 	s.Args.validate()
@@ -90,6 +91,7 @@ func (s *sessionCreate) Execute(args []string) error {
 
 func (s *sessionModify) Execute(args []string) error {
 	client := connect()
+
 	defer disconnect()
 
 	s.Args.validate()
@@ -115,6 +117,7 @@ func (s *sessionModify) Execute(args []string) error {
 
 func (s *sessionDelete) Execute(args []string) error {
 	client := connect()
+
 	defer disconnect()
 
 	s.Args.validate()

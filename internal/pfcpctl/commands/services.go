@@ -30,6 +30,7 @@ func RegisterServiceCommands(parser *flags.Parser) {
 
 func (c *configureRemoteAddresses) Execute(args []string) error {
 	client := connect()
+
 	defer disconnect()
 
 	res, err := client.Configure(context.Background(), &pb.ConfigureRequest{
@@ -48,6 +49,7 @@ func (c *configureRemoteAddresses) Execute(args []string) error {
 
 func (c *associate) Execute(args []string) error {
 	client := connect()
+
 	defer disconnect()
 
 	res, err := client.Associate(context.Background(), &pb.EmptyRequest{})
@@ -62,6 +64,7 @@ func (c *associate) Execute(args []string) error {
 
 func (c *disassociate) Execute(args []string) error {
 	client := connect()
+
 	defer disconnect()
 
 	res, err := client.Disassociate(context.Background(), &pb.EmptyRequest{})

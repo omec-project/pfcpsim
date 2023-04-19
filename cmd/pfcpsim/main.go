@@ -58,6 +58,7 @@ func main() {
 	optHelp := getopt.BoolLong("help", 0, "Help")
 
 	getopt.Parse()
+
 	if *optHelp {
 		getopt.Usage()
 		os.Exit(0)
