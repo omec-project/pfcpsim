@@ -109,6 +109,7 @@ func parseAppFilter(filter string) (string, uint8, uint32, error) {
 	proto, ipNetAddr, portRange, action, precedence := result[0], result[1], result[2], result[3], result[4]
 
 	var gateStatus uint8
+
 	switch action {
 	case "allow":
 		gateStatus = ie.GateStatusOpen
@@ -155,6 +156,7 @@ func parseAppFilter(filter string) (string, uint8, uint32, error) {
 		if lowerPort > upperPort {
 			return "", 0, 0, pfcpsim.NewInvalidFormatError("Port range. Lower port is greater than upper port")
 		}
+
 		return fmt.Sprintf(sdfFilterFormatWPort, proto, ipNetAddr, lowerPort, upperPort), gateStatus, precedenceUint, nil
 	} else {
 		return fmt.Sprintf(sdfFilterFormatWOPort, proto, ipNetAddr), gateStatus, precedenceUint, nil

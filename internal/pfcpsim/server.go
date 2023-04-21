@@ -49,6 +49,7 @@ func (P pfcpSimService) Configure(ctx context.Context, request *pb.ConfigureRequ
 	if net.ParseIP(request.UpfN3Address) == nil {
 		errMsg := fmt.Sprintf("Error while parsing UPF N3 address: %v", request.UpfN3Address)
 		log.Error(errMsg)
+
 		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 	}
 	// remotePeerAddress is validated in pfcpsim
@@ -74,6 +75,7 @@ func (P pfcpSimService) Associate(ctx context.Context, empty *pb.EmptyRequest) (
 		if err := connectPFCPSim(); err != nil {
 			errMsg := fmt.Sprintf("Could not connect to remote peer :%v", err)
 			log.Error(errMsg)
+
 			return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 		}
 	}
@@ -127,6 +129,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 	if err != nil {
 		errMsg := fmt.Sprintf(" Could not parse Address Pool: %v", err)
 		log.Error(errMsg)
+
 		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 	}
 
@@ -255,6 +258,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		if err != nil {
 			return &pb.Response{}, status.Error(codes.Internal, err.Error())
 		}
+
 		insertSession(i, sess)
 	}
 
@@ -280,6 +284,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 	if len(activeSessions) < count {
 		err := pfcpsim.NewNotEnoughSessionsError()
 		log.Error(err)
+
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
 
@@ -308,7 +313,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 			teid = 0 // When buffering, TEID = 0.
 		}
 
-		for _, _ = range request.AppFilters {
+		for range request.AppFilters {
 			downlinkFAR := session.NewFARBuilder().
 				WithID(ID). // Same FARID that was generated in create sessions
 				WithMethod(session.Update).
@@ -327,6 +332,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 		if !ok {
 			errMsg := fmt.Sprintf("Could not retrieve session with index %v", i)
 			log.Error(errMsg)
+
 			return &pb.Response{}, status.Error(codes.Internal, errMsg)
 		}
 
@@ -356,6 +362,7 @@ func (P pfcpSimService) DeleteSession(ctx context.Context, request *pb.DeleteSes
 	if len(activeSessions) < count {
 		err := pfcpsim.NewNotEnoughSessionsError()
 		log.Error(err)
+
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
 
@@ -364,6 +371,7 @@ func (P pfcpSimService) DeleteSession(ctx context.Context, request *pb.DeleteSes
 		if !ok {
 			errMsg := "Session was nil. Check baseID"
 			log.Error(errMsg)
+
 			return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 		}
 

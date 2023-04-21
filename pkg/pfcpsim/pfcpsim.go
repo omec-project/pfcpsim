@@ -180,11 +180,27 @@ func (c *PFCPClient) PeekNextHeartbeatResponse() (*message.HeartbeatResponse, er
 // It's a blocking operation, which is timed out after c.responseTimeout period (5 seconds by default).
 // Use SetPFCPResponseTimeout() to configure a custom timeout.
 func (c *PFCPClient) PeekNextResponse() (message.Message, error) {
-	select {
-	case msg := <-c.recvChan:
-		return msg, nil
-	case <-time.After(c.responseTimeout):
-		return nil, NewTimeoutExpiredError()
+	var resMsg message.Message
+
+	var err error
+
+	delay := time.NewTimer(c.responseTimeout)
+
+	for {
+		select {
+		case msg := <-c.recvChan:
+			if !delay.Stop() {
+				<-delay.C
+			}
+
+			resMsg = msg
+		case <-delay.C:
+			if resMsg == nil {
+				err = NewTimeoutExpiredError()
+			}
+
+			return resMsg, err
+		}
 	}
 }
 
