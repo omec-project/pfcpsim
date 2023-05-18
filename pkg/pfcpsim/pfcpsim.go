@@ -6,11 +6,11 @@ package pfcpsim
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
 	"sync"
 	"time"
 
+	"github.com/wmnsk/go-pfcp/ie"
 	ieLib "github.com/wmnsk/go-pfcp/ie"
 	"github.com/wmnsk/go-pfcp/message"
 )
@@ -20,6 +20,50 @@ const (
 	DefaultHeartbeatPeriod = 5
 	DefaultResponseTimeout = 5 * time.Second
 )
+
+var (
+	activeSessions     = make(map[int]*PFCPSession, 0)
+	lockActiveSessions = new(sync.Mutex)
+)
+
+func GetActiveSessionNum() int {
+	lockActiveSessions.Lock()
+	defer lockActiveSessions.Unlock()
+
+	return len(activeSessions)
+}
+
+func InsertSession(index int, session *PFCPSession) {
+	lockActiveSessions.Lock()
+	defer lockActiveSessions.Unlock()
+
+	activeSessions[index] = session
+}
+
+func GetSession(index int) (*PFCPSession, bool) {
+	lockActiveSessions.Lock()
+	defer lockActiveSessions.Unlock()
+	element, ok := activeSessions[index]
+	return element, ok
+}
+
+func GetSessionByLocalSEID(seid uint64) (*PFCPSession, bool) {
+	lockActiveSessions.Lock()
+	defer lockActiveSessions.Unlock()
+	for _, session := range activeSessions {
+		if session.localSEID == seid {
+			return session, true
+		}
+	}
+	return nil, false
+}
+
+func RemoveSession(index int) {
+	lockActiveSessions.Lock()
+	defer lockActiveSessions.Unlock()
+
+	delete(activeSessions, index)
+}
 
 // PFCPClient enables to simulate a client sending PFCP messages towards the UPF.
 // It provides two usage modes:
@@ -43,8 +87,9 @@ type PFCPClient struct {
 	sequenceNumber uint32
 	seqNumLock     sync.Mutex
 
-	localAddr string
-	conn      *net.UDPConn
+	localAddr  string
+	remoteAddr string
+	conn       *net.UDPConn
 
 	// responseTimeout timeout to wait for PFCP response (default: 5 seconds)
 	responseTimeout time.Duration
@@ -102,7 +147,12 @@ func (c *PFCPClient) sendMsg(msg message.Message) error {
 		return err
 	}
 
-	if _, err := c.conn.Write(b); err != nil {
+	raddr, err := net.ResolveUDPAddr("udp", c.remoteAddr)
+	if err != nil {
+		return err
+	}
+
+	if _, err := c.conn.WriteTo(b, raddr); err != nil {
 		return err
 	}
 
@@ -128,7 +178,9 @@ func (c *PFCPClient) receiveFromN4() {
 			c.heartbeatsChan <- msg
 
 		case *message.SessionReportRequest:
-			// Ignore message
+			if c.handleSessionReportRequest(msg) {
+				continue
+			}
 		default:
 			c.recvChan <- msg
 		}
@@ -143,17 +195,19 @@ func (c *PFCPClient) ConnectN4(remoteAddr string) error {
 		addr = fmt.Sprintf("%s:%s", host, port)
 	}
 
-	raddr, err := net.ResolveUDPAddr("udp", addr)
+	c.remoteAddr = addr
+
+	laddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", c.localAddr, PFCPStandardPort))
 	if err != nil {
 		return err
 	}
 
-	conn, err := net.DialUDP("udp", nil, raddr)
+	rxconn, err := net.ListenUDP("udp4", laddr)
 	if err != nil {
 		return err
 	}
 
-	c.conn = conn
+	c.conn = rxconn
 
 	go c.receiveFromN4()
 
@@ -187,11 +241,7 @@ func (c *PFCPClient) PeekNextResponse() (message.Message, error) {
 
 	for {
 		select {
-		case resMsg = <-c.recvChan:
-			if isSessionReport(resMsg) {
-				log.Println("Ignoring Session Report message")
-				continue
-			}
+		case resMsg := <-c.recvChan:
 			if !delay.Stop() {
 				<-delay.C
 			}
@@ -204,12 +254,32 @@ func (c *PFCPClient) PeekNextResponse() (message.Message, error) {
 
 // MsgTypeSessionReportRequest: sent by the UP function to the CP function to report information related to an PFCP session
 // MsgTypeSessionReportResponse: sent by the CP function to the UP function as a reply to the Session Report Request.
-func isSessionReport(msg message.Message) bool {
-	if msg.MessageType() == message.MsgTypeSessionReportRequest ||
-		msg.MessageType() == message.MsgTypeSessionReportResponse {
+func (c *PFCPClient) handleSessionReportRequest(msg *message.SessionReportRequest) bool {
+	if msg.MessageType() == message.MsgTypeSessionReportRequest {
+		fmt.Println("Session Report Request received")
+		err := c.sendSessionReportResponse(msg.Sequence(),
+			msg.Header.SEID)
+		if err != nil {
+			fmt.Println("Error sending Session Report Response")
+		}
 		return true
 	}
 	return false
+}
+
+func (c *PFCPClient) sendSessionReportResponse(seq uint32, seid uint64) error {
+	var rseid uint64
+	sess, ok := GetSessionByLocalSEID(seid)
+	if !ok {
+		rseid = 0
+		fmt.Println("Session not found")
+	} else {
+		rseid = sess.peerSEID
+	}
+	res := message.NewSessionReportResponse(0, 0, rseid, seq, 0,
+		ie.NewCause(ie.CauseRequestAccepted))
+
+	return c.sendMsg(res)
 }
 
 func (c *PFCPClient) SendAssociationSetupRequest(ie ...*ieLib.IE) error {

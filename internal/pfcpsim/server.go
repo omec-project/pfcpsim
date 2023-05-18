@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/c-robinson/iplib"
 	pb "github.com/omec-project/pfcpsim/api"
@@ -189,7 +190,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				WithID(urrId).
 				WithMethod(session.Create).
 				WithMeasurementMethod(0, 1, 0).
-				WithMeasurementPeriod(1).
+				WithMeasurementPeriod(1 * time.Second).
 				WithReportingTrigger(session.ReportingTrigger{
 					Flags: session.RPT_TRIG_PERIO,
 				}).
@@ -201,7 +202,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				WithID(urrId+1).
 				WithMethod(session.Create).
 				WithMeasurementMethod(0, 1, 0).
-				WithMeasurementPeriod(1).
+				WithMeasurementPeriod(1*time.Second).
 				WithReportingTrigger(session.ReportingTrigger{
 					Flags: session.RPT_TRIG_VOLTH | session.RPT_TRIG_VOLQU,
 				}).
@@ -285,8 +286,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		if err != nil {
 			return &pb.Response{}, status.Error(codes.Internal, err.Error())
 		}
-
-		insertSession(i, sess)
+		pfcpsim.InsertSession(i, sess)
 	}
 
 	infoMsg := fmt.Sprintf("%v sessions were established using %v as baseID ", count, baseID)
@@ -308,7 +308,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 	count := int(request.Count)
 	nodeBaddress := request.NodeBAddress
 
-	if len(activeSessions) < count {
+	if pfcpsim.GetActiveSessionNum() < count {
 		err := pfcpsim.NewNotEnoughSessionsError()
 		log.Error(err)
 
@@ -357,7 +357,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 			urr := session.NewURRBuilder().
 				WithID(urrId).
 				WithMethod(session.Update).
-				WithMeasurementPeriod(2).
+				WithMeasurementPeriod(1 * time.Second).
 				Build()
 
 			newURRs = append(newURRs, urr)
@@ -365,7 +365,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 			ID += 2
 		}
 
-		sess, ok := getSession(i)
+		sess, ok := pfcpsim.GetSession(i)
 		if !ok {
 			errMsg := fmt.Sprintf("Could not retrieve session with index %v", i)
 			log.Error(errMsg)
@@ -396,7 +396,7 @@ func (P pfcpSimService) DeleteSession(ctx context.Context, request *pb.DeleteSes
 	baseID := int(request.BaseID)
 	count := int(request.Count)
 
-	if len(activeSessions) < count {
+	if pfcpsim.GetActiveSessionNum() < count {
 		err := pfcpsim.NewNotEnoughSessionsError()
 		log.Error(err)
 
@@ -404,7 +404,7 @@ func (P pfcpSimService) DeleteSession(ctx context.Context, request *pb.DeleteSes
 	}
 
 	for i := baseID; i < (count*SessionStep + baseID); i = i + SessionStep {
-		sess, ok := getSession(i)
+		sess, ok := pfcpsim.GetSession(i)
 		if !ok {
 			errMsg := "Session was nil. Check baseID"
 			log.Error(errMsg)
@@ -418,10 +418,10 @@ func (P pfcpSimService) DeleteSession(ctx context.Context, request *pb.DeleteSes
 			return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 		}
 		// remove from activeSessions
-		deleteSession(i)
+		pfcpsim.RemoveSession(i)
 	}
 
-	infoMsg := fmt.Sprintf("%v sessions deleted; activeSessions: %v", count, len(activeSessions))
+	infoMsg := fmt.Sprintf("%v sessions deleted; activeSessions: %v", count, pfcpsim.GetActiveSessionNum())
 	log.Info(infoMsg)
 
 	return &pb.Response{
