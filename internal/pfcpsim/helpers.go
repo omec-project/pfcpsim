@@ -4,6 +4,7 @@
 package pfcpsim
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"strconv"
@@ -19,7 +20,11 @@ import (
 const sdfFilterFormatWPort = "permit out %v from %v to assigned %v-%v"
 const sdfFilterFormatWOPort = "permit out %v from %v to assigned"
 
-func connectPFCPSim() error {
+func GetSimulator() *pfcpsim.PFCPClient {
+	return sim
+}
+
+func ConnectPFCPSim() error {
 	if sim == nil {
 		localAddr, err := getLocalAddress(interfaceName)
 		if err != nil {
@@ -29,13 +34,22 @@ func connectPFCPSim() error {
 		sim = pfcpsim.NewPFCPClient(localAddr.String())
 	}
 
-	err := sim.ConnectN4(remotePeerAddress)
+	ctx, cancel := context.WithCancel(context.Background())
+	err := sim.ConnectN4(ctx, remotePeerAddress)
 	if err != nil {
 		return err
 	}
-
+	cancelFunc = cancel
 	remotePeerConnected = true
 
+	return nil
+}
+
+func DisconnectPFCPSim() error {
+	if sim == nil {
+		return fmt.Errorf("PFCP simulator is not initialized")
+	}
+	cancelFunc()
 	return nil
 }
 
@@ -92,9 +106,9 @@ func getLocalAddress(interfaceName string) (net.IP, error) {
 	return nil, pfcpsim.NewNoValidInterfaceError()
 }
 
-// parseAppFilter parses an application filter. Returns a tuple formed by a formatted SDF filter
+// ParseAppFilter parses an application filter. Returns a tuple formed by a formatted SDF filter
 // and a uint8 representing the Application QER gate status and a precedence. Returns error if fail occurs while validating the filter string.
-func parseAppFilter(filter string) (string, uint8, uint32, error) {
+func ParseAppFilter(filter string) (string, uint8, uint32, error) {
 	if filter == "" {
 		// parsing a wildcard app filter
 		return "", ie.GateStatusOpen, 100, nil

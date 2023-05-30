@@ -46,6 +46,14 @@ func checkServerStatus() error {
 	return nil
 }
 
+func SetRemotePeer(addr string) {
+	remotePeerAddress = addr
+}
+
+func SetUpfN3(addr string) {
+	upfN3Address = addr
+}
+
 func (P pfcpSimService) Configure(ctx context.Context, request *pb.ConfigureRequest) (*pb.Response, error) {
 	if net.ParseIP(request.UpfN3Address) == nil {
 		errMsg := fmt.Sprintf("Error while parsing UPF N3 address: %v", request.UpfN3Address)
@@ -54,8 +62,8 @@ func (P pfcpSimService) Configure(ctx context.Context, request *pb.ConfigureRequ
 		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 	}
 	// remotePeerAddress is validated in pfcpsim
-	remotePeerAddress = request.RemotePeerAddress
-	upfN3Address = request.UpfN3Address
+	SetRemotePeer(request.RemotePeerAddress)
+	SetUpfN3(request.UpfN3Address)
 
 	configurationMsg := fmt.Sprintf("Server is configured. Remote peer address: %v, N3 interface address: %v ", remotePeerAddress, upfN3Address)
 	log.Info(configurationMsg)
@@ -73,7 +81,7 @@ func (P pfcpSimService) Associate(ctx context.Context, empty *pb.EmptyRequest) (
 	}
 
 	if !isRemotePeerConnected() {
-		if err := connectPFCPSim(); err != nil {
+		if err := ConnectPFCPSim(); err != nil {
 			errMsg := fmt.Sprintf("Could not connect to remote peer :%v", err)
 			log.Error(errMsg)
 
@@ -169,7 +177,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		ID := uint16(i)
 
 		for _, appFilter := range request.AppFilters {
-			SDFFilter, gateStatus, precedence, err := parseAppFilter(appFilter)
+			SDFFilter, gateStatus, precedence, err := ParseAppFilter(appFilter)
 			if err != nil {
 				return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 			}

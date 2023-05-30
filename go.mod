@@ -8,7 +8,7 @@ require (
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/pborman/getopt/v2 v2.1.0
 	github.com/sirupsen/logrus v1.9.0
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.9.0
 	github.com/wmnsk/go-pfcp v0.0.19
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0

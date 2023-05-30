@@ -159,35 +159,40 @@ func (c *PFCPClient) sendMsg(msg message.Message) error {
 	return nil
 }
 
-func (c *PFCPClient) receiveFromN4() {
+func (c *PFCPClient) receiveFromN4(ctx context.Context) {
 	buf := make([]byte, 1500)
 
 	for {
-		n, _, err := c.conn.ReadFrom(buf)
-		if err != nil {
-			continue
-		}
-
-		msg, err := message.Parse(buf[:n])
-		if err != nil {
-			continue
-		}
-
-		switch msg := msg.(type) {
-		case *message.HeartbeatResponse:
-			c.heartbeatsChan <- msg
-
-		case *message.SessionReportRequest:
-			if c.handleSessionReportRequest(msg) {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			n, _, err := c.conn.ReadFrom(buf)
+			if err != nil {
 				continue
 			}
-		default:
-			c.recvChan <- msg
+
+			msg, err := message.Parse(buf[:n])
+			if err != nil {
+				continue
+			}
+
+			switch msg := msg.(type) {
+			case *message.HeartbeatResponse:
+				c.heartbeatsChan <- msg
+
+			case *message.SessionReportRequest:
+				if c.handleSessionReportRequest(msg) {
+					continue
+				}
+			default:
+				c.recvChan <- msg
+			}
 		}
 	}
 }
 
-func (c *PFCPClient) ConnectN4(remoteAddr string) error {
+func (c *PFCPClient) ConnectN4(ctx context.Context, remoteAddr string) error {
 	addr := fmt.Sprintf("%s:%d", remoteAddr, PFCPStandardPort)
 
 	if host, port, err := net.SplitHostPort(remoteAddr); err == nil {
@@ -209,7 +214,7 @@ func (c *PFCPClient) ConnectN4(remoteAddr string) error {
 
 	c.conn = rxconn
 
-	go c.receiveFromN4()
+	go c.receiveFromN4(ctx)
 
 	return nil
 }
@@ -416,7 +421,7 @@ func (c *PFCPClient) SetupAssociation() error {
 
 	assocResp, ok := resp.(*message.AssociationSetupResponse)
 	if !ok {
-		return NewInvalidResponseError()
+		return NewInvalidResponseError(fmt.Errorf("unexpected response type"))
 	}
 
 	cause, err := assocResp.Cause.Cause()
@@ -425,7 +430,7 @@ func (c *PFCPClient) SetupAssociation() error {
 	}
 
 	if cause != ieLib.CauseRequestAccepted {
-		return NewInvalidResponseError()
+		return NewInvalidResponseError(fmt.Errorf("association setup failed with cause %d", cause))
 	}
 
 	ctx, cancelFunc := context.WithCancel(c.ctx)
