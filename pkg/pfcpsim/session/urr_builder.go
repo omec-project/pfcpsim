@@ -4,6 +4,7 @@
 package session
 
 import (
+	"log"
 	"time"
 
 	"github.com/wmnsk/go-pfcp/ie"
@@ -26,9 +27,27 @@ type urrBuilder struct {
 	volumeQuota       *volumeQuota
 }
 
+const UrrNoFuzz = 0
+const UrrWithID = 1
+const UrrWithMeasurementInfo = 2
+const UrrMax = 3
+
 // NewURRBuilder returns a urrBuilder.
 func NewURRBuilder() *urrBuilder {
 	return &urrBuilder{}
+}
+
+func (b *urrBuilder) FuzzIE(ieType int, arg uint) *urrBuilder {
+	switch ieType {
+	case UrrWithID:
+		log.Println("Fuzz: UrrWithID")
+		return b.WithID(uint32(arg))
+	case UrrWithMeasurementInfo:
+		log.Println("Fuzz: UrrWithMeasurementInfo")
+		return b.WithMeasurementInfo(uint8(arg))
+	default:
+	}
+	return b
 }
 
 func (b *urrBuilder) WithID(id uint32) *urrBuilder {
@@ -99,7 +118,9 @@ func (b *urrBuilder) validate() {
 }
 
 func (b *urrBuilder) Build() *ie.IE {
-	b.validate()
+	if doCheck {
+		b.validate()
+	}
 
 	createFunc := ie.NewCreateURR
 	if b.method == Update {

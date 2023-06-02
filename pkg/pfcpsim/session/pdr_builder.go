@@ -4,6 +4,7 @@
 package session
 
 import (
+	"log"
 	"net"
 
 	"github.com/wmnsk/go-pfcp/ie"
@@ -24,10 +25,46 @@ type pdrBuilder struct {
 	direction direction
 }
 
+var doCheck = true
+
+func SetCheck(check bool) {
+	doCheck = check
+}
+
+const PdrNoFuzz = 0
+const PdrWithPrecedence = 1
+const PdrWithID = 2
+const PdrWithTEID = 3
+const PdrAddQERID = 4
+const PdrWithFARID = 5
+const PdrMax = 6
+
 func NewPDRBuilder() *pdrBuilder {
 	return &pdrBuilder{
 		qerIDs: make([]*ie.IE, 0),
 	}
+}
+
+func (b *pdrBuilder) FuzzIE(ieType int, arg uint) *pdrBuilder {
+	switch ieType {
+	case PdrWithPrecedence:
+		log.Println("PdrWithPrecedence")
+		return b.WithPrecedence(uint32(arg))
+	case PdrWithID:
+		log.Println("PdrWithID")
+		return b.WithID(uint16(arg))
+	case PdrWithTEID:
+		log.Println("PdrWithTEID")
+		return b.WithTEID(uint32(arg))
+	case PdrAddQERID:
+		log.Println("PdrAddQERID")
+		return b.AddQERID(uint32(arg))
+	case PdrWithFARID:
+		log.Println("PdrWithFARID")
+		return b.WithFARID(uint32(arg))
+	default:
+	}
+	return b
 }
 
 func (b *pdrBuilder) WithPrecedence(precedence uint32) *pdrBuilder {
@@ -122,7 +159,9 @@ func newRemovePDR(pdr *ie.IE) *ie.IE {
 // BuildPDR returns by default an UplinkFAR.
 // Returns a DownlinkFAR if MarkAsDownlink was invoked.
 func (b *pdrBuilder) BuildPDR() *ie.IE {
-	b.validate()
+	if doCheck {
+		b.validate()
+	}
 
 	createFunc := ie.NewCreatePDR
 	if b.method == Update {

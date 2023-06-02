@@ -165,6 +165,10 @@ func (c *PFCPClient) receiveFromN4(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			if c.cancelHeartbeats != nil {
+				c.cancelHeartbeats()
+			}
+			c.conn.Close()
 			return
 		default:
 			n, _, err := c.conn.ReadFrom(buf)

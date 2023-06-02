@@ -4,6 +4,8 @@
 package session
 
 import (
+	"log"
+
 	"github.com/wmnsk/go-pfcp/ie"
 )
 
@@ -20,9 +22,35 @@ type farBuilder struct {
 	isInterfaceSet       bool
 }
 
+const FarNoFuzz = 0
+const FarWithID = 1
+const FarWithAction = 2
+const FarWithTEID = 3
+const FarWithDstInterface = 4
+const FarMax = 5
+
 // NewFARBuilder returns a farBuilder.
 func NewFARBuilder() *farBuilder {
 	return &farBuilder{}
+}
+
+func (b *farBuilder) FuzzIE(ieType int, arg uint) *farBuilder {
+	switch ieType {
+	case FarWithID:
+		log.Println("FarWithID")
+		return b.WithID(uint32(arg))
+	case FarWithAction:
+		log.Println("FarWithAction")
+		return b.WithAction(uint8(arg))
+	case FarWithTEID:
+		log.Println("FarWithTEID")
+		return b.WithTEID(uint32(arg))
+	case FarWithDstInterface:
+		log.Println("FarWithDstInterface")
+		return b.WithDstInterface(uint8(arg))
+	default:
+	}
+	return b
 }
 
 func (b *farBuilder) WithID(id uint32) *farBuilder {
@@ -85,7 +113,9 @@ func (b *farBuilder) validate() {
 // BuildFAR returns a downlinkFAR if MarkAsDownlink was invoked.
 // Returns an UplinkFAR if MarkAsUplink was invoked.
 func (b *farBuilder) BuildFAR() *ie.IE {
-	b.validate()
+	if doCheck {
+		b.validate()
+	}
 
 	fwdParams := ie.NewForwardingParameters(
 		ie.NewDestinationInterface(b.dstInterface),
