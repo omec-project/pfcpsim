@@ -182,24 +182,18 @@ func (c *PFCPClient) PeekNextHeartbeatResponse() (*message.HeartbeatResponse, er
 func (c *PFCPClient) PeekNextResponse() (message.Message, error) {
 	var resMsg message.Message
 
-	var err error
-
 	delay := time.NewTimer(c.responseTimeout)
 
 	for {
 		select {
-		case msg := <-c.recvChan:
+		case resMsg = <-c.recvChan:
 			if !delay.Stop() {
 				<-delay.C
 			}
 
-			resMsg = msg
+			return resMsg, nil
 		case <-delay.C:
-			if resMsg == nil {
-				err = NewTimeoutExpiredError()
-			}
-
-			return resMsg, err
+			return resMsg, NewTimeoutExpiredError()
 		}
 	}
 }
