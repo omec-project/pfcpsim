@@ -75,3 +75,21 @@ jobs:
             ${{ env.DOCKER_REPO }}:latest
             ${{ env.DOCKER_REPO }}:${{ env.GIT_SHA_SHORT }}
           target: 'pfcpsim'
+
+  license-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: reuse lint
+        uses: fsfe/reuse-action@v2
+
+  fossa-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: FOSSA scan
+        uses: fossa-contrib/fossa-action@v3
+        with:
+          fossa-api-key: 9dc8fa92e3dd565687317beb87b56d89
