@@ -46,6 +46,7 @@ func (b *farBuilder) FuzzIE(ieType int, arg uint) *farBuilder {
 		return b.WithDstInterface(uint8(arg))
 	default:
 	}
+
 	return b
 }
 

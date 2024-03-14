@@ -45,15 +45,18 @@ func (b *urrBuilder) FuzzIE(ieType int, arg uint) *urrBuilder {
 		return b.WithMeasurementInfo(uint8(arg))
 	case UrrWithMeasurementMethod:
 		log.Println("Fuzz: UrrWithMeasurementMethod")
+
 		args := []int{0, 1, 0}
 		i := arg % 3
 		args[i] = int(arg)
+
 		return b.WithMeasurementMethod(args[0], args[1], args[2])
 	case UrrWithMeasurementPeriod:
 		log.Println("Fuzz: UrrWithMeasurementPeriod")
 		return b.WithMeasurementPeriod(time.Duration(arg))
 	default:
 	}
+
 	return b
 }
 
@@ -73,6 +76,7 @@ func (b *urrBuilder) WithMeasurementMethod(event, volum, durat int) *urrBuilder 
 		volum: volum,
 		durat: durat,
 	}
+
 	return b
 }
 
@@ -93,6 +97,7 @@ func (b *urrBuilder) WithVolumeThreshold(flags uint8, tvol, uvol, dvol uint64) *
 		uvol:  uvol,
 		dvol:  dvol,
 	}
+
 	return b
 }
 
@@ -103,6 +108,7 @@ func (b *urrBuilder) WithVolumeQuota(flags uint8, tvol, uvol, dvol uint64) *urrB
 		uvol:  uvol,
 		dvol:  dvol,
 	}
+
 	return b
 }
 
@@ -133,6 +139,7 @@ func (b *urrBuilder) Build() *ie.IE {
 	if b.method == Update {
 		createFunc = ie.NewUpdateURR
 	}
+
 	urr := createFunc(ie.NewURRID(b.urrID),
 		newMeasurementMethod(b.measurementMethod),
 		ie.NewMeasurementPeriod(b.measurementPeriod),
@@ -141,8 +148,10 @@ func (b *urrBuilder) Build() *ie.IE {
 		newVolumeQuota(b.volumeQuota),
 		newMeasurementInfo(b.measurementInfo),
 	)
+
 	if b.method == Delete {
 		return ie.NewRemoveURR(urr)
 	}
+
 	return urr
 }

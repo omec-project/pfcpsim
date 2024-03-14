@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023-present Ian Chen <ychen.cs10@nycu.edu.tw>
+// Copyright 2024-present Ian Chen <ychen.cs10@nycu.edu.tw>
 package session
 
 import (
@@ -21,6 +21,7 @@ func newMeasurementInfo(info uint8) *ie.IE {
 	if info == 0 {
 		return nil
 	}
+
 	return ie.NewMeasurementInformation(info)
 }
 
@@ -54,11 +55,14 @@ func NewRptTrig(rpgTrig ReportingTrigger) *ie.IE {
 	if rpgTrig.Flags == 0 {
 		return nil
 	}
+
 	b := make([]byte, 4)
 	binary.LittleEndian.PutUint32(b, rpgTrig.Flags)
+
 	if b[2] != 0 {
 		return ie.NewReportingTriggers(b[:3]...)
 	}
+
 	return ie.NewReportingTriggers(b[:2]...)
 }
 
@@ -74,6 +78,7 @@ func newVolumeThreshold(vParams *volumThreshold) *ie.IE {
 	if vParams == nil {
 		return nil
 	}
+
 	return ie.NewVolumeThreshold(vParams.flags, vParams.tvol, vParams.uvol, vParams.dvol)
 }
 
@@ -99,6 +104,7 @@ func newVolumeQuota(vParams *volumeQuota) *ie.IE {
 	if vParams == nil {
 		return nil
 	}
+
 	return ie.NewVolumeQuota(vParams.flags, vParams.tvol, vParams.uvol, vParams.dvol)
 }
 
@@ -106,5 +112,6 @@ func newMeasurementMethod(mParams *measurementMethodParams) *ie.IE {
 	if mParams == nil {
 		return nil
 	}
+
 	return ie.NewMeasurementMethod(mParams.event, mParams.volum, mParams.durat)
 }

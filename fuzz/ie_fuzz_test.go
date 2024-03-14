@@ -43,6 +43,7 @@ func Fuzz(f *testing.F) {
 	for i := 0; i < 100; i++ {
 		testcases = append(testcases, uint(rand.Intn(MaxInt)))
 	}
+
 	for _, tc := range testcases {
 		f.Add(tc)
 	}

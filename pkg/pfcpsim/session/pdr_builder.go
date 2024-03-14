@@ -60,6 +60,7 @@ func (b *pdrBuilder) FuzzIE(ieType int, arg uint) *pdrBuilder {
 		return b.WithFARID(uint32(arg))
 	default:
 	}
+
 	return b
 }
 

@@ -5,6 +5,7 @@ package pfcpsim
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -16,6 +17,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+var notInit = errors.New("PFCP simulator is not initialized")
 
 const sdfFilterFormatWPort = "permit out %v from %v to assigned %v-%v"
 const sdfFilterFormatWOPort = "permit out %v from %v to assigned"
@@ -35,10 +38,13 @@ func ConnectPFCPSim() error {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+
 	err := sim.ConnectN4(ctx, remotePeerAddress)
 	if err != nil {
+		cancel()
 		return err
 	}
+
 	cancelFunc = cancel
 	remotePeerConnected = true
 
@@ -47,9 +53,11 @@ func ConnectPFCPSim() error {
 
 func DisconnectPFCPSim() error {
 	if sim == nil {
-		return fmt.Errorf("PFCP simulator is not initialized")
+		return notInit
 	}
+
 	cancelFunc()
+
 	return nil
 }
 

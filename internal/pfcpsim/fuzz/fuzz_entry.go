@@ -22,6 +22,11 @@ const (
 	SVC_ASSOCIATED
 )
 
+var (
+	notConnected  = errors.New("Not connected")
+	notAssociated = errors.New("Not associated")
+)
+
 const SessionStep = 10
 
 type PfcpSimCfg struct {
@@ -46,13 +51,16 @@ func (c *PfcpSimCfg) InitPFCPSim() error {
 	pfcpsim.NewPFCPSimService(c.interfaceName)
 	pfcpsim.SetRemotePeer(c.serverAddr)
 	pfcpsim.SetUpfN3(c.upfN3)
+
 	var err error
+
 	if err = pfcpsim.ConnectPFCPSim(); err != nil {
 		return err
 	} else {
 		c.state = SVC_CONNECTED
 		c.sim = pfcpsim.GetSimulator()
 	}
+
 	return nil
 }
 
@@ -63,7 +71,7 @@ func (c *PfcpSimCfg) TerminatePFCPSim() error {
 func (c *PfcpSimCfg) Associate() error {
 	switch c.state {
 	case SVC_INIT:
-		return errors.New("Not connected")
+		return notConnected
 	case SVC_CONNECTED:
 		err := c.sim.SetupAssociation()
 		if err != nil {
@@ -79,17 +87,20 @@ func (c *PfcpSimCfg) Associate() error {
 func (c *PfcpSimCfg) Deassociate() error {
 	switch c.state {
 	case SVC_INIT:
-		return fmt.Errorf("Not connected")
+		return notConnected
 	case SVC_CONNECTED:
-		return fmt.Errorf("Not associated")
+		return notAssociated
 	case SVC_ASSOCIATED:
 		err := c.sim.TeardownAssociation()
 		if err != nil {
 			return err
 		}
+
 		c.sim.DisconnectN4()
 	}
+
 	c.state = SVC_INIT
+
 	return nil
 }
 
@@ -108,6 +119,7 @@ func (c *PfcpSimCfg) CreateSession(baseID int,
 	if err != nil {
 		errMsg := fmt.Sprintf(" Could not parse Address Pool: %v", err)
 		log.Error(errMsg)
+
 		return status.Error(codes.Aborted, errMsg)
 	}
 
@@ -264,11 +276,13 @@ func (c *PfcpSimCfg) CreateSession(baseID int,
 		if err != nil {
 			return status.Error(codes.Internal, err.Error())
 		}
+
 		sim.InsertSession(i, sess)
 	}
 
 	infoMsg := fmt.Sprintf("%v sessions were established using %v as baseID ", count, baseID)
 	log.Info(infoMsg)
+
 	return nil
 }
 
@@ -320,6 +334,7 @@ func (c *PfcpSimCfg) ModifySession(baseID int,
 		if !ok {
 			errMsg := fmt.Sprintf("Could not retrieve session with index %v", i)
 			log.Error(errMsg)
+
 			return status.Error(codes.Internal, errMsg)
 		}
 
@@ -336,12 +351,12 @@ func (c *PfcpSimCfg) ModifySession(baseID int,
 }
 
 func (c *PfcpSimCfg) DeleteSession(baseID int) error {
-
 	count := 1
 
 	if sim.GetActiveSessionNum() < count {
 		err := sim.NewNotEnoughSessionsError()
 		log.Error(err)
+
 		return status.Error(codes.Aborted, err.Error())
 	}
 
@@ -350,6 +365,7 @@ func (c *PfcpSimCfg) DeleteSession(baseID int) error {
 		if !ok {
 			errMsg := "Session was nil. Check baseID"
 			log.Error(errMsg)
+
 			return status.Error(codes.Aborted, errMsg)
 		}
 
@@ -364,5 +380,6 @@ func (c *PfcpSimCfg) DeleteSession(baseID int) error {
 
 	infoMsg := fmt.Sprintf("%v sessions deleted; activeSessions: %v", count, sim.GetActiveSessionNum())
 	log.Info(infoMsg)
+
 	return nil
 }

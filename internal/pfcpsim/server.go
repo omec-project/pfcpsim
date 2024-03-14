@@ -294,6 +294,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		if err != nil {
 			return &pb.Response{}, status.Error(codes.Internal, err.Error())
 		}
+
 		pfcpsim.InsertSession(i, sess)
 	}
 
@@ -340,6 +341,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 
 	for i := baseID; i < (count*SessionStep + baseID); i = i + SessionStep {
 		var newFARs []*ieLib.IE
+
 		var newURRs []*ieLib.IE
 
 		ID := uint32(i + 1)

@@ -7,6 +7,7 @@ run:
   timeout: 10m
   skip-files:
     - ".*\\.pb\\.go"
+    - ".*\\_test.go"
   skip-dirs-use-default: true
 
 linters:

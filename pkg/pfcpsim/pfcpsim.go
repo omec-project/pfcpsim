@@ -5,6 +5,7 @@ package pfcpsim
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"sync"
@@ -24,6 +25,8 @@ const (
 var (
 	activeSessions     = make(map[int]*PFCPSession, 0)
 	lockActiveSessions = new(sync.Mutex)
+	wrongRspType       = errors.New("unexpected response type")
+	assocFailed        = errors.New("association failed")
 )
 
 func GetActiveSessionNum() int {
@@ -43,18 +46,22 @@ func InsertSession(index int, session *PFCPSession) {
 func GetSession(index int) (*PFCPSession, bool) {
 	lockActiveSessions.Lock()
 	defer lockActiveSessions.Unlock()
+
 	element, ok := activeSessions[index]
+
 	return element, ok
 }
 
 func GetSessionByLocalSEID(seid uint64) (*PFCPSession, bool) {
 	lockActiveSessions.Lock()
 	defer lockActiveSessions.Unlock()
+
 	for _, session := range activeSessions {
 		if session.localSEID == seid {
 			return session, true
 		}
 	}
+
 	return nil, false
 }
 
@@ -168,7 +175,9 @@ func (c *PFCPClient) receiveFromN4(ctx context.Context) {
 			if c.cancelHeartbeats != nil {
 				c.cancelHeartbeats()
 			}
+
 			c.conn.Close()
+
 			return
 		default:
 			n, _, err := c.conn.ReadFrom(buf)
@@ -256,6 +265,7 @@ func (c *PFCPClient) PeekNextResponse() (message.Message, error) {
 			if !delay.Stop() {
 				<-delay.C
 			}
+
 			return resMsg, nil
 		case <-delay.C:
 			return resMsg, NewTimeoutExpiredError()
@@ -268,25 +278,29 @@ func (c *PFCPClient) PeekNextResponse() (message.Message, error) {
 func (c *PFCPClient) handleSessionReportRequest(msg *message.SessionReportRequest) bool {
 	if msg.MessageType() == message.MsgTypeSessionReportRequest {
 		fmt.Println("Session Report Request received")
+
 		err := c.sendSessionReportResponse(msg.Sequence(),
 			msg.Header.SEID)
 		if err != nil {
 			fmt.Println("Error sending Session Report Response")
 		}
+
 		return true
 	}
+
 	return false
 }
 
 func (c *PFCPClient) sendSessionReportResponse(seq uint32, seid uint64) error {
 	var rseid uint64
+
 	sess, ok := GetSessionByLocalSEID(seid)
 	if !ok {
 		rseid = 0
-		fmt.Println("Session not found")
 	} else {
 		rseid = sess.peerSEID
 	}
+
 	res := message.NewSessionReportResponse(0, 0, rseid, seq, 0,
 		ie.NewCause(ie.CauseRequestAccepted))
 
@@ -427,7 +441,7 @@ func (c *PFCPClient) SetupAssociation() error {
 
 	assocResp, ok := resp.(*message.AssociationSetupResponse)
 	if !ok {
-		return NewInvalidResponseError(fmt.Errorf("unexpected response type"))
+		return NewInvalidResponseError(wrongRspType)
 	}
 
 	cause, err := assocResp.Cause.Cause()
@@ -436,7 +450,7 @@ func (c *PFCPClient) SetupAssociation() error {
 	}
 
 	if cause != ieLib.CauseRequestAccepted {
-		return NewInvalidResponseError(fmt.Errorf("association setup failed with cause %d", cause))
+		return NewInvalidResponseError(assocFailed)
 	}
 
 	ctx, cancelFunc := context.WithCancel(c.ctx)

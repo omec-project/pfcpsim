@@ -59,6 +59,7 @@ func (b *qerBuilder) FuzzIE(ieType int, arg uint) *qerBuilder {
 		return b.WithGateStatus(uint8(arg))
 	default:
 	}
+
 	return b
 }
 
