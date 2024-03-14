@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/omec-project/pfcpsim/internal/pfcpsim/fuzz"
+	"github.com/omec-project/pfcpsim/internal/pfcpsim/export"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
 	"github.com/stretchr/testify/require"
 )
@@ -14,7 +14,7 @@ const MaxUint = ^uint(0)
 const MaxInt = int(MaxUint >> 1)
 
 func TestBasicFunction(t *testing.T) {
-	sim := fuzz.NewPfcpSimCfg("eth0", "192.168.0.5", "127.0.0.8")
+	sim := export.NewPfcpSimCfg("eth0", "192.168.0.5", "127.0.0.8")
 	err := sim.InitPFCPSim()
 	if err != nil {
 		require.NoError(t, err, "InitPFCPSim failed")
@@ -51,7 +51,7 @@ func Fuzz(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, input uint) {
 		time.Sleep(5 * time.Second)
-		sim := fuzz.NewPfcpSimCfg("ens18", "10.10.0.59", "127.0.0.8")
+		sim := export.NewPfcpSimCfg("eth0", "192.168.0.5", "127.0.0.8")
 		err := sim.InitPFCPSim()
 		if err != nil {
 			require.NoError(t, err, "InitPFCPSim failed")
