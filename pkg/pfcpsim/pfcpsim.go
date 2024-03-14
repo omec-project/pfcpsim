@@ -160,7 +160,7 @@ func (c *PFCPClient) sendMsg(msg message.Message) error {
 }
 
 func (c *PFCPClient) receiveFromN4(ctx context.Context) {
-	buf := make([]byte, 1500)
+	buf := make([]byte, 3000)
 
 	for {
 		select {
@@ -184,7 +184,9 @@ func (c *PFCPClient) receiveFromN4(ctx context.Context) {
 			switch msg := msg.(type) {
 			case *message.HeartbeatResponse:
 				c.heartbeatsChan <- msg
-
+			case *message.HeartbeatRequest:
+				// ignore HeartbeatRequest
+				continue
 			case *message.SessionReportRequest:
 				if c.handleSessionReportRequest(msg) {
 					continue
