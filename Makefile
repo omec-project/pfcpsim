@@ -11,9 +11,9 @@ DOCKER_TAG               ?= ${VERSION}
 DOCKER_IMAGENAME         := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}${PROJECT_NAME}:${DOCKER_TAG}
 DOCKER_BUILDKIT          ?= 1
 
-DOCKER_TARGET           ?= pfcpsim
+DOCKER_TARGET            ?= pfcpsim
 
-build-pfcpsim:
+docker-build:
 	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build -f Dockerfile . \
     	--target $(DOCKER_TARGET) \
     	--cache-from ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}$(DOCKER_TARGET):${DOCKER_TAG} \

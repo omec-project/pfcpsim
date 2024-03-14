@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2022-present Open Networking Foundation
+
+name: Publish pfcpsim
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  push-images:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DOCKER_REPO: 'opennetworking/pfcpsim'
+
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+
+      - name: Read version file
+        run: echo VERSION=$(cat ./VERSION) >> $GITHUB_ENV
+
+      - name: Build protobuf
+        id: check
+        run: |
+          make build-proto
+          echo "::set-output name=PORCELAIN::`git status --porcelain`"
+      # Verify that protobuf is in sync with changes
+      - name: Check protobuf is sync
+        if: ${{ steps.check.outputs.PORCELAIN != '' }}
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('Please run make build-proto and commit changes to compiled protobuf')
+
+      - uses: docker/login-action@v3.1.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Get short SHA
+        run: echo GIT_SHA_SHORT=$(git rev-parse --short HEAD) >> $GITHUB_ENV
+
+      - name: Build with Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          load: true
+          tags: |
+            ${{ env.DOCKER_REPO }}:${{ env.VERSION }}
+            ${{ env.DOCKER_REPO }}:latest
+            ${{ env.DOCKER_REPO }}:${{ env.GIT_SHA_SHORT }}
+          target: 'pfcpsim'
+
+      - name: Test docker build
+        run: |
+          docker run --rm ${{ env.DOCKER_REPO }}:latest --help
+          docker run --rm --entrypoint pfcpctl ${{ env.DOCKER_REPO }}:latest --help
+
+      - name: Push to registry
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.DOCKER_REPO }}:${{ env.VERSION }}
+            ${{ env.DOCKER_REPO }}:latest
+            ${{ env.DOCKER_REPO }}:${{ env.GIT_SHA_SHORT }}
+          target: 'pfcpsim'
