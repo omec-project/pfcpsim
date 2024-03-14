@@ -33,11 +33,10 @@ func SetCheck(check bool) {
 
 const PdrNoFuzz = 0
 const PdrWithPrecedence = 1
-const PdrWithID = 2
-const PdrWithTEID = 3
-const PdrAddQERID = 4
-const PdrWithFARID = 5
-const PdrMax = 6
+const PdrWithTEID = 2
+const PdrAddQERID = 3
+const PdrWithFARID = 4
+const PdrMax = 5
 
 func NewPDRBuilder() *pdrBuilder {
 	return &pdrBuilder{
@@ -50,9 +49,6 @@ func (b *pdrBuilder) FuzzIE(ieType int, arg uint) *pdrBuilder {
 	case PdrWithPrecedence:
 		log.Println("PdrWithPrecedence")
 		return b.WithPrecedence(uint32(arg))
-	case PdrWithID:
-		log.Println("PdrWithID")
-		return b.WithID(uint16(arg))
 	case PdrWithTEID:
 		log.Println("PdrWithTEID")
 		return b.WithTEID(uint32(arg))

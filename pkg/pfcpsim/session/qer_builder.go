@@ -25,14 +25,13 @@ type qerBuilder struct {
 }
 
 const QerNoFuzz = 0
-const QerWithID = 1
-const QerWithQFI = 2
-const QerWithUplinkMBR = 3
-const QerWithUplinkGBR = 4
-const QerWithDownlinkMBR = 5
-const QerWithDownlinkGBR = 6
-const QerWithGateStatus = 7
-const QerMax = 8
+const QerWithQFI = 1
+const QerWithUplinkMBR = 2
+const QerWithUplinkGBR = 3
+const QerWithDownlinkMBR = 4
+const QerWithDownlinkGBR = 5
+const QerWithGateStatus = 6
+const QerMax = 7
 
 func NewQERBuilder() *qerBuilder {
 	return &qerBuilder{}
@@ -40,9 +39,6 @@ func NewQERBuilder() *qerBuilder {
 
 func (b *qerBuilder) FuzzIE(ieType int, arg uint) *qerBuilder {
 	switch ieType {
-	case QerWithID:
-		log.Println("QerWithID")
-		return b.WithID(uint32(arg))
 	case QerWithQFI:
 		log.Println("QerWithQFI")
 		return b.WithQFI(uint8(arg))

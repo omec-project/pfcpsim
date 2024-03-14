@@ -23,11 +23,10 @@ type farBuilder struct {
 }
 
 const FarNoFuzz = 0
-const FarWithID = 1
-const FarWithAction = 2
-const FarWithTEID = 3
-const FarWithDstInterface = 4
-const FarMax = 5
+const FarWithAction = 1
+const FarWithTEID = 2
+const FarWithDstInterface = 3
+const FarMax = 4
 
 // NewFARBuilder returns a farBuilder.
 func NewFARBuilder() *farBuilder {
@@ -36,9 +35,6 @@ func NewFARBuilder() *farBuilder {
 
 func (b *farBuilder) FuzzIE(ieType int, arg uint) *farBuilder {
 	switch ieType {
-	case FarWithID:
-		log.Println("FarWithID")
-		return b.WithID(uint32(arg))
 	case FarWithAction:
 		log.Println("FarWithAction")
 		return b.WithAction(uint8(arg))

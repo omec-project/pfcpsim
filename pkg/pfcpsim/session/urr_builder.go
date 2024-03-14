@@ -28,9 +28,10 @@ type urrBuilder struct {
 }
 
 const UrrNoFuzz = 0
-const UrrWithID = 1
-const UrrWithMeasurementInfo = 2
-const UrrMax = 3
+const UrrWithMeasurementInfo = 1
+const UrrWithMeasurementMethod = 2
+const UrrWithMeasurementPeriod = 3
+const UrrMax = 4
 
 // NewURRBuilder returns a urrBuilder.
 func NewURRBuilder() *urrBuilder {
@@ -39,12 +40,18 @@ func NewURRBuilder() *urrBuilder {
 
 func (b *urrBuilder) FuzzIE(ieType int, arg uint) *urrBuilder {
 	switch ieType {
-	case UrrWithID:
-		log.Println("Fuzz: UrrWithID")
-		return b.WithID(uint32(arg))
 	case UrrWithMeasurementInfo:
 		log.Println("Fuzz: UrrWithMeasurementInfo")
 		return b.WithMeasurementInfo(uint8(arg))
+	case UrrWithMeasurementMethod:
+		log.Println("Fuzz: UrrWithMeasurementMethod")
+		args := []int{0, 1, 0}
+		i := arg % 3
+		args[i] = int(arg)
+		return b.WithMeasurementMethod(args[0], args[1], args[2])
+	case UrrWithMeasurementPeriod:
+		log.Println("Fuzz: UrrWithMeasurementPeriod")
+		return b.WithMeasurementPeriod(time.Duration(arg))
 	default:
 	}
 	return b
