@@ -22,9 +22,9 @@ const (
 
 // PFCPClient enables to simulate a client sending PFCP messages towards the UPF.
 // It provides two usage modes:
-// - 1st mode enables high-level PFCP operations (e.g., SetupAssociation())
-// - 2nd mode gives a user more control over PFCP sequence flow
-//   and enables send and receive of individual messages (e.g., SendAssociationSetupRequest(), PeekNextResponse())
+//   - 1st mode enables high-level PFCP operations (e.g., SetupAssociation())
+//   - 2nd mode gives a user more control over PFCP sequence flow
+//     and enables send and receive of individual messages (e.g., SendAssociationSetupRequest(), PeekNextResponse())
 type PFCPClient struct {
 	// keeps the current number of active PFCP sessions
 	// it is also used as F-SEID
