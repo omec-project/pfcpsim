@@ -8,7 +8,7 @@ import (
 	"github.com/wmnsk/go-pfcp/ie"
 )
 
-//  Measurement Information IE bits definition
+// Measurement Information IE bits definition
 const (
 	MBQE = 1 << iota // Measurement Before QoS Enforcement
 	INAM             // Inactive Measurement
