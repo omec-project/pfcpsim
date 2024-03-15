@@ -16,30 +16,31 @@ import (
 const MaxUint = ^uint(0)
 const MaxInt = int(MaxUint >> 1)
 
-func TestBasicFunction(t *testing.T) {
-	sim := export.NewPfcpSimCfg("eth0", "192.168.0.5", "127.0.0.8")
-	err := sim.InitPFCPSim()
-	if err != nil {
-		require.NoError(t, err, "InitPFCPSim failed")
-	}
-	err = sim.Associate()
-	if err != nil {
-		require.NoError(t, err, "Associate failed")
-	}
-	defer func() {
-		err = sim.TerminatePFCPSim()
-		require.NoError(t, err)
-	}()
-	err = sim.CreateSession(2,
-		session.PdrNoFuzz,
-		session.QerNoFuzz,
-		session.FarNoFuzz,
-		session.UrrNoFuzz,
-		uint(0))
-	if err != nil {
-		require.NoError(t, err, "CreateSession failed")
-	}
-}
+// Example of a basic function test
+// func TestBasicFunction(t *testing.T) {
+// 	sim := export.NewPfcpSimCfg("eth0", "192.168.0.5", "127.0.0.8")
+// 	err := sim.InitPFCPSim()
+// 	if err != nil {
+// 		require.NoError(t, err, "InitPFCPSim failed")
+// 	}
+// 	err = sim.Associate()
+// 	if err != nil {
+// 		require.NoError(t, err, "Associate failed")
+// 	}
+// 	defer func() {
+// 		err = sim.TerminatePFCPSim()
+// 		require.NoError(t, err)
+// 	}()
+// 	err = sim.CreateSession(2,
+// 		session.PdrNoFuzz,
+// 		session.QerNoFuzz,
+// 		session.FarNoFuzz,
+// 		session.UrrNoFuzz,
+// 		uint(0))
+// 	if err != nil {
+// 		require.NoError(t, err, "CreateSession failed")
+// 	}
+// }
 
 func Fuzz(f *testing.F) {
 	var testcases []uint

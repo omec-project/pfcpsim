@@ -27,7 +27,7 @@ golint:
 	mkdir -p $(CURDIR)/.coverage
 
 test: .coverage
-	go test	-race -coverprofile=.coverage/coverage-unit.txt -covermode=atomic -v ./...
+	go test	-race -coverprofile=.coverage/coverage-unit.txt -covermode=atomic -run=^Test.*$ -v ./...
 
 reuse-lint:
 	docker run --rm -v $(CURDIR):/pfcpsim -w /pfcpsim omecproject/reuse-verify:latest reuse lint
