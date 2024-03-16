@@ -4,7 +4,8 @@
 package fuzz
 
 import (
-	"math/rand"
+	"crypto/rand"
+	"math/big"
 	"testing"
 	"time"
 
@@ -15,6 +16,11 @@ import (
 
 const MaxUint = ^uint(0)
 const MaxInt = int(MaxUint >> 1)
+
+func getRand(n int) int {
+	res, _ := rand.Int(rand.Reader, big.NewInt(int64(n)))
+	return int(res.Int64())
+}
 
 // Example of a basic function test
 // func TestBasicFunction(t *testing.T) {
@@ -45,12 +51,13 @@ const MaxInt = int(MaxUint >> 1)
 func Fuzz(f *testing.F) {
 	var testcases []uint
 	for i := 0; i < 100; i++ {
-		testcases = append(testcases, uint(rand.Intn(MaxInt)))
+		testcases = append(testcases, uint(getRand(MaxInt)))
 	}
 
 	for _, tc := range testcases {
 		f.Add(tc)
 	}
+
 	session.SetCheck(false)
 
 	f.Fuzz(func(t *testing.T, input uint) {
@@ -68,7 +75,7 @@ func Fuzz(f *testing.F) {
 			err = sim.TerminatePFCPSim()
 			require.NoError(t, err)
 		}()
-		err = sim.CreateSession(2, rand.Intn(session.PdrMax),
+		err = sim.CreateSession(2, getRand(session.PdrMax),
 			int(input)%session.QerMax,
 			int(input)%session.FarMax,
 			int(input)%session.UrrMax,
@@ -77,8 +84,8 @@ func Fuzz(f *testing.F) {
 			require.NoError(t, err, "CreateSession failed")
 		}
 		err = sim.ModifySession(2,
-			rand.Intn(session.FarMax),
-			rand.Intn(session.UrrMax),
+			getRand(session.FarMax),
+			getRand(session.UrrMax),
 			input)
 		if err != nil {
 			require.NoError(t, err, "ModifySession failed")
