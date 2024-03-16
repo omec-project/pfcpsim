@@ -62,19 +62,24 @@ func Fuzz(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, input uint) {
 		time.Sleep(5 * time.Second)
+
 		sim := export.NewPfcpSimCfg("eth0", "192.168.0.5", "127.0.0.8")
+
 		err := sim.InitPFCPSim()
 		if err != nil {
 			require.NoError(t, err, "InitPFCPSim failed")
 		}
+
 		err = sim.Associate()
 		if err != nil {
 			require.NoError(t, err, "Associate failed")
 		}
+
 		defer func() {
 			err = sim.TerminatePFCPSim()
 			require.NoError(t, err)
 		}()
+
 		err = sim.CreateSession(2, getRand(session.PdrMax),
 			int(input)%session.QerMax,
 			int(input)%session.FarMax,
@@ -83,6 +88,7 @@ func Fuzz(f *testing.F) {
 		if err != nil {
 			require.NoError(t, err, "CreateSession failed")
 		}
+
 		err = sim.ModifySession(2,
 			getRand(session.FarMax),
 			getRand(session.UrrMax),
@@ -90,7 +96,9 @@ func Fuzz(f *testing.F) {
 		if err != nil {
 			require.NoError(t, err, "ModifySession failed")
 		}
+
 		time.Sleep(3 * time.Second)
+
 		err = sim.DeleteSession(2)
 		if err != nil {
 			require.NoError(t, err, "DeleteSession failed")
