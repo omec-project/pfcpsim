@@ -15,16 +15,19 @@ var conn *grpc.ClientConn
 
 func connect() pb.PFCPSimClient {
 	// Create an insecure gRPC Channel
-	conn, err := grpc.Dial(config.GlobalConfig.Server, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	connection, err := grpc.Dial(config.GlobalConfig.Server, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Error dialing %v: %v", config.GlobalConfig.Server, err)
 	}
 
-	return pb.NewPFCPSimClient(conn)
+	return pb.NewPFCPSimClient(connection)
 }
 
 func disconnect() {
 	if conn != nil {
-		conn.Close()
+		err := conn.Close()
+		if err != nil {
+			log.Warnln(err)
+		}
 	}
 }

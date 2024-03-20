@@ -57,7 +57,10 @@ type SessionOptions struct {
 }
 
 func RegisterSessionCommands(parser *flags.Parser) {
-	_, _ = parser.AddCommand("session", "Handle sessions", "Command to create/modify/delete sessions", &SessionOptions{})
+	_, err := parser.AddCommand("session", "Handle sessions", "Command to create/modify/delete sessions", &SessionOptions{})
+	if err != nil {
+		log.Warnln(err)
+	}
 }
 
 func (s *sessionCreate) Execute(args []string) error {
@@ -79,7 +82,6 @@ func (s *sessionCreate) Execute(args []string) error {
 		AppFilters:    s.Args.AppFilterString,
 		Qfi:           int32(s.Args.QFI),
 	})
-
 	if err != nil {
 		log.Fatalf("Error while creating sessions: %v", err)
 	}
@@ -105,7 +107,6 @@ func (s *sessionModify) Execute(args []string) error {
 		NotifyCPFlag:  s.Args.NotifyCPFlag,
 		AppFilters:    s.Args.AppFilterString,
 	})
-
 	if err != nil {
 		log.Fatalf("Error while modifying sessions: %v", err)
 	}
