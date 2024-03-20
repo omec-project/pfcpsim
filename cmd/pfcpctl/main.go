@@ -17,7 +17,6 @@ func main() {
 	parser := flags.NewNamedParser(path.Base(os.Args[0]),
 		flags.HelpFlag|flags.PassDoubleDash|flags.PassAfterNonOption)
 	_, err := parser.AddGroup("Global Options", "", &config.GlobalOptions)
-
 	if err != nil {
 		panic(err)
 	}
@@ -33,7 +32,10 @@ func main() {
 		if ok {
 			realF := err.(*flags.Error)
 			if realF.Type == flags.ErrHelp {
-				os.Stdout.WriteString(err.Error() + "\n")
+				_, err = os.Stdout.WriteString(err.Error() + "\n")
+				if err != nil {
+					fmt.Println(err)
+				}
 				return
 			}
 		}

@@ -16,8 +16,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const sdfFilterFormatWPort = "permit out %v from %v to assigned %v-%v"
-const sdfFilterFormatWOPort = "permit out %v from %v to assigned"
+const (
+	sdfFilterFormatWPort  = "permit out %v from %v to assigned %v-%v"
+	sdfFilterFormatWOPort = "permit out %v from %v to assigned"
+)
 
 func connectPFCPSim() error {
 	if sim == nil {
@@ -77,7 +79,10 @@ func getLocalAddress(interfaceName string) (net.IP, error) {
 			return nil, err
 		}
 
-		addrs, _ = interfaceAddrs.Addrs()
+		addrs, err = interfaceAddrs.Addrs()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for _, address := range addrs {

@@ -43,7 +43,7 @@ func ProcessGlobalOptions() {
 		log.Fatal("Server is not set. Please use the -s option")
 	}
 
-	//Try to resolve hostname if provided for the server
+	// Try to resolve hostname if provided for the server
 	if host, port, err := net.SplitHostPort(GlobalConfig.Server); err == nil {
 		if addrs, err := net.LookupHost(host); err == nil {
 			GlobalConfig.Server = net.JoinHostPort(addrs[0], port)
