@@ -26,6 +26,8 @@ golint:
 	rm -rf $(CURDIR)/.coverage
 	mkdir -p $(CURDIR)/.coverage
 
+# -run flag ensures that the fuzz test won't be run
+# because the fuzz test needs to run with the running UPF
 test: .coverage
 	go test	-race -coverprofile=.coverage/coverage-unit.txt -covermode=atomic -run=^Test -v ./...
 

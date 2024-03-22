@@ -8,3 +8,5 @@ output
 *.pyc
 *.swp
 *.log
+client
+server

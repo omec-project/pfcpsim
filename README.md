@@ -14,6 +14,8 @@ pfcpsim is designed to work within a containerized environment. The docker image
 
 ## Getting Started
 
+### Normal Case
+
 #### 1. Create the container. Images are available on [DockerHub](https://hub.docker.com/r/opennetworking/pfcpsim/tags):
 ```bash
 docker container run --rm -d --name pfcpsim pfcpsim:<image_tag> -p 12345 --interface <interface-name>
@@ -57,6 +59,40 @@ docker exec pfcpsim pfcpctl --server localhost:12345 session delete --count 5 --
 ```bash
 docker exec pfcpsim pfcpctl --server localhost:12345 service disassociate
 ```
+
+### Fuzzing Mode
+
+Pfcpsim is able to generate the malformed PFCP message, it can be used to explore the the potential vulnerabilities of the PFCP agents (UPF).
+
+> Note:
+> PFCP fuzzer is developed by the [Ian Chen (free5GC team)](https://github.com/ianchen0119)
+> PFCP fuzzer has been used to test the UPF implementation of the free5GC project, and successfully found some vulnerabilities.
+
+To use the PFCP fuzzer, we need to prepare the fuzzing environment first. The following steps show how to use the PFCP fuzzer.
+
+#### 1. Launch the UPF instance
+
+Pfcpsim support to test various UPF implementations.
+You can choose the UPF implementation you want to test, and launch the UPF instance.
+
+#### 2. Change the configuration in `fuzz/ie_fuzz_test.go`
+
+You should change the configuration in `fuzz/ie_fuzz_test.go`:
+```go=
+sim := export.NewPfcpSimCfg(iface, upfN3, upfN4)
+```
+- `iface`: the interface name you used to establish the connection with UPF.
+- `upfN3`: the N3 interface address of the UPF.
+- `upfN4`: the N4 interface address of the UPF.
+
+#### 3. Run the fuzzing test
+
+You can run the fuzzing test by the following command:
+```
+go test -fuzz=Fuzz -p 1 -parallel 1 -fuzztime 15m ./fuzz/...
+```
+- `-fuzztime`: the time you want to run the fuzzing test.
+- Do not change the value of `-parallel` and `-p` flag, it will cause the race condition.
 
 ## Compile binaries
 If you don't want to use docker you can just compile the binaries of `pfcpsim` and `pfcpctl`:
