@@ -239,7 +239,10 @@ func (c *PFCPClient) DisconnectN4() {
 		c.cancelHeartbeats()
 	}
 
-	c.conn.Close()
+	err := c.conn.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func (c *PFCPClient) PeekNextHeartbeatResponse() (*message.HeartbeatResponse, error) {
@@ -523,8 +526,8 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE,
 		return nil, NewInvalidResponseError(err)
 	}
 
-	if cause, err := estResp.Cause.Cause(); err != nil || cause != ieLib.CauseRequestAccepted {
-		return nil, NewInvalidCauseError(err)
+	if cause, errCause := estResp.Cause.Cause(); errCause != nil || cause != ieLib.CauseRequestAccepted {
+		return nil, NewInvalidCauseError(errCause)
 	}
 
 	remoteSEID, err := estResp.UPFSEID.FSEID()

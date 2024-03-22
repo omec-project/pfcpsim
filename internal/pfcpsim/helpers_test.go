@@ -27,7 +27,8 @@ func Test_ParseAppFilter(t *testing.T) {
 		want    *want
 		wantErr bool
 	}{
-		{name: "Correct app filter",
+		{
+			name: "Correct app filter",
 			args: &args{
 				filterString: "udp:10.0.0.0/8:80-80:allow:100",
 			},
@@ -37,7 +38,8 @@ func Test_ParseAppFilter(t *testing.T) {
 				precedence: 100,
 			},
 		},
-		{name: "Correct app filter with deny",
+		{
+			name: "Correct app filter with deny",
 			args: &args{
 				filterString: "udp:10.0.0.0/8:80-80:deny:101",
 			},
@@ -47,7 +49,8 @@ func Test_ParseAppFilter(t *testing.T) {
 				precedence: 101,
 			},
 		},
-		{name: "Correct app filter with deny-all policy",
+		{
+			name: "Correct app filter with deny-all policy",
 			args: &args{
 				filterString: "ip:0.0.0.0/0:any:deny:102",
 			},
@@ -57,7 +60,8 @@ func Test_ParseAppFilter(t *testing.T) {
 				precedence: 102,
 			},
 		},
-		{name: "Correct app filter with deny-all policy 2",
+		{
+			name: "Correct app filter with deny-all policy 2",
 			args: &args{
 				filterString: "ip:any:any:deny:100",
 			},
@@ -67,7 +71,8 @@ func Test_ParseAppFilter(t *testing.T) {
 				precedence: 100,
 			},
 		},
-		{name: "Correct app filter with allow-all policy",
+		{
+			name: "Correct app filter with allow-all policy",
 			args: &args{
 				filterString: "ip:any:any:allow:100",
 			},
@@ -77,7 +82,8 @@ func Test_ParseAppFilter(t *testing.T) {
 				precedence: 100,
 			},
 		},
-		{name: "Correct app filter with allow-all policy 2",
+		{
+			name: "Correct app filter with allow-all policy 2",
 			args: &args{
 				filterString: "ip:0.0.0.0/0:any:allow:103",
 			},
@@ -87,28 +93,32 @@ func Test_ParseAppFilter(t *testing.T) {
 				precedence: 103,
 			},
 		},
-		{name: "incorrect app filter bad protocol",
+		{
+			name: "incorrect app filter bad protocol",
 			args: &args{
 				filterString: "test:10.0.0.0/8:80-80:allow",
 			},
 			want:    &want{},
 			wantErr: true,
 		},
-		{name: "incorrect app filter bad IP format",
+		{
+			name: "incorrect app filter bad IP format",
 			args: &args{
 				filterString: "ip:10/8:80-80:allow",
 			},
 			want:    &want{},
 			wantErr: true,
 		},
-		{name: "incorrect app filter missing precedence",
+		{
+			name: "incorrect app filter missing precedence",
 			args: &args{
 				filterString: "ip:10/8:80-80:allow",
 			},
 			want:    &want{},
 			wantErr: true,
 		},
-		{name: "incorrect app filter bad precedence",
+		{
+			name: "incorrect app filter bad precedence",
 			args: &args{
 				filterString: "ip:10/8:80-80:allow:test",
 			},

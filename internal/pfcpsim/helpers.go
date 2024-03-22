@@ -20,8 +20,10 @@ import (
 
 var notInit = errors.New("PFCP simulator is not initialized")
 
-const sdfFilterFormatWPort = "permit out %v from %v to assigned %v-%v"
-const sdfFilterFormatWOPort = "permit out %v from %v to assigned"
+const (
+	sdfFilterFormatWPort  = "permit out %v from %v to assigned %v-%v"
+	sdfFilterFormatWOPort = "permit out %v from %v to assigned"
+)
 
 func GetSimulator() *pfcpsim.PFCPClient {
 	return sim
@@ -99,7 +101,10 @@ func getLocalAddress(interfaceName string) (net.IP, error) {
 			return nil, err
 		}
 
-		addrs, _ = interfaceAddrs.Addrs()
+		addrs, err = interfaceAddrs.Addrs()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for _, address := range addrs {
