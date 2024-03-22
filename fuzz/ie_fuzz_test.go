@@ -14,11 +14,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const MaxUint = ^uint(0)
-const MaxInt = int(MaxUint >> 1)
+const (
+	MaxUint = ^uint(0)
+	MaxInt  = int(MaxUint >> 1)
+)
 
 func getRand(n int) int {
-	res, _ := rand.Int(rand.Reader, big.NewInt(int64(n)))
+	res, err := rand.Int(rand.Reader, big.NewInt(int64(n)))
+	if err != nil {
+		return n
+	}
+
 	return int(res.Int64())
 }
 

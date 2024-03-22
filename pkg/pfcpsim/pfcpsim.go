@@ -176,7 +176,10 @@ func (c *PFCPClient) receiveFromN4(ctx context.Context) {
 				c.cancelHeartbeats()
 			}
 
-			c.conn.Close()
+			err := c.conn.Close()
+			if err != nil {
+				fmt.Println(err)
+			}
 
 			return
 		default:
@@ -264,7 +267,7 @@ func (c *PFCPClient) PeekNextResponse() (message.Message, error) {
 
 	for {
 		select {
-		case resMsg := <-c.recvChan:
+		case resMsg = <-c.recvChan:
 			if !delay.Stop() {
 				<-delay.C
 			}
@@ -347,7 +350,8 @@ func (c *PFCPClient) SendHeartbeatRequest() error {
 }
 
 func (c *PFCPClient) SendSessionEstablishmentRequest(pdrs []*ieLib.IE, fars []*ieLib.IE,
-	qers []*ieLib.IE, urrs []*ieLib.IE) error {
+	qers []*ieLib.IE, urrs []*ieLib.IE,
+) error {
 	estReq := message.NewSessionEstablishmentRequest(
 		0,
 		0,
@@ -506,7 +510,8 @@ func (c *PFCPClient) TeardownAssociation() error {
 // EstablishSession sends PFCP Session Establishment Request and waits for PFCP Session Establishment Response.
 // Returns a pointer to a new PFCPSession. Returns error if the process fails at any stage.
 func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE,
-	qers []*ieLib.IE, urrs []*ieLib.IE) (*PFCPSession, error) {
+	qers []*ieLib.IE, urrs []*ieLib.IE,
+) (*PFCPSession, error) {
 	if !c.isAssociationActive {
 		return nil, NewAssociationInactiveError()
 	}
@@ -544,7 +549,8 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE,
 }
 
 func (c *PFCPClient) ModifySession(sess *PFCPSession, pdrs []*ieLib.IE, fars []*ieLib.IE,
-	qers []*ieLib.IE, urrs []*ieLib.IE) error {
+	qers []*ieLib.IE, urrs []*ieLib.IE,
+) error {
 	if !c.isAssociationActive {
 		return NewAssociationInactiveError()
 	}

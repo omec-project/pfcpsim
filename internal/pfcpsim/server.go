@@ -363,7 +363,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 
 			newFARs = append(newFARs, downlinkFAR)
 
-			urrId := uint32(ID)
+			urrId := ID
 			urr := session.NewURRBuilder().
 				WithID(urrId).
 				WithMethod(session.Update).

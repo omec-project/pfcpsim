@@ -31,12 +31,14 @@ func SetCheck(check bool) {
 	doCheck = check
 }
 
-const PdrNoFuzz = 0
-const PdrWithPrecedence = 1
-const PdrWithTEID = 2
-const PdrAddQERID = 3
-const PdrWithFARID = 4
-const PdrMax = 5
+const (
+	PdrNoFuzz         = 0
+	PdrWithPrecedence = 1
+	PdrWithTEID       = 2
+	PdrAddQERID       = 3
+	PdrWithFARID      = 4
+	PdrMax            = 5
+)
 
 func NewPDRBuilder() *pdrBuilder {
 	return &pdrBuilder{

@@ -27,11 +27,13 @@ type urrBuilder struct {
 	volumeQuota       *volumeQuota
 }
 
-const UrrNoFuzz = 0
-const UrrWithMeasurementInfo = 1
-const UrrWithMeasurementMethod = 2
-const UrrWithMeasurementPeriod = 3
-const UrrMax = 4
+const (
+	UrrNoFuzz                = 0
+	UrrWithMeasurementInfo   = 1
+	UrrWithMeasurementMethod = 2
+	UrrWithMeasurementPeriod = 3
+	UrrMax                   = 4
+)
 
 // NewURRBuilder returns a urrBuilder.
 func NewURRBuilder() *urrBuilder {

@@ -24,14 +24,16 @@ type qerBuilder struct {
 	isIDSet bool
 }
 
-const QerNoFuzz = 0
-const QerWithQFI = 1
-const QerWithUplinkMBR = 2
-const QerWithUplinkGBR = 3
-const QerWithDownlinkMBR = 4
-const QerWithDownlinkGBR = 5
-const QerWithGateStatus = 6
-const QerMax = 7
+const (
+	QerNoFuzz          = 0
+	QerWithQFI         = 1
+	QerWithUplinkMBR   = 2
+	QerWithUplinkGBR   = 3
+	QerWithDownlinkMBR = 4
+	QerWithDownlinkGBR = 5
+	QerWithGateStatus  = 6
+	QerMax             = 7
+)
 
 func NewQERBuilder() *qerBuilder {
 	return &qerBuilder{}

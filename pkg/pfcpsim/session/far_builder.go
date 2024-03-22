@@ -22,11 +22,13 @@ type farBuilder struct {
 	isInterfaceSet       bool
 }
 
-const FarNoFuzz = 0
-const FarWithAction = 1
-const FarWithTEID = 2
-const FarWithDstInterface = 3
-const FarMax = 4
+const (
+	FarNoFuzz           = 0
+	FarWithAction       = 1
+	FarWithTEID         = 2
+	FarWithDstInterface = 3
+	FarMax              = 4
+)
 
 // NewFARBuilder returns a farBuilder.
 func NewFARBuilder() *farBuilder {

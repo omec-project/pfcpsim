@@ -107,13 +107,13 @@ func (c *PfcpSimCfg) Deassociate() error {
 	return nil
 }
 
-type SessionIEs struct {
-}
+type SessionIEs struct{}
 
 func (c *PfcpSimCfg) CreateSession(baseID int,
 	pdrBuilder, qerBuilder, farBuilder, urrBuilder int,
-	fuzz uint) error {
-	var uePool = "10.60.0.0/15"
+	fuzz uint,
+) error {
+	uePool := "10.60.0.0/15"
 
 	appFilters := []string{""}
 	count := 1
@@ -291,7 +291,8 @@ func (c *PfcpSimCfg) CreateSession(baseID int,
 
 func (c *PfcpSimCfg) ModifySession(baseID int,
 	farBuilder, urrBuilder int,
-	fuzz uint) error {
+	fuzz uint,
+) error {
 	var actions uint8
 
 	actions |= session.ActionNotify
@@ -320,7 +321,7 @@ func (c *PfcpSimCfg) ModifySession(baseID int,
 
 			newFARs = append(newFARs, downlinkFAR)
 
-			urrId := uint32(ID)
+			urrId := ID
 			urr := session.NewURRBuilder().
 				WithID(urrId).
 				WithMethod(session.Update).
