@@ -108,8 +108,7 @@ func getLocalAddress(interfaceName string) (net.IP, error) {
 	}
 
 	for _, address := range addrs {
-		// Check address type to be non-loopback
-		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+		if ipnet, ok := address.(*net.IPNet); ok {
 			if ipnet.IP.To4() != nil {
 				return ipnet.IP, nil
 			}
