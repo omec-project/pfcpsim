@@ -62,7 +62,7 @@ docker exec pfcpsim pfcpctl --server localhost:12345 service disassociate
 
 ### Fuzzing Mode
 
-Pfcpsim is able to generate malformed PFCP messages and can be used to explore the the potential vulnerabilities of PFCP agents (UPF).
+Pfcpsim is able to generate malformed PFCP messages and can be used to explore potential vulnerabilities of PFCP agents (UPF).
 
 > Note:
 > PFCP fuzzer is developed by the [Ian Chen (free5GC team)](https://github.com/ianchen0119)
@@ -97,7 +97,7 @@ go test -fuzz=Fuzz -p 1 -parallel 1 -fuzztime 15m ./fuzz/... -args -iface=lo -up
 ```
 - `-fuzztime`: the time you want to run the fuzzing test.
 - Do not change the value of either `-parallel` or `-p` flag because it will cause the race condition.
-- The example output for fuzzing test:
+- The output for the fuzzing test looks like this:
 ```
 fuzz: elapsed: 0s, gathering baseline coverage: 0/100 completed
 fuzz: elapsed: 3s, gathering baseline coverage: 0/100 completed
@@ -110,10 +110,10 @@ fuzz: elapsed: 15m1s, execs: 111 (0/sec), new interesting: 0 (total: 100)
 PASS
 ok  	github.com/omec-project/pfcpsim/fuzz	900.684s
 ```
-- If the test result shows "PASS" and the UPF didn't crash, it means you have passed the fuzzy test!
+- If the test result shows "PASS" and the UPF didn't crash, it means that the fuzzy test was successful!
+- ```
 
-
-- If Pfcpsim can't connect to UPF:
+- If Pfcpsim can't connect to the UPF, the user will see an output like this:
 ```
 ...
 failure while testing seed corpus entry: Fuzz/seed#0
