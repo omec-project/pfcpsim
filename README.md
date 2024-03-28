@@ -62,17 +62,17 @@ docker exec pfcpsim pfcpctl --server localhost:12345 service disassociate
 
 ### Fuzzing Mode
 
-Pfcpsim is able to generate the malformed PFCP message, it can be used to explore the the potential vulnerabilities of the PFCP agents (UPF).
+Pfcpsim is able to generate malformed PFCP messages and can be used to explore the the potential vulnerabilities of PFCP agents (UPF).
 
 > Note:
 > PFCP fuzzer is developed by the [Ian Chen (free5GC team)](https://github.com/ianchen0119)
-> PFCP fuzzer has been used to test the UPF implementation of the free5GC project, and successfully found some vulnerabilities.
+> PFCP fuzzer was used to test the UPF implementation of the free5GC project, and successfully found some vulnerabilities.
 
 To use the PFCP fuzzer, we need to prepare the fuzzing environment first. The following steps show how to use the PFCP fuzzer.
 
 #### 1. Launch the UPF instance
 
-Pfcpsim support to test various UPF implementations.
+Pfcpsim supports to test various UPF implementations.
 You can choose the UPF implementation you want to test, and launch the UPF instance.
 
 #### 2. Change the configuration in `fuzz/ie_fuzz_test.go`
@@ -89,10 +89,51 @@ sim := export.NewPfcpSimCfg(iface, upfN3, upfN4)
 
 You can run the fuzzing test by the following command:
 ```
-go test -fuzz=Fuzz -p 1 -parallel 1 -fuzztime 15m ./fuzz/...
+go test -fuzz=Fuzz -p 1 -parallel 1 -fuzztime 15m ./fuzz/... 
+```
+To specify args:
+```
+go test -fuzz=Fuzz -p 1 -parallel 1 -fuzztime 15m ./fuzz/... -args -iface=lo -upfN3=192.168.0.5 -upfN4=127.0.0.8
 ```
 - `-fuzztime`: the time you want to run the fuzzing test.
-- Do not change the value of `-parallel` and `-p` flag, it will cause the race condition.
+- Do not change the value of either `-parallel` or `-p` flag because it will cause the race condition.
+- The example output for fuzzing test:
+```
+fuzz: elapsed: 0s, gathering baseline coverage: 0/100 completed
+fuzz: elapsed: 3s, gathering baseline coverage: 0/100 completed
+...
+fuzz: elapsed: 13m21s, gathering baseline coverage: 99/100 completed
+fuzz: elapsed: 13m21s, gathering baseline coverage: 100/100 completed, now fuzzing with 1 workers
+fuzz: elapsed: 13m24s, execs: 100 (0/sec), new interesting: 0 (total: 100)
+...
+fuzz: elapsed: 15m1s, execs: 111 (0/sec), new interesting: 0 (total: 100)
+PASS
+ok  	github.com/omec-project/pfcpsim/fuzz	900.684s
+```
+- If the test result shows "PASS" and the UPF didn't crash, it means you have passed the fuzzy test!
+
+
+- If Pfcpsim can't connect to UPF:
+```
+...
+failure while testing seed corpus entry: Fuzz/seed#0
+fuzz: elapsed: 5s, gathering baseline coverage: 0/106 completed
+--- FAIL: Fuzz (5.02s)
+    --- FAIL: Fuzz (5.00s)
+        ie_fuzz_test.go:57: 
+                Error Trace:    /home/xxxx/pfcpsim/fuzz/ie_fuzz_test.go:57
+                                                        /usr/local/go/src/reflect/value.go:556
+                                                        /usr/local/go/src/reflect/value.go:339
+                                                        /usr/local/go/src/testing/fuzz.go:337
+                Error:          Received unexpected error:
+                                route ip+net: no such network interface
+                Test:           Fuzz
+                Messages:       InitPFCPSim failed
+    
+FAIL
+exit status 1
+FAIL    github.com/omec-project/pfcpsim/fuzz    5.023s
+```
 
 ## Compile binaries
 If you don't want to use docker you can just compile the binaries of `pfcpsim` and `pfcpctl`:
