@@ -3,6 +3,7 @@
 # pfcpsim
 pfcpsim is a simulator to interact with PFCP agents. Can be used to simulate a 4G SGW-C / 5G SMF.
 
+> All related features are implemented according to the 3GPP TS 29.244 V16.3.1(2020-04).
 ## Overview
 
 pfcpsim is designed to work within a containerized environment. The docker image comes with both client (`pfcpctl`) and server (`pfcpsim`).
@@ -13,7 +14,9 @@ pfcpsim is designed to work within a containerized environment. The docker image
 
 ## Getting Started
 
-#### 1. Create the container. Images are available on [Dockerhub](https://hub.docker.com/r/opennetworking/pfcpsim/tags):
+### Normal Case
+
+#### 1. Create the container. Images are available on [DockerHub](https://hub.docker.com/r/opennetworking/pfcpsim/tags):
 ```bash
 docker container run --rm -d --name pfcpsim pfcpsim:<image_tag> -p 12345 --interface <interface-name>
 ```
@@ -55,6 +58,81 @@ docker exec pfcpsim pfcpctl --server localhost:12345 session delete --count 5 --
 #### 6. `disassociate` command will perform disassociation and close connection with remote peer.
 ```bash
 docker exec pfcpsim pfcpctl --server localhost:12345 service disassociate
+```
+
+### Fuzzing Mode
+
+Pfcpsim is able to generate malformed PFCP messages and can be used to explore potential vulnerabilities of PFCP agents (UPF).
+
+> Note:
+> PFCP fuzzer is developed by the [Ian Chen (free5GC team)](https://github.com/ianchen0119)
+> PFCP fuzzer was used to test the UPF implementation of the free5GC project, and successfully found some vulnerabilities.
+
+To use the PFCP fuzzer, we need to prepare the fuzzing environment first. The following steps show how to use the PFCP fuzzer.
+
+#### 1. Launch the UPF instance
+
+Pfcpsim supports to test various UPF implementations.
+You can choose the UPF implementation you want to test, and launch the UPF instance.
+
+#### 2. Change the configuration in `fuzz/ie_fuzz_test.go`
+
+You should change the configuration in `fuzz/ie_fuzz_test.go`:
+```go=
+sim := export.NewPfcpSimCfg(iface, upfN3, upfN4)
+```
+- `iface`: the interface name you used to establish the connection with UPF.
+- `upfN3`: the N3 interface address of the UPF.
+- `upfN4`: the N4 interface address of the UPF.
+
+#### 3. Run the fuzzing test
+
+You can run the fuzzing test by the following command:
+```
+go test -fuzz=Fuzz -p 1 -parallel 1 -fuzztime 15m ./fuzz/... 
+```
+To specify args:
+```
+go test -fuzz=Fuzz -p 1 -parallel 1 -fuzztime 15m ./fuzz/... -args -iface=lo -upfN3=192.168.0.5 -upfN4=127.0.0.8
+```
+- `-fuzztime`: the time you want to run the fuzzing test.
+- Do not change the value of either `-parallel` or `-p` flag because it will cause the race condition.
+- The output for the fuzzing test looks like this:
+```
+fuzz: elapsed: 0s, gathering baseline coverage: 0/100 completed
+fuzz: elapsed: 3s, gathering baseline coverage: 0/100 completed
+...
+fuzz: elapsed: 13m21s, gathering baseline coverage: 99/100 completed
+fuzz: elapsed: 13m21s, gathering baseline coverage: 100/100 completed, now fuzzing with 1 workers
+fuzz: elapsed: 13m24s, execs: 100 (0/sec), new interesting: 0 (total: 100)
+...
+fuzz: elapsed: 15m1s, execs: 111 (0/sec), new interesting: 0 (total: 100)
+PASS
+ok  	github.com/omec-project/pfcpsim/fuzz	900.684s
+```
+- If the test result shows "PASS" and the UPF didn't crash, it means that the fuzzy test was successful!
+- ```
+
+- If Pfcpsim can't connect to the UPF, the user will see an output like this:
+```
+...
+failure while testing seed corpus entry: Fuzz/seed#0
+fuzz: elapsed: 5s, gathering baseline coverage: 0/106 completed
+--- FAIL: Fuzz (5.02s)
+    --- FAIL: Fuzz (5.00s)
+        ie_fuzz_test.go:57: 
+                Error Trace:    /home/xxxx/pfcpsim/fuzz/ie_fuzz_test.go:57
+                                                        /usr/local/go/src/reflect/value.go:556
+                                                        /usr/local/go/src/reflect/value.go:339
+                                                        /usr/local/go/src/testing/fuzz.go:337
+                Error:          Received unexpected error:
+                                route ip+net: no such network interface
+                Test:           Fuzz
+                Messages:       InitPFCPSim failed
+    
+FAIL
+exit status 1
+FAIL    github.com/omec-project/pfcpsim/fuzz    5.023s
 ```
 
 ## Compile binaries

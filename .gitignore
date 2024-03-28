@@ -1,9 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2022-present Open Networking Foundation
 
+.fuzz/test_data
 .idea/
 .coverage/
 output
 *.pyc
 *.swp
 *.log
+client
+server

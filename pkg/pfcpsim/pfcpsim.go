@@ -5,11 +5,13 @@ package pfcpsim
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"sync"
 	"time"
 
+	"github.com/wmnsk/go-pfcp/ie"
 	ieLib "github.com/wmnsk/go-pfcp/ie"
 	"github.com/wmnsk/go-pfcp/message"
 )
@@ -19,6 +21,56 @@ const (
 	DefaultHeartbeatPeriod = 5
 	DefaultResponseTimeout = 5 * time.Second
 )
+
+var (
+	activeSessions     = make(map[int]*PFCPSession, 0)
+	lockActiveSessions = new(sync.Mutex)
+	wrongRspType       = errors.New("unexpected response type")
+	assocFailed        = errors.New("association failed")
+)
+
+func GetActiveSessionNum() int {
+	lockActiveSessions.Lock()
+	defer lockActiveSessions.Unlock()
+
+	return len(activeSessions)
+}
+
+func InsertSession(index int, session *PFCPSession) {
+	lockActiveSessions.Lock()
+	defer lockActiveSessions.Unlock()
+
+	activeSessions[index] = session
+}
+
+func GetSession(index int) (*PFCPSession, bool) {
+	lockActiveSessions.Lock()
+	defer lockActiveSessions.Unlock()
+
+	element, ok := activeSessions[index]
+
+	return element, ok
+}
+
+func GetSessionByLocalSEID(seid uint64) (*PFCPSession, bool) {
+	lockActiveSessions.Lock()
+	defer lockActiveSessions.Unlock()
+
+	for _, session := range activeSessions {
+		if session.localSEID == seid {
+			return session, true
+		}
+	}
+
+	return nil, false
+}
+
+func RemoveSession(index int) {
+	lockActiveSessions.Lock()
+	defer lockActiveSessions.Unlock()
+
+	delete(activeSessions, index)
+}
 
 // PFCPClient enables to simulate a client sending PFCP messages towards the UPF.
 // It provides two usage modes:
@@ -42,8 +94,9 @@ type PFCPClient struct {
 	sequenceNumber uint32
 	seqNumLock     sync.Mutex
 
-	localAddr string
-	conn      *net.UDPConn
+	localAddr  string
+	remoteAddr string
+	conn       *net.UDPConn
 
 	// responseTimeout timeout to wait for PFCP response (default: 5 seconds)
 	responseTimeout time.Duration
@@ -101,40 +154,63 @@ func (c *PFCPClient) sendMsg(msg message.Message) error {
 		return err
 	}
 
-	if _, err := c.conn.Write(b); err != nil {
+	raddr, err := net.ResolveUDPAddr("udp", c.remoteAddr)
+	if err != nil {
+		return err
+	}
+
+	if _, err := c.conn.WriteTo(b, raddr); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (c *PFCPClient) receiveFromN4() {
-	buf := make([]byte, 1500)
+func (c *PFCPClient) receiveFromN4(ctx context.Context) {
+	buf := make([]byte, 3000)
 
 	for {
-		n, _, err := c.conn.ReadFrom(buf)
-		if err != nil {
-			continue
-		}
+		select {
+		case <-ctx.Done():
+			if c.cancelHeartbeats != nil {
+				c.cancelHeartbeats()
+			}
 
-		msg, err := message.Parse(buf[:n])
-		if err != nil {
-			continue
-		}
+			err := c.conn.Close()
+			if err != nil {
+				fmt.Println(err)
+			}
 
-		switch msg := msg.(type) {
-		case *message.HeartbeatResponse:
-			c.heartbeatsChan <- msg
-
-		case *message.SessionReportRequest:
-			// Ignore message
+			return
 		default:
-			c.recvChan <- msg
+			n, _, err := c.conn.ReadFrom(buf)
+			if err != nil {
+				continue
+			}
+
+			msg, err := message.Parse(buf[:n])
+			if err != nil {
+				continue
+			}
+
+			switch msg := msg.(type) {
+			case *message.HeartbeatResponse:
+				c.heartbeatsChan <- msg
+			case *message.HeartbeatRequest:
+				// ignore HeartbeatRequest
+				continue
+			case *message.SessionReportRequest:
+				if c.handleSessionReportRequest(msg) {
+					continue
+				}
+			default:
+				c.recvChan <- msg
+			}
 		}
 	}
 }
 
-func (c *PFCPClient) ConnectN4(remoteAddr string) error {
+func (c *PFCPClient) ConnectN4(ctx context.Context, remoteAddr string) error {
 	addr := fmt.Sprintf("%s:%d", remoteAddr, PFCPStandardPort)
 
 	if host, port, err := net.SplitHostPort(remoteAddr); err == nil {
@@ -142,19 +218,21 @@ func (c *PFCPClient) ConnectN4(remoteAddr string) error {
 		addr = fmt.Sprintf("%s:%s", host, port)
 	}
 
-	raddr, err := net.ResolveUDPAddr("udp", addr)
+	c.remoteAddr = addr
+
+	laddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", c.localAddr, PFCPStandardPort))
 	if err != nil {
 		return err
 	}
 
-	conn, err := net.DialUDP("udp", nil, raddr)
+	rxconn, err := net.ListenUDP("udp4", laddr)
 	if err != nil {
 		return err
 	}
 
-	c.conn = conn
+	c.conn = rxconn
 
-	go c.receiveFromN4()
+	go c.receiveFromN4(ctx)
 
 	return nil
 }
@@ -201,6 +279,40 @@ func (c *PFCPClient) PeekNextResponse() (message.Message, error) {
 	}
 }
 
+// MsgTypeSessionReportRequest: sent by the UP function to the CP function to report information related to an PFCP session
+// MsgTypeSessionReportResponse: sent by the CP function to the UP function as a reply to the Session Report Request.
+func (c *PFCPClient) handleSessionReportRequest(msg *message.SessionReportRequest) bool {
+	if msg.MessageType() == message.MsgTypeSessionReportRequest {
+		fmt.Println("Session Report Request received")
+
+		err := c.sendSessionReportResponse(msg.Sequence(),
+			msg.Header.SEID)
+		if err != nil {
+			fmt.Println("Error sending Session Report Response")
+		}
+
+		return true
+	}
+
+	return false
+}
+
+func (c *PFCPClient) sendSessionReportResponse(seq uint32, seid uint64) error {
+	var rseid uint64
+
+	sess, ok := GetSessionByLocalSEID(seid)
+	if !ok {
+		rseid = 0
+	} else {
+		rseid = sess.peerSEID
+	}
+
+	res := message.NewSessionReportResponse(0, 0, rseid, seq, 0,
+		ie.NewCause(ie.CauseRequestAccepted))
+
+	return c.sendMsg(res)
+}
+
 func (c *PFCPClient) SendAssociationSetupRequest(ie ...*ieLib.IE) error {
 	c.resetSequenceNumber()
 
@@ -237,7 +349,9 @@ func (c *PFCPClient) SendHeartbeatRequest() error {
 	return c.sendMsg(hbReq)
 }
 
-func (c *PFCPClient) SendSessionEstablishmentRequest(pdrs []*ieLib.IE, fars []*ieLib.IE, qers []*ieLib.IE) error {
+func (c *PFCPClient) SendSessionEstablishmentRequest(pdrs []*ieLib.IE, fars []*ieLib.IE,
+	qers []*ieLib.IE, urrs []*ieLib.IE,
+) error {
 	estReq := message.NewSessionEstablishmentRequest(
 		0,
 		0,
@@ -251,11 +365,12 @@ func (c *PFCPClient) SendSessionEstablishmentRequest(pdrs []*ieLib.IE, fars []*i
 	estReq.CreatePDR = append(estReq.CreatePDR, pdrs...)
 	estReq.CreateFAR = append(estReq.CreateFAR, fars...)
 	estReq.CreateQER = append(estReq.CreateQER, qers...)
+	estReq.CreateURR = append(estReq.CreateURR, urrs...)
 
 	return c.sendMsg(estReq)
 }
 
-func (c *PFCPClient) SendSessionModificationRequest(PeerSEID uint64, pdrs []*ieLib.IE, qers []*ieLib.IE, fars []*ieLib.IE) error {
+func (c *PFCPClient) SendSessionModificationRequest(PeerSEID uint64, pdrs []*ieLib.IE, qers []*ieLib.IE, fars []*ieLib.IE, urrs []*ieLib.IE) error {
 	modifyReq := message.NewSessionModificationRequest(
 		0,
 		0,
@@ -267,6 +382,7 @@ func (c *PFCPClient) SendSessionModificationRequest(PeerSEID uint64, pdrs []*ieL
 	modifyReq.UpdatePDR = append(modifyReq.UpdatePDR, pdrs...)
 	modifyReq.UpdateFAR = append(modifyReq.UpdateFAR, fars...)
 	modifyReq.UpdateQER = append(modifyReq.UpdateQER, qers...)
+	modifyReq.UpdateURR = append(modifyReq.UpdateURR, urrs...)
 
 	return c.sendMsg(modifyReq)
 }
@@ -332,7 +448,7 @@ func (c *PFCPClient) SetupAssociation() error {
 
 	assocResp, ok := resp.(*message.AssociationSetupResponse)
 	if !ok {
-		return NewInvalidResponseError()
+		return NewInvalidResponseError(wrongRspType)
 	}
 
 	cause, err := assocResp.Cause.Cause()
@@ -341,7 +457,7 @@ func (c *PFCPClient) SetupAssociation() error {
 	}
 
 	if cause != ieLib.CauseRequestAccepted {
-		return NewInvalidResponseError()
+		return NewInvalidResponseError(assocFailed)
 	}
 
 	ctx, cancelFunc := context.WithCancel(c.ctx)
@@ -393,12 +509,14 @@ func (c *PFCPClient) TeardownAssociation() error {
 
 // EstablishSession sends PFCP Session Establishment Request and waits for PFCP Session Establishment Response.
 // Returns a pointer to a new PFCPSession. Returns error if the process fails at any stage.
-func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers []*ieLib.IE) (*PFCPSession, error) {
+func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE,
+	qers []*ieLib.IE, urrs []*ieLib.IE,
+) (*PFCPSession, error) {
 	if !c.isAssociationActive {
 		return nil, NewAssociationInactiveError()
 	}
 
-	err := c.SendSessionEstablishmentRequest(pdrs, fars, qers)
+	err := c.SendSessionEstablishmentRequest(pdrs, fars, qers, urrs)
 	if err != nil {
 		return nil, err
 	}
@@ -430,12 +548,14 @@ func (c *PFCPClient) EstablishSession(pdrs []*ieLib.IE, fars []*ieLib.IE, qers [
 	return sess, nil
 }
 
-func (c *PFCPClient) ModifySession(sess *PFCPSession, pdrs []*ieLib.IE, fars []*ieLib.IE, qers []*ieLib.IE) error {
+func (c *PFCPClient) ModifySession(sess *PFCPSession, pdrs []*ieLib.IE, fars []*ieLib.IE,
+	qers []*ieLib.IE, urrs []*ieLib.IE,
+) error {
 	if !c.isAssociationActive {
 		return NewAssociationInactiveError()
 	}
 
-	err := c.SendSessionModificationRequest(sess.peerSEID, pdrs, fars, qers)
+	err := c.SendSessionModificationRequest(sess.peerSEID, pdrs, fars, qers, urrs)
 	if err != nil {
 		return err
 	}
