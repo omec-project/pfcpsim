@@ -111,7 +111,6 @@ PASS
 ok  	github.com/omec-project/pfcpsim/fuzz	900.684s
 ```
 - If the test result shows "PASS" and the UPF didn't crash, it means that the fuzzy test was successful!
-- ```
 
 - If Pfcpsim can't connect to the UPF, the user will see an output like this:
 ```
