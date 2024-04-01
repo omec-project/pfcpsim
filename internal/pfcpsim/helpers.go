@@ -4,7 +4,6 @@
 package pfcpsim
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net"
