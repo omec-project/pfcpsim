@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2022-present Open Networking Foundation
 
@@ -166,16 +167,12 @@ func (c *PFCPClient) sendMsg(msg message.Message) error {
 	return nil
 }
 
-func (c *PFCPClient) receiveFromN4(ctx context.Context) {
+func (c *PFCPClient) receiveFromN4() {
 	buf := make([]byte, 3000)
 
 	for {
 		select {
-		case <-ctx.Done():
-			if c.cancelHeartbeats != nil {
-				c.cancelHeartbeats()
-			}
-
+		case <-c.ctx.Done():
 			err := c.conn.Close()
 			if err != nil {
 				fmt.Println(err)
@@ -210,7 +207,7 @@ func (c *PFCPClient) receiveFromN4(ctx context.Context) {
 	}
 }
 
-func (c *PFCPClient) ConnectN4(ctx context.Context, remoteAddr string) error {
+func (c *PFCPClient) ConnectN4(remoteAddr string) error {
 	addr := fmt.Sprintf("%s:%d", remoteAddr, PFCPStandardPort)
 
 	if host, port, err := net.SplitHostPort(remoteAddr); err == nil {
@@ -232,7 +229,7 @@ func (c *PFCPClient) ConnectN4(ctx context.Context, remoteAddr string) error {
 
 	c.conn = rxconn
 
-	go c.receiveFromN4(ctx)
+	go c.receiveFromN4()
 
 	return nil
 }
