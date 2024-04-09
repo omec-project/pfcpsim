@@ -85,8 +85,8 @@ type PFCPClient struct {
 	aliveLock           sync.Mutex
 	isAssociationActive bool
 
-	ctx              context.Context
-	cancelHeartbeats context.CancelFunc
+	ctx    context.Context
+	cancel context.CancelFunc
 
 	heartbeatsChan chan *message.HeartbeatResponse
 	recvChan       chan message.Message
@@ -109,7 +109,9 @@ func NewPFCPClient(localAddr string) *PFCPClient {
 		responseTimeout: DefaultResponseTimeout,
 	}
 
-	client.ctx = context.Background()
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	client.ctx = ctx
+	client.cancel = cancelFunc
 	client.heartbeatsChan = make(chan *message.HeartbeatResponse)
 	client.recvChan = make(chan message.Message)
 
@@ -172,11 +174,6 @@ func (c *PFCPClient) receiveFromN4() {
 	for {
 		select {
 		case <-c.ctx.Done():
-			err := c.conn.Close()
-			if err != nil {
-				fmt.Println(err)
-			}
-
 			return
 		default:
 			n, _, err := c.conn.ReadFrom(buf)
@@ -234,8 +231,9 @@ func (c *PFCPClient) ConnectN4(remoteAddr string) error {
 }
 
 func (c *PFCPClient) DisconnectN4() {
-	if c.cancelHeartbeats != nil {
-		c.cancelHeartbeats()
+	if c.cancel != nil {
+		c.cancel()
+		c.cancel = nil
 	}
 
 	err := c.conn.Close()
@@ -326,8 +324,13 @@ func (c *PFCPClient) SendAssociationSetupRequest(ie ...*ieLib.IE) error {
 // SendAssociationTeardownRequest sends PFCP Teardown Request towards a peer.
 // A caller should make sure that the PFCP connection is established before invoking this function.
 func (c *PFCPClient) SendAssociationTeardownRequest(ie ...*ieLib.IE) error {
+	raddr, err := net.ResolveUDPAddr("udp", c.remoteAddr)
+	if err != nil {
+		return err
+	}
+
 	teardownReq := message.NewAssociationReleaseRequest(0,
-		ieLib.NewNodeID(c.conn.RemoteAddr().String(), "", ""),
+		ieLib.NewNodeID(raddr.String(), "", ""),
 	)
 
 	teardownReq.IEs = append(teardownReq.IEs, ie...)
@@ -396,12 +399,12 @@ func (c *PFCPClient) SendSessionDeletionRequest(localSEID uint64, remoteSEID uin
 	return c.sendMsg(delReq)
 }
 
-func (c *PFCPClient) StartHeartbeats(stopCtx context.Context) {
+func (c *PFCPClient) StartHeartbeats() {
 	ticker := time.NewTicker(DefaultHeartbeatPeriod * time.Second)
 
 	for {
 		select {
-		case <-stopCtx.Done():
+		case <-c.ctx.Done():
 			return
 		case <-ticker.C:
 			err := c.SendAndRecvHeartbeat()
@@ -456,12 +459,9 @@ func (c *PFCPClient) SetupAssociation() error {
 		return NewInvalidResponseError(assocFailed)
 	}
 
-	ctx, cancelFunc := context.WithCancel(c.ctx)
-	c.cancelHeartbeats = cancelFunc
-
 	c.setAssociationStatus(true)
 
-	go c.StartHeartbeats(ctx)
+	go c.StartHeartbeats()
 
 	return nil
 }
@@ -494,8 +494,9 @@ func (c *PFCPClient) TeardownAssociation() error {
 		return NewInvalidResponseError()
 	}
 
-	if c.cancelHeartbeats != nil {
-		c.cancelHeartbeats()
+	if c.cancel != nil {
+		c.cancel()
+		c.cancel = nil
 	}
 
 	c.setAssociationStatus(false)
