@@ -4,7 +4,6 @@
 package pfcpsim
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -39,15 +38,11 @@ func ConnectPFCPSim() error {
 		sim = pfcpsim.NewPFCPClient(localAddr.String())
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-
-	err := sim.ConnectN4(ctx, remotePeerAddress)
+	err := sim.ConnectN4(remotePeerAddress)
 	if err != nil {
-		cancel()
 		return err
 	}
 
-	cancelFunc = cancel
 	remotePeerConnected = true
 
 	return nil
@@ -58,9 +53,7 @@ func DisconnectPFCPSim() error {
 		return notInit
 	}
 
-	cancelFunc()
-
-	return nil
+	return sim.TeardownAssociation()
 }
 
 func isConfigured() bool {

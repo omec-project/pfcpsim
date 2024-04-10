@@ -4,8 +4,6 @@
 package pfcpsim
 
 import (
-	"context"
-
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
 )
 
@@ -18,5 +16,4 @@ var (
 	// Emulates 5G SMF/ 4G SGW
 	sim                 *pfcpsim.PFCPClient
 	remotePeerConnected bool
-	cancelFunc          context.CancelFunc
 )
