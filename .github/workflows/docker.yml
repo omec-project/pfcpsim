@@ -9,7 +9,7 @@ on:
 
 jobs:
   push-images:
-    name: Build
+    if: github.repository_owner == 'omec-project'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
