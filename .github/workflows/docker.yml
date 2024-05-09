@@ -30,7 +30,7 @@ jobs:
       # Verify that protobuf is in sync with changes
       - name: Check protobuf is sync
         if: ${{ steps.check.outputs.PORCELAIN != '' }}
-        uses: actions/github-script@v3
+        uses: actions/github-script@v7
         with:
           script: |
             core.setFailed('Please run make build-proto and commit changes to compiled protobuf')
