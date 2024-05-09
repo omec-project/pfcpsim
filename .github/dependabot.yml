@@ -8,13 +8,22 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "wednesday"
+      time: "21:00"
+      timezone: "America/Los_Angeles"
 
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "wednesday"
+      time: "21:00"
+      timezone: "America/Los_Angeles"
 
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "wednesday"
+      time: "21:00"
+      timezone: "America/Los_Angeles"
