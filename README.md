@@ -42,7 +42,7 @@ docker exec pfcpsim pfcpctl -s localhost:12345 service associate
 
 #### 4. Create 5 sessions
 ```bash
-docker exec pfcpsim pfcpctl -s localhost:12345 session create --count 5 --baseID 2 --ue-pool <CIDR-IP-pool> --gnb-addr <GNodeB-address> --sdf-filter 'permit out ip from 0.0.0.0/0 to assigned 81-81'
+docker exec pfcpsim pfcpctl -s localhost:12345 session create --count 5 --baseID 2 --ue-pool <CIDR-IP-pool> --gnb-addr <GNodeB-address> --app-filter='udp:0.0.0.0/0:any:allow:100'
 ```
  - `--count` the amount of sessions to create
  - `--baseID` the base ID used to incrementally create sessions
