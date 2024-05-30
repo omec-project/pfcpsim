@@ -15,7 +15,7 @@ const (
 )
 
 var GlobalOptions struct {
-	Server string `short:"s" long:"server" default:"" value-name:"SERVER:PORT" description:"IP/Host and port of pfcpsim gRPC Server"`
+	Server string `short:"s" long:"server" default:"" value-name:"SERVER:PORT" description:"gRPC Server IP/Host and port"`
 }
 
 type GlobalConfigSpec struct {

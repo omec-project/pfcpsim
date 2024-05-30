@@ -273,8 +273,10 @@ func (c *PFCPClient) PeekNextResponse() (message.Message, error) {
 	}
 }
 
-// MsgTypeSessionReportRequest: sent by the UP function to the CP function to report information related to an PFCP session
-// MsgTypeSessionReportResponse: sent by the CP function to the UP function as a reply to the Session Report Request.
+// MsgTypeSessionReportRequest: sent by the UP function to the CP function to
+// report information related to an PFCP session
+// MsgTypeSessionReportResponse: sent by the CP function to the UP function as
+// a reply to the Session Report Request.
 func (c *PFCPClient) handleSessionReportRequest(msg *message.SessionReportRequest) bool {
 	if msg.MessageType() == message.MsgTypeSessionReportRequest {
 		fmt.Println("Session Report Request received")
@@ -322,7 +324,8 @@ func (c *PFCPClient) SendAssociationSetupRequest(ie ...*ieLib.IE) error {
 }
 
 // SendAssociationTeardownRequest sends PFCP Teardown Request towards a peer.
-// A caller should make sure that the PFCP connection is established before invoking this function.
+// A caller should make sure that the PFCP connection is established before
+// invoking this function.
 func (c *PFCPClient) SendAssociationTeardownRequest(ie ...*ieLib.IE) error {
 	raddr, err := net.ResolveUDPAddr("udp", c.remoteAddr)
 	if err != nil {
@@ -369,7 +372,13 @@ func (c *PFCPClient) SendSessionEstablishmentRequest(pdrs []*ieLib.IE, fars []*i
 	return c.sendMsg(estReq)
 }
 
-func (c *PFCPClient) SendSessionModificationRequest(PeerSEID uint64, pdrs []*ieLib.IE, qers []*ieLib.IE, fars []*ieLib.IE, urrs []*ieLib.IE) error {
+func (c *PFCPClient) SendSessionModificationRequest(
+	PeerSEID uint64,
+	pdrs []*ieLib.IE,
+	qers []*ieLib.IE,
+	fars []*ieLib.IE,
+	urrs []*ieLib.IE,
+) error {
 	modifyReq := message.NewSessionModificationRequest(
 		0,
 		0,
