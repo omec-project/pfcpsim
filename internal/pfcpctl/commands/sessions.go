@@ -40,7 +40,7 @@ type sessionModify struct {
 	Args struct {
 		commonArgs
 		BufferFlag   bool `short:"b" long:"buffer" description:"If set, downlink FARs will have the buffer flag set to true"`
-		NotifyCPFlag bool `short:"n" long:"notifycp" description:"If set, downlink FARs will have the notify CP flag set to true"`
+		NotifyCPFlag bool `short:"n" long:"notifycp" description:"Set true to have downlink FARs notify CP"`
 	}
 }
 
@@ -57,7 +57,12 @@ type SessionOptions struct {
 }
 
 func RegisterSessionCommands(parser *flags.Parser) {
-	_, err := parser.AddCommand("session", "Handle sessions", "Command to create/modify/delete sessions", &SessionOptions{})
+	_, err := parser.AddCommand(
+		"session",
+		"Handle sessions",
+		"Command to create/modify/delete sessions",
+		&SessionOptions{},
+	)
 	if err != nil {
 		log.Warnln(err)
 	}
