@@ -3,7 +3,7 @@ module github.com/omec-project/pfcpsim
 go 1.21
 
 require (
-	github.com/c-robinson/iplib v1.0.6
+	github.com/c-robinson/iplib v1.0.8
 	github.com/golang/protobuf v1.5.3
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/pborman/getopt/v2 v2.1.0
