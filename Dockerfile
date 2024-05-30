@@ -1,29 +1,21 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2022-present Open Networking Foundation
+# Copyright 2024-present Intel Corporation
 
 # Stage pfcpsim-build: builds the pfcpsim docker image
-FROM golang:alpine AS builder
+FROM golang:1.22.3-bookworm AS builder
 WORKDIR /pfcpctl
 
-COPY go.mod ./go.mod
-COPY go.sum ./go.sum
+COPY . .
 
-RUN go mod download
-# exploit local cache
-VOLUME $(go env GOCACHE):/root/.cache/go-build
-
-COPY . ./
-RUN CGO_ENABLED=0 go build -o /bin/pfcpctl cmd/pfcpctl/main.go
-RUN CGO_ENABLED=0 go build -o /bin/pfcpsim cmd/pfcpsim/main.go
+RUN CGO_ENABLED=0 go build -o ./pfcpctl cmd/pfcpctl/main.go && \
+    CGO_ENABLED=0 go build -o ./pfcpsim cmd/pfcpsim/main.go
 
 # Stage pfcpsim: runtime image of pfcpsim, containing also pfcpctl
-FROM alpine AS pfcpsim
+FROM alpine:3.20 AS pfcpsim
 
-RUN apk update && apk add tcpdump
+RUN apk update && apk add --no-cache -U tcpdump
 
-COPY --from=builder /bin/pfcpctl /bin
-COPY --from=builder /bin/pfcpsim /bin
-
-RUN echo "export PATH=/bin:${PATH}" >> /root/.bashrc
+COPY --from=builder /pfcpctl/pfcp* /usr/local/bin
 
 ENTRYPOINT [ "pfcpsim" ]

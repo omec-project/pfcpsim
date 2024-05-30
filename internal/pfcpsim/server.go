@@ -65,8 +65,11 @@ func (P pfcpSimService) Configure(ctx context.Context, request *pb.ConfigureRequ
 	SetRemotePeer(request.RemotePeerAddress)
 	SetUpfN3(request.UpfN3Address)
 
-	configurationMsg := fmt.Sprintf("Server is configured. Remote peer address: %v, N3 interface address: %v ", remotePeerAddress, upfN3Address)
-	log.Info(configurationMsg)
+	configurationMsg := fmt.Sprintf(
+		"Server is configured. Remote peer address: %v, N3 interface address: %v ",
+		remotePeerAddress,
+		upfN3Address,
+	)
 
 	return &pb.Response{
 		StatusCode: int32(codes.OK),

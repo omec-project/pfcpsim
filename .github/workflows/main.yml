@@ -2,7 +2,7 @@
 # Copyright 2022-present Open Networking Foundation
 # Copyright 2024-present Intel Corporation
 
-name: Master workflow
+name: Main workflow
 on:
   push:
     branches:
@@ -45,6 +45,21 @@ jobs:
         with:
           version: latest
           args: -v --config ./.golangci.yml
+
+  hadolint:
+    name: hadolint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dockerfile linter
+        uses: hadolint/hadolint-action@v3.1.0
+        # For now, ignoring:
+        # DL3018 warning: Pin versions in apk add (e.g., apk add <package>=<version>)
+        with:
+          dockerfile: Dockerfile
+          ignore: DL3018
 
   license-check:
     runs-on: ubuntu-latest

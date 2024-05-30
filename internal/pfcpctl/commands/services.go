@@ -16,7 +16,7 @@ type (
 	disassociate             struct{}
 	configureRemoteAddresses struct {
 		RemotePeerAddress  string `short:"r" long:"remote-peer-addr" default:"" description:"The remote PFCP agent address."`
-		N3InterfaceAddress string `short:"n" long:"n3-addr" default:"" description:"The IPv4 address of the UPF's N3 interface"`
+		N3InterfaceAddress string `short:"n" long:"n3-addr" default:"" description:"UPF's N3 IP address"`
 	}
 )
 

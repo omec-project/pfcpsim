@@ -1,14 +1,25 @@
+<!--
+SPDX-FileCopyrightText: 2022-present Open Networking Foundation
+SPDX-FileCopyrightText: 2024-present Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+
+-->
 [![Go Report Card](https://goreportcard.com/badge/github.com/omec-project/pfcpsim)](https://goreportcard.com/report/github.com/omec-project/pfcpsim)
 
 # pfcpsim
-pfcpsim is a simulator to interact with PFCP agents. Can be used to simulate a 4G SGW-C / 5G SMF.
+pfcpsim is a PFCP simulator to interact with PFCP agents and can be used to
+simulate a 4G SGW-C or 5G SMF.
 
-> All related features are implemented according to the 3GPP TS 29.244 V16.3.1(2020-04).
+> All related features are implemented according to the 3GPP TS 29.244 V16.3.1 (2020-04).
+
 ## Overview
 
-pfcpsim is designed to work within a containerized environment. The docker image comes with both client (`pfcpctl`) and server (`pfcpsim`).
+pfcpsim is designed to work within a containerized environment. The docker image
+comes with both client (`pfcpctl`) and server (`pfcpsim`).
 
-`PFCPClient` is embedded in a gRPC Server. Interaction between pfcpsim and pfcpctl is performed through RPCs, as shown in the following schema: 
+`PFCPClient` is embedded in a gRPC Server. Interaction between pfcpsim and pfcpctl
+is performed through RPCs, as shown in the following schema:
 
 ![Alt text](docs/images/schema.svg)
 
@@ -16,12 +27,14 @@ pfcpsim is designed to work within a containerized environment. The docker image
 
 ### Normal Case
 
-#### 1. Create the container. Images are available on [DockerHub](https://hub.docker.com/r/opennetworking/pfcpsim/tags):
+#### 1. Deploy container
+Note: Release images are available on [DockerHub](https://hub.docker.com/r/omecproject/pfcpsim/tags),
+while per-PR images are available on [Aether registry](https://registry.aetherproject.org/harbor/projects/9/repositories/pfcpsim/artifacts-tab)
 ```bash
 docker container run --rm -d --name pfcpsim pfcpsim:<image_tag> -p 12345 --interface <interface-name>
 ```
  - `-p` (**optional**, default is 54321): to set a custom gRPC listening port
- - `--interface` (**optional**, default is first non-loopback interface): to specify a specific interface from which retrieve local IP address
+ - `--interface` (**optional**, default is first non-loopback interface): to indicate a specific interface from which retrieve the local IP address
 
 #### 2. Use `pfcpctl` to configure server's remote peer address and N3 interface address:
 ```bash
@@ -47,7 +60,7 @@ docker exec pfcpsim pfcpctl -s localhost:12345 session create --count 5 --baseID
  - `--count` the amount of sessions to create
  - `--baseID` the base ID used to incrementally create sessions
  - `--ue-pool` the IP pool from which UE addresses will be generated (e.g. `17.0.0.0/24`)
- - `--gnb-addr` the (e/g)NodeB address 
+ - `--gnb-addr` the (e/g)NodeB address
  - `--sdf-filter` (optional) the SDF Filter to use when creating PDRs. If not set, PDI will contain a SDF Filter IE with an empty string as SDF Filter.
 
 #### 5. Delete the sessions
@@ -89,7 +102,7 @@ sim := export.NewPfcpSimCfg(iface, upfN3, upfN4)
 
 You can run the fuzzing test by the following command:
 ```
-go test -fuzz=Fuzz -p 1 -parallel 1 -fuzztime 15m ./fuzz/... 
+go test -fuzz=Fuzz -p 1 -parallel 1 -fuzztime 15m ./fuzz/...
 ```
 To specify args:
 ```
@@ -119,7 +132,7 @@ failure while testing seed corpus entry: Fuzz/seed#0
 fuzz: elapsed: 5s, gathering baseline coverage: 0/106 completed
 --- FAIL: Fuzz (5.02s)
     --- FAIL: Fuzz (5.00s)
-        ie_fuzz_test.go:57: 
+        ie_fuzz_test.go:57:
                 Error Trace:    /home/xxxx/pfcpsim/fuzz/ie_fuzz_test.go:57
                                                         /usr/local/go/src/reflect/value.go:556
                                                         /usr/local/go/src/reflect/value.go:339
@@ -128,7 +141,7 @@ fuzz: elapsed: 5s, gathering baseline coverage: 0/106 completed
                                 route ip+net: no such network interface
                 Test:           Fuzz
                 Messages:       InitPFCPSim failed
-    
+
 FAIL
 exit status 1
 FAIL    github.com/omec-project/pfcpsim/fuzz    5.023s
@@ -153,8 +166,8 @@ go build -o client cmd/pfcpctl/main.go
 ```
 
 You can now place `server` and `client` wherever you want.
-To setup pfcpsim use the same steps shown above (without executing `docker`). E.G:
+To setup `pfcpsim` use the same steps shown above (without executing `docker`)
+as shown below:
 ```bash
 ./server -p 12345 --interface <interface-name>
 ```
-

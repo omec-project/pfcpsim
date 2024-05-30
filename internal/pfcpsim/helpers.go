@@ -68,7 +68,8 @@ func isRemotePeerConnected() bool {
 	return remotePeerConnected
 }
 
-// isNumOfAppFiltersCorrect returns error if the number of the passed filter exceed the max number of supported application filters.
+// isNumOfAppFiltersCorrect returns error if the number of the passed filter
+// exceed the max number of supported application filters.
 func isNumOfAppFiltersCorrect(filters []string) error {
 	if len(filters) > SessionStep/2 {
 		log.Errorf("Too many application filters: %v", filters)
@@ -78,8 +79,9 @@ func isNumOfAppFiltersCorrect(filters []string) error {
 	return nil
 }
 
-// getLocalAddress returns the first IP address of the interfaceName, if specified,
-// otherwise returns the IP address of the first non-loopback interface
+// getLocalAddress returns the first IP address of the interfaceName, if
+// specified, otherwise returns the IP address of the first non-loopback
+// interface
 // Returns error if fail occurs at any stage.
 func getLocalAddress(interfaceName string) (net.IP, error) {
 	addrs, err := net.InterfaceAddrs()
@@ -111,8 +113,10 @@ func getLocalAddress(interfaceName string) (net.IP, error) {
 	return nil, pfcpsim.NewNoValidInterfaceError()
 }
 
-// ParseAppFilter parses an application filter. Returns a tuple formed by a formatted SDF filter
-// and a uint8 representing the Application QER gate status and a precedence. Returns error if fail occurs while validating the filter string.
+// ParseAppFilter parses an application filter. Returns a tuple formed by a
+// formatted SDF filter and a uint8 representing the Application QER gate status
+// and a precedence. Returns error if fail occurs while validating the filter
+// string.
 func ParseAppFilter(filter string) (string, uint8, uint32, error) {
 	if filter == "" {
 		// parsing a wildcard app filter
@@ -121,8 +125,9 @@ func ParseAppFilter(filter string) (string, uint8, uint32, error) {
 
 	result := strings.Split(filter, ":")
 	if len(result) != 5 {
-		return "", 0, 0, pfcpsim.NewInvalidFormatError("Parser was not able to generate the correct number of arguments." +
-			" Please make sure to use the right format")
+		return "", 0, 0, pfcpsim.NewInvalidFormatError(
+			"Parser was not able to generate the correct number of arguments." +
+				" Please make sure to use the right format")
 	}
 
 	proto, ipNetAddr, portRange, action, precedence := result[0], result[1], result[2], result[3], result[4]
@@ -135,7 +140,8 @@ func ParseAppFilter(filter string) (string, uint8, uint32, error) {
 	case "deny":
 		gateStatus = ie.GateStatusClosed
 	default:
-		return "", 0, 0, pfcpsim.NewInvalidFormatError("Action. Please make sure to use 'allow' or 'deny'")
+		return "", 0, 0, pfcpsim.NewInvalidFormatError(
+			"Action. Please make sure to use 'allow' or 'deny'")
 	}
 
 	if !(proto == "ip" || proto == "udp" || proto == "tcp") {
@@ -159,7 +165,9 @@ func ParseAppFilter(filter string) (string, uint8, uint32, error) {
 	if portRange != "any" {
 		portList := strings.Split(portRange, "-")
 		if !(len(portList) == 2) {
-			return "", 0, 0, pfcpsim.NewInvalidFormatError("Port range. Please make sure to use dash '-' to separate the two ports")
+			return "", 0, 0, pfcpsim.NewInvalidFormatError(
+				"Port range. Please make sure to use dash '-' to separate the two ports",
+			)
 		}
 
 		lowerPort, err := strconv.Atoi(portList[0])
