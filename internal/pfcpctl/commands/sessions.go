@@ -91,7 +91,7 @@ func (s *sessionCreate) Execute(args []string) error {
 		log.Fatalf("Error while creating sessions: %v", err)
 	}
 
-	log.Infof(res.Message)
+	log.Infof("%s", res.Message)
 
 	return nil
 }
@@ -116,7 +116,7 @@ func (s *sessionModify) Execute(args []string) error {
 		log.Fatalf("Error while modifying sessions: %v", err)
 	}
 
-	log.Infof(res.Message)
+	log.Infof("%s", res.Message)
 
 	return nil
 }
@@ -136,7 +136,7 @@ func (s *sessionDelete) Execute(args []string) error {
 		log.Fatalf("Error while deleting sessions: %v", err)
 	}
 
-	log.Infof(res.Message)
+	log.Infof("%s", res.Message)
 
 	return nil
 }

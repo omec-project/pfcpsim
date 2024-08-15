@@ -61,7 +61,7 @@ func (c *associate) Execute(args []string) error {
 		log.Fatalf("Error while associating: %v", err)
 	}
 
-	log.Infof(res.Message)
+	log.Infof("%s", res.Message)
 
 	return nil
 }
@@ -76,7 +76,7 @@ func (c *disassociate) Execute(args []string) error {
 		log.Fatalf("Error while disassociating: %v", err)
 	}
 
-	log.Infof(res.Message)
+	log.Infof("%s", res.Message)
 
 	return nil
 }
