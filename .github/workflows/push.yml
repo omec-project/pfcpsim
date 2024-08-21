@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2022-present Open Networking Foundation
+# Copyright 2024 Intel Corporation
 name: GitHub release and Docker images
 
 on:
@@ -183,7 +184,7 @@ jobs:
           commit-message: Update version
           committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
-          signoff: false
+          signoff: true
           branch: version-update
           delete-branch: true
           title: Update version
