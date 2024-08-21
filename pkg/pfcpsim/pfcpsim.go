@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wmnsk/go-pfcp/ie"
 	ieLib "github.com/wmnsk/go-pfcp/ie"
 	"github.com/wmnsk/go-pfcp/message"
 )
@@ -25,8 +24,8 @@ const (
 var (
 	activeSessions     = make(map[int]*PFCPSession, 0)
 	lockActiveSessions = new(sync.Mutex)
-	wrongRspType       = errors.New("unexpected response type")
-	assocFailed        = errors.New("association failed")
+	errWrongRspType    = errors.New("unexpected response type")
+	errAssocFailed     = errors.New("association failed")
 )
 
 func GetActiveSessionNum() int {
@@ -304,7 +303,7 @@ func (c *PFCPClient) sendSessionReportResponse(seq uint32, seid uint64) error {
 	}
 
 	res := message.NewSessionReportResponse(0, 0, rseid, seq, 0,
-		ie.NewCause(ie.CauseRequestAccepted))
+		ieLib.NewCause(ieLib.CauseRequestAccepted))
 
 	return c.sendMsg(res)
 }
@@ -456,7 +455,7 @@ func (c *PFCPClient) SetupAssociation() error {
 
 	assocResp, ok := resp.(*message.AssociationSetupResponse)
 	if !ok {
-		return NewInvalidResponseError(wrongRspType)
+		return NewInvalidResponseError(errWrongRspType)
 	}
 
 	cause, err := assocResp.Cause.Cause()
@@ -465,7 +464,7 @@ func (c *PFCPClient) SetupAssociation() error {
 	}
 
 	if cause != ieLib.CauseRequestAccepted {
-		return NewInvalidResponseError(assocFailed)
+		return NewInvalidResponseError(errAssocFailed)
 	}
 
 	c.setAssociationStatus(true)

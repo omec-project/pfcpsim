@@ -26,8 +26,8 @@ const (
 )
 
 var (
-	notConnected  = errors.New("Not connected")
-	notAssociated = errors.New("Not associated")
+	errNotConnected  = errors.New("not connected")
+	errNotAssociated = errors.New("not associated")
 )
 
 const SessionStep = 10
@@ -74,7 +74,7 @@ func (c *PfcpSimCfg) TerminatePFCPSim() error {
 func (c *PfcpSimCfg) Associate() error {
 	switch c.state {
 	case SVC_INIT:
-		return notConnected
+		return errNotConnected
 	case SVC_CONNECTED:
 		err := c.sim.SetupAssociation()
 		if err != nil {
@@ -90,9 +90,9 @@ func (c *PfcpSimCfg) Associate() error {
 func (c *PfcpSimCfg) Deassociate() error {
 	switch c.state {
 	case SVC_INIT:
-		return notConnected
+		return errNotConnected
 	case SVC_CONNECTED:
-		return notAssociated
+		return errNotAssociated
 	case SVC_ASSOCIATED:
 		err := c.sim.TeardownAssociation()
 		if err != nil {
