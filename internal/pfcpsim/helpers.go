@@ -17,7 +17,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var notInit = errors.New("PFCP simulator is not initialized")
+var errNotInit = errors.New("PFCP simulator is not initialized")
 
 const (
 	sdfFilterFormatWPort  = "permit out %v from %v to assigned %v-%v"
@@ -50,7 +50,7 @@ func ConnectPFCPSim() error {
 
 func DisconnectPFCPSim() error {
 	if sim == nil {
-		return notInit
+		return errNotInit
 	}
 
 	return sim.TeardownAssociation()

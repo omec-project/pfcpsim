@@ -4,10 +4,12 @@
 
 name: Main workflow
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
-  pull_request:
 
 jobs:
   build:
@@ -29,6 +31,20 @@ jobs:
 
       - name: Build Docker image
         run: make docker-build
+
+  staticcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: WillAbides/setup-go-faster@v1.14.0
+        with:
+          go-version-file: 'go.mod'
+
+      - uses: dominikh/staticcheck-action@v1.3.1
+        with:
+          version: latest
+          install-go: false
 
   lint:
     name: lint
