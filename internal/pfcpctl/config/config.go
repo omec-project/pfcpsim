@@ -7,7 +7,7 @@ import (
 	"net"
 	"os"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/omec-project/pfcpsim/logger"
 )
 
 const (
@@ -40,7 +40,7 @@ func ProcessGlobalOptions() {
 
 	// Generate error messages for required settings
 	if GlobalConfig.Server == "" {
-		log.Fatal("Server is not set. Please use the -s option")
+		logger.PfcpsimLog.Fatalln("server is not set. Please use the -s option")
 	}
 
 	// Try to resolve hostname if provided for the server
@@ -50,5 +50,5 @@ func ProcessGlobalOptions() {
 		}
 	}
 
-	log.Debugf("ServerAddress: %v", GlobalOptions.Server)
+	logger.PfcpsimLog.Debugf("serverAddress: %v", GlobalOptions.Server)
 }

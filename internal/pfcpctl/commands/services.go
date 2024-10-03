@@ -8,7 +8,7 @@ import (
 
 	"github.com/jessevdk/go-flags"
 	pb "github.com/omec-project/pfcpsim/api"
-	log "github.com/sirupsen/logrus"
+	"github.com/omec-project/pfcpsim/logger"
 )
 
 type (
@@ -29,7 +29,7 @@ type serviceOptions struct {
 func RegisterServiceCommands(parser *flags.Parser) {
 	_, err := parser.AddCommand("service", "configure pfcpsim", "Command to configure pfcpsim", &serviceOptions{})
 	if err != nil {
-		log.Warnln(err)
+		logger.PfcpsimLog.Warnln(err)
 	}
 }
 
@@ -43,10 +43,10 @@ func (c *configureRemoteAddresses) Execute(args []string) error {
 		RemotePeerAddress: c.RemotePeerAddress,
 	})
 	if err != nil {
-		log.Fatalf("Error while configuring remote addresses: %v", err)
+		logger.PfcpsimLog.Fatalf("error while configuring remote addresses: %v", err)
 	}
 
-	log.Info(res.Message)
+	logger.PfcpsimLog.Infoln(res.Message)
 
 	return nil
 }
@@ -58,10 +58,10 @@ func (c *associate) Execute(args []string) error {
 
 	res, err := client.Associate(context.Background(), &pb.EmptyRequest{})
 	if err != nil {
-		log.Fatalf("Error while associating: %v", err)
+		logger.PfcpsimLog.Fatalf("error while associating: %v", err)
 	}
 
-	log.Infof("%s", res.Message)
+	logger.PfcpsimLog.Infoln(res.Message)
 
 	return nil
 }
@@ -73,10 +73,10 @@ func (c *disassociate) Execute(args []string) error {
 
 	res, err := client.Disassociate(context.Background(), &pb.EmptyRequest{})
 	if err != nil {
-		log.Fatalf("Error while disassociating: %v", err)
+		logger.PfcpsimLog.Fatalf("error while disassociating: %v", err)
 	}
 
-	log.Infof("%s", res.Message)
+	logger.PfcpsimLog.Infoln(res.Message)
 
 	return nil
 }

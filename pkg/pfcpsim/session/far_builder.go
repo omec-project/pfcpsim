@@ -4,8 +4,7 @@
 package session
 
 import (
-	"log"
-
+	"github.com/omec-project/pfcpsim/logger"
 	"github.com/wmnsk/go-pfcp/ie"
 )
 
@@ -38,13 +37,13 @@ func NewFARBuilder() *farBuilder {
 func (b *farBuilder) FuzzIE(ieType int, arg uint) *farBuilder {
 	switch ieType {
 	case FarWithAction:
-		log.Println("FarWithAction")
+		logger.PfcpsimLog.Infoln("FarWithAction")
 		return b.WithAction(uint8(arg))
 	case FarWithTEID:
-		log.Println("FarWithTEID")
+		logger.PfcpsimLog.Infoln("FarWithTEID")
 		return b.WithTEID(uint32(arg))
 	case FarWithDstInterface:
-		log.Println("FarWithDstInterface")
+		logger.PfcpsimLog.Infoln("FarWithDstInterface")
 		return b.WithDstInterface(uint8(arg))
 	default:
 	}
@@ -93,19 +92,19 @@ func (b *farBuilder) WithDownlinkIP(downlinkIP string) *farBuilder {
 
 func (b *farBuilder) validate() {
 	if b.farID == 0 {
-		panic("Tried building FAR without setting FAR ID")
+		logger.PfcpsimLog.Panicln("tried building FAR without setting FAR ID")
 	}
 
 	if !b.isInterfaceSet {
-		panic("Tried building FAR without setting a destination interface")
+		logger.PfcpsimLog.Panicln("tried building FAR without setting a destination interface")
 	}
 
 	if b.applyAction == ActionDrop|ActionForward {
-		panic("Tried building FAR with actions' ActionDrop and ActionForward flags")
+		logger.PfcpsimLog.Panicln("tried building FAR with actions' ActionDrop and ActionForward flags")
 	}
 
 	if !b.isActionSet {
-		panic("Tried building FAR without setting an action")
+		logger.PfcpsimLog.Panicln("tried building FAR without setting an action")
 	}
 }
 

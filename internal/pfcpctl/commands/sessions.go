@@ -8,7 +8,7 @@ import (
 
 	"github.com/jessevdk/go-flags"
 	pb "github.com/omec-project/pfcpsim/api"
-	log "github.com/sirupsen/logrus"
+	"github.com/omec-project/pfcpsim/logger"
 )
 
 type commonArgs struct {
@@ -22,11 +22,11 @@ type commonArgs struct {
 
 func (a *commonArgs) validate() {
 	if a.BaseID <= 0 {
-		log.Fatalf("BaseID cannot be 0 or a negative number.")
+		logger.PfcpsimLog.Fatalln("baseID cannot be 0 or a negative number")
 	}
 
 	if a.Count <= 0 {
-		log.Fatalf("Count cannot be 0 or a negative number.")
+		logger.PfcpsimLog.Fatalln("count cannot be 0 or a negative number")
 	}
 }
 
@@ -64,13 +64,13 @@ func RegisterSessionCommands(parser *flags.Parser) {
 		&SessionOptions{},
 	)
 	if err != nil {
-		log.Warnln(err)
+		logger.PfcpsimLog.Warnln(err)
 	}
 }
 
 func (s *sessionCreate) Execute(args []string) error {
 	if s.Args.QFI > 64 {
-		log.Fatalf("QFI cannot be greater than 64. Provided QFI: %v", s.Args.QFI)
+		logger.PfcpsimLog.Fatalf("qfi cannot be greater than 64. Provided qfi: %v", s.Args.QFI)
 	}
 
 	client := connect()
@@ -88,10 +88,10 @@ func (s *sessionCreate) Execute(args []string) error {
 		Qfi:           int32(s.Args.QFI),
 	})
 	if err != nil {
-		log.Fatalf("Error while creating sessions: %v", err)
+		logger.PfcpsimLog.Fatalf("error while creating sessions: %v", err)
 	}
 
-	log.Infof("%s", res.Message)
+	logger.PfcpsimLog.Infoln(res.Message)
 
 	return nil
 }
@@ -113,10 +113,10 @@ func (s *sessionModify) Execute(args []string) error {
 		AppFilters:    s.Args.AppFilterString,
 	})
 	if err != nil {
-		log.Fatalf("Error while modifying sessions: %v", err)
+		logger.PfcpsimLog.Fatalf("error while modifying sessions: %v", err)
 	}
 
-	log.Infof("%s", res.Message)
+	logger.PfcpsimLog.Infof(res.Message)
 
 	return nil
 }
@@ -133,10 +133,10 @@ func (s *sessionDelete) Execute(args []string) error {
 		BaseID: int32(s.Args.BaseID),
 	})
 	if err != nil {
-		log.Fatalf("Error while deleting sessions: %v", err)
+		logger.PfcpsimLog.Fatalf("error while deleting sessions: %v", err)
 	}
 
-	log.Infof("%s", res.Message)
+	logger.PfcpsimLog.Infoln(res.Message)
 
 	return nil
 }

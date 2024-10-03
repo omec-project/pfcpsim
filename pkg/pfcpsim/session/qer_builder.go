@@ -4,8 +4,7 @@
 package session
 
 import (
-	"log"
-
+	"github.com/omec-project/pfcpsim/logger"
 	"github.com/wmnsk/go-pfcp/ie"
 )
 
@@ -42,22 +41,22 @@ func NewQERBuilder() *qerBuilder {
 func (b *qerBuilder) FuzzIE(ieType int, arg uint) *qerBuilder {
 	switch ieType {
 	case QerWithQFI:
-		log.Println("QerWithQFI")
+		logger.PfcpsimLog.Infoln("QerWithQFI")
 		return b.WithQFI(uint8(arg))
 	case QerWithUplinkMBR:
-		log.Println("QerWithUplinkMBR")
+		logger.PfcpsimLog.Infoln("QerWithUplinkMBR")
 		return b.WithUplinkMBR(uint64(arg))
 	case QerWithUplinkGBR:
-		log.Println("QerWithUplinkGBR")
+		logger.PfcpsimLog.Infoln("QerWithUplinkGBR")
 		return b.WithUplinkGBR(uint64(arg))
 	case QerWithDownlinkMBR:
-		log.Println("QerWithDownlinkMBR")
+		logger.PfcpsimLog.Infoln("QerWithDownlinkMBR")
 		return b.WithDownlinkMBR(uint64(arg))
 	case QerWithDownlinkGBR:
-		log.Println("QerWithDownlinkGBR")
+		logger.PfcpsimLog.Infoln("QerWithDownlinkGBR")
 		return b.WithDownlinkGBR(uint64(arg))
 	case QerWithGateStatus:
-		log.Println("QerWithGateStatus")
+		logger.PfcpsimLog.Infoln("QerWithGateStatus")
 		return b.WithGateStatus(uint8(arg))
 	default:
 	}
@@ -114,7 +113,7 @@ func (b *qerBuilder) WithGateStatus(status uint8) *qerBuilder {
 
 func (b *qerBuilder) validate() {
 	if !b.isIDSet {
-		panic("Tried to build a QER without setting the QER ID")
+		logger.PfcpsimLog.Panicln("tried to build a QER without setting the QER ID")
 	}
 }
 
