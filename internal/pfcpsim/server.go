@@ -11,9 +11,9 @@ import (
 
 	"github.com/c-robinson/iplib"
 	pb "github.com/omec-project/pfcpsim/api"
+	"github.com/omec-project/pfcpsim/logger"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
-	log "github.com/sirupsen/logrus"
 	ieLib "github.com/wmnsk/go-pfcp/ie"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -56,8 +56,8 @@ func SetUpfN3(addr string) {
 
 func (P pfcpSimService) Configure(ctx context.Context, request *pb.ConfigureRequest) (*pb.Response, error) {
 	if net.ParseIP(request.UpfN3Address) == nil {
-		errMsg := fmt.Sprintf("Error while parsing UPF N3 address: %v", request.UpfN3Address)
-		log.Error(errMsg)
+		errMsg := fmt.Sprintf("error while parsing UPF N3 address: %v", request.UpfN3Address)
+		logger.PfcpsimLog.Errorln(errMsg)
 
 		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 	}
@@ -79,26 +79,26 @@ func (P pfcpSimService) Configure(ctx context.Context, request *pb.ConfigureRequ
 
 func (P pfcpSimService) Associate(ctx context.Context, empty *pb.EmptyRequest) (*pb.Response, error) {
 	if !isConfigured() {
-		log.Error("Server is not configured")
+		logger.PfcpsimLog.Errorln("server is not configured")
 		return &pb.Response{}, status.Error(codes.Aborted, "Server is not configured")
 	}
 
 	if !isRemotePeerConnected() {
 		if err := ConnectPFCPSim(); err != nil {
-			errMsg := fmt.Sprintf("Could not connect to remote peer :%v", err)
-			log.Error(errMsg)
+			errMsg := fmt.Sprintf("Could not connect to remote peer: %v", err)
+			logger.PfcpsimLog.Error(errMsg)
 
 			return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 		}
 	}
 
 	if err := sim.SetupAssociation(); err != nil {
-		log.Error(err.Error())
+		logger.PfcpsimLog.Errorln(err)
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
 
 	infoMsg := "Association established"
-	log.Info(infoMsg)
+	logger.PfcpsimLog.Infoln(infoMsg)
 
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
@@ -112,7 +112,7 @@ func (P pfcpSimService) Disassociate(ctx context.Context, empty *pb.EmptyRequest
 	}
 
 	if err := sim.TeardownAssociation(); err != nil {
-		log.Error(err.Error())
+		logger.PfcpsimLog.Errorln(err.Error())
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
 
@@ -121,7 +121,7 @@ func (P pfcpSimService) Disassociate(ctx context.Context, empty *pb.EmptyRequest
 	remotePeerConnected = false
 
 	infoMsg := "Association teardown completed and connection to remote peer closed"
-	log.Info(infoMsg)
+	logger.PfcpsimLog.Infoln(infoMsg)
 
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
@@ -139,8 +139,8 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 
 	lastUEAddr, _, err := net.ParseCIDR(request.UeAddressPool)
 	if err != nil {
-		errMsg := fmt.Sprintf(" Could not parse Address Pool: %v", err)
-		log.Error(errMsg)
+		errMsg := fmt.Sprintf("Could not parse Address Pool: %v", err)
+		logger.PfcpsimLog.Errorln(errMsg)
 
 		return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 	}
@@ -185,7 +185,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 				return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 			}
 
-			log.Infof("Successfully parsed application filter. SDF Filter: %v", SDFFilter)
+			logger.PfcpsimLog.Infof("successfully parsed application filter. SDF Filter: %v", SDFFilter)
 
 			uplinkPdrID := ID
 			downlinkPdrID := ID + 1
@@ -301,8 +301,8 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		pfcpsim.InsertSession(i, sess)
 	}
 
-	infoMsg := fmt.Sprintf("%v sessions were established using %v as baseID ", count, baseID)
-	log.Info(infoMsg)
+	infoMsg := fmt.Sprintf("%v sessions were established using %v as baseID", count, baseID)
+	logger.PfcpsimLog.Infoln(infoMsg)
 
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
@@ -322,7 +322,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 
 	if pfcpsim.GetActiveSessionNum() < count {
 		err := pfcpsim.NewNotEnoughSessionsError()
-		log.Error(err)
+		logger.PfcpsimLog.Errorln(err.Error())
 
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
@@ -381,7 +381,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 		sess, ok := pfcpsim.GetSession(i)
 		if !ok {
 			errMsg := fmt.Sprintf("Could not retrieve session with index %v", i)
-			log.Error(errMsg)
+			logger.PfcpsimLog.Errorln(errMsg)
 
 			return &pb.Response{}, status.Error(codes.Internal, errMsg)
 		}
@@ -393,7 +393,7 @@ func (P pfcpSimService) ModifySession(ctx context.Context, request *pb.ModifySes
 	}
 
 	infoMsg := fmt.Sprintf("%v sessions were modified", count)
-	log.Info(infoMsg)
+	logger.PfcpsimLog.Infoln(infoMsg)
 
 	return &pb.Response{
 		StatusCode: int32(codes.OK),
@@ -411,7 +411,7 @@ func (P pfcpSimService) DeleteSession(ctx context.Context, request *pb.DeleteSes
 
 	if pfcpsim.GetActiveSessionNum() < count {
 		err := pfcpsim.NewNotEnoughSessionsError()
-		log.Error(err)
+		logger.PfcpsimLog.Error(err.Error())
 
 		return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 	}
@@ -420,14 +420,14 @@ func (P pfcpSimService) DeleteSession(ctx context.Context, request *pb.DeleteSes
 		sess, ok := pfcpsim.GetSession(i)
 		if !ok {
 			errMsg := "Session was nil. Check baseID"
-			log.Error(errMsg)
+			logger.PfcpsimLog.Errorln(errMsg)
 
 			return &pb.Response{}, status.Error(codes.Aborted, errMsg)
 		}
 
 		err := sim.DeleteSession(sess)
 		if err != nil {
-			log.Error(err.Error())
+			logger.PfcpsimLog.Errorln(err.Error())
 			return &pb.Response{}, status.Error(codes.Aborted, err.Error())
 		}
 		// remove from activeSessions
@@ -435,7 +435,7 @@ func (P pfcpSimService) DeleteSession(ctx context.Context, request *pb.DeleteSes
 	}
 
 	infoMsg := fmt.Sprintf("%v sessions deleted; activeSessions: %v", count, pfcpsim.GetActiveSessionNum())
-	log.Info(infoMsg)
+	logger.PfcpsimLog.Infoln(infoMsg)
 
 	return &pb.Response{
 		StatusCode: int32(codes.OK),

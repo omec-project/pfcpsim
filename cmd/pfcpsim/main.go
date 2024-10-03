@@ -13,8 +13,8 @@ import (
 
 	pb "github.com/omec-project/pfcpsim/api"
 	"github.com/omec-project/pfcpsim/internal/pfcpsim"
+	"github.com/omec-project/pfcpsim/logger"
 	"github.com/pborman/getopt/v2"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
@@ -25,7 +25,7 @@ const (
 func startServer(apiDoneChannel chan bool, iFace string, port string, group *sync.WaitGroup) {
 	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%v", port))
 	if err != nil {
-		log.Fatalf("API gRPC Server failed to listen: %v", err)
+		logger.PfcpsimLog.Fatalf("api gRPC Server failed to listen: %v", err)
 	}
 
 	grpcServer := grpc.NewServer()
@@ -34,17 +34,17 @@ func startServer(apiDoneChannel chan bool, iFace string, port string, group *syn
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatalf("Failed to listed: %v", err)
+			logger.PfcpsimLog.Fatalf("failed to listed: %v", err)
 		}
 	}()
 
-	log.Infof("Server listening on port %v", port)
+	logger.PfcpsimLog.Infoln("server listening on port", port)
 
 	x := <-apiDoneChannel
 	if x {
 		// if the API channel is closed, stop the gRPC pfcpsim
 		grpcServer.Stop()
-		log.Warnf("Stopping API gRPC pfcpsim")
+		logger.PfcpsimLog.Warnln("stopping API gRPC pfcpsim")
 	}
 
 	group.Done()
@@ -80,11 +80,11 @@ func main() {
 	wg.Add(1)
 
 	go startServer(doneChannel, *iFaceName, *port, &wg)
-	log.Debugf("Started API gRPC Service")
+	logger.PfcpsimLog.Debugln("started API gRPC Service")
 
 	wg.Wait()
 
 	defer func() {
-		log.Info("PFCP Simulator shutting down")
+		logger.PfcpsimLog.Infoln("pfcp Simulator shutting down")
 	}()
 }

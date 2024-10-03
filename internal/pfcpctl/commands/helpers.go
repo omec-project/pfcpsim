@@ -6,7 +6,7 @@ package commands
 import (
 	pb "github.com/omec-project/pfcpsim/api"
 	"github.com/omec-project/pfcpsim/internal/pfcpctl/config"
-	log "github.com/sirupsen/logrus"
+	"github.com/omec-project/pfcpsim/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -17,7 +17,7 @@ func connect() pb.PFCPSimClient {
 	// Create an insecure gRPC Channel
 	connection, err := grpc.NewClient(config.GlobalConfig.Server, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("Error dialing %v: %v", config.GlobalConfig.Server, err)
+		logger.PfcpsimLog.Fatalf("error dialing %v: %v", config.GlobalConfig.Server, err)
 	}
 
 	return pb.NewPFCPSimClient(connection)
@@ -27,7 +27,7 @@ func disconnect() {
 	if conn != nil {
 		err := conn.Close()
 		if err != nil {
-			log.Warnln(err)
+			logger.PfcpsimLog.Warnln(err)
 		}
 	}
 }

@@ -4,9 +4,9 @@
 package session
 
 import (
-	"log"
 	"time"
 
+	"github.com/omec-project/pfcpsim/logger"
 	"github.com/wmnsk/go-pfcp/ie"
 )
 
@@ -43,10 +43,10 @@ func NewURRBuilder() *urrBuilder {
 func (b *urrBuilder) FuzzIE(ieType int, arg uint) *urrBuilder {
 	switch ieType {
 	case UrrWithMeasurementInfo:
-		log.Println("Fuzz: UrrWithMeasurementInfo")
+		logger.PfcpsimLog.Infoln("Fuzz: UrrWithMeasurementInfo")
 		return b.WithMeasurementInfo(uint8(arg))
 	case UrrWithMeasurementMethod:
-		log.Println("Fuzz: UrrWithMeasurementMethod")
+		logger.PfcpsimLog.Infoln("Fuzz: UrrWithMeasurementMethod")
 
 		args := []int{0, 1, 0}
 		i := arg % 3
@@ -54,7 +54,7 @@ func (b *urrBuilder) FuzzIE(ieType int, arg uint) *urrBuilder {
 
 		return b.WithMeasurementMethod(args[0], args[1], args[2])
 	case UrrWithMeasurementPeriod:
-		log.Println("Fuzz: UrrWithMeasurementPeriod")
+		logger.PfcpsimLog.Infoln("Fuzz: UrrWithMeasurementPeriod")
 		return b.WithMeasurementPeriod(time.Duration(arg))
 	default:
 	}
@@ -124,11 +124,11 @@ func (b *urrBuilder) WithReportingTrigger(rptTrig ReportingTrigger) *urrBuilder 
 
 func (b *urrBuilder) validate() {
 	if b.urrID == 0 {
-		panic("URR ID is not set")
+		logger.PfcpsimLog.Panicln("URR ID is not set")
 	}
 
 	if b.measurementInfo > 0 && b.measurementInfo > MNOP {
-		panic("Measurement Information is not valid")
+		logger.PfcpsimLog.Panicln("Measurement Information is not valid")
 	}
 }
 

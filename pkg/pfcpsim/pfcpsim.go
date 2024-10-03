@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/omec-project/pfcpsim/logger"
 	ieLib "github.com/wmnsk/go-pfcp/ie"
 	"github.com/wmnsk/go-pfcp/message"
 )
@@ -237,7 +238,7 @@ func (c *PFCPClient) DisconnectN4() {
 
 	err := c.conn.Close()
 	if err != nil {
-		fmt.Println(err)
+		logger.PfcpsimLog.Errorln(err)
 	}
 }
 
@@ -278,12 +279,12 @@ func (c *PFCPClient) PeekNextResponse() (message.Message, error) {
 // a reply to the Session Report Request.
 func (c *PFCPClient) handleSessionReportRequest(msg *message.SessionReportRequest) bool {
 	if msg.MessageType() == message.MsgTypeSessionReportRequest {
-		fmt.Println("Session Report Request received")
+		logger.PfcpsimLog.Infoln("Session Report Request received")
 
 		err := c.sendSessionReportResponse(msg.Sequence(),
 			msg.Header.SEID)
 		if err != nil {
-			fmt.Println("Error sending Session Report Response")
+			logger.PfcpsimLog.Errorln("Error sending Session Report Response")
 		}
 
 		return true

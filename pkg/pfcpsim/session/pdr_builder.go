@@ -4,9 +4,9 @@
 package session
 
 import (
-	"log"
 	"net"
 
+	"github.com/omec-project/pfcpsim/logger"
 	"github.com/wmnsk/go-pfcp/ie"
 )
 
@@ -49,16 +49,16 @@ func NewPDRBuilder() *pdrBuilder {
 func (b *pdrBuilder) FuzzIE(ieType int, arg uint) *pdrBuilder {
 	switch ieType {
 	case PdrWithPrecedence:
-		log.Println("PdrWithPrecedence")
+		logger.PfcpsimLog.Infoln("PdrWithPrecedence")
 		return b.WithPrecedence(uint32(arg))
 	case PdrWithTEID:
-		log.Println("PdrWithTEID")
+		logger.PfcpsimLog.Infoln("PdrWithTEID")
 		return b.WithTEID(uint32(arg))
 	case PdrAddQERID:
-		log.Println("PdrAddQERID")
+		logger.PfcpsimLog.Infoln("PdrAddQERID")
 		return b.AddQERID(uint32(arg))
 	case PdrWithFARID:
-		log.Println("PdrWithFARID")
+		logger.PfcpsimLog.Infoln("PdrWithFARID")
 		return b.WithFARID(uint32(arg))
 	default:
 	}
@@ -123,30 +123,30 @@ func (b *pdrBuilder) MarkAsUplink() *pdrBuilder {
 
 func (b *pdrBuilder) validate() {
 	if b.direction == notSet {
-		panic("Tried building a PDR without marking it as uplink or downlink")
+		logger.PfcpsimLog.Panicln("tried building a PDR without marking it as uplink or downlink")
 	}
 
 	if len(b.qerIDs) == 0 {
-		panic("Tried building PDR without providing QER IDs")
+		logger.PfcpsimLog.Panicln("tried building PDR without providing QER IDs")
 	}
 
 	if b.farID == 0 {
-		panic("Tried building PDR without providing FAR ID")
+		logger.PfcpsimLog.Panicln("tried building PDR without providing FAR ID")
 	}
 
 	if b.direction == downlink {
 		if b.ueAddress == "" {
-			panic("Tried building downlink PDR without setting the UE IP address")
+			logger.PfcpsimLog.Panicln("tried building downlink PDR without setting the UE IP address")
 		}
 	}
 
 	if b.direction == uplink {
 		if b.n3Address == "" {
-			panic("Tried building uplink PDR without setting the N3Address")
+			logger.PfcpsimLog.Panicln("tried building uplink PDR without setting the N3Address")
 		}
 
 		if b.teid == 0 {
-			panic("Tried building uplink PDR without setting the TEID")
+			logger.PfcpsimLog.Panicln("tried building uplink PDR without setting the TEID")
 		}
 	}
 }

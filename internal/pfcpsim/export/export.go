@@ -11,9 +11,9 @@ import (
 
 	"github.com/c-robinson/iplib"
 	"github.com/omec-project/pfcpsim/internal/pfcpsim"
+	"github.com/omec-project/pfcpsim/logger"
 	sim "github.com/omec-project/pfcpsim/pkg/pfcpsim"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
-	log "github.com/sirupsen/logrus"
 	ieLib "github.com/wmnsk/go-pfcp/ie"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -120,8 +120,8 @@ func (c *PfcpSimCfg) CreateSession(baseID int,
 
 	lastUEAddr, _, err := net.ParseCIDR(uePool)
 	if err != nil {
-		errMsg := fmt.Sprintf(" Could not parse Address Pool: %v", err)
-		log.Error(errMsg)
+		errMsg := fmt.Sprintf("Could not parse Address Pool: %v", err)
+		logger.PfcpsimLog.Errorln(errMsg)
 
 		return status.Error(codes.Aborted, errMsg)
 	}
@@ -159,7 +159,7 @@ func (c *PfcpSimCfg) CreateSession(baseID int,
 				return status.Error(codes.Aborted, err.Error())
 			}
 
-			log.Infof("Successfully parsed application filter. SDF Filter: %v", SDFFilter)
+			logger.PfcpsimLog.Infof("successfully parsed application filter. SDF Filter: %v", SDFFilter)
 
 			uplinkPdrID := ID
 			downlinkPdrID := ID + 1
@@ -283,8 +283,7 @@ func (c *PfcpSimCfg) CreateSession(baseID int,
 		sim.InsertSession(i, sess)
 	}
 
-	infoMsg := fmt.Sprintf("%v sessions were established using %v as baseID ", count, baseID)
-	log.Info(infoMsg)
+	logger.PfcpsimLog.Infof("%d sessions were established using %d as baseID", count, baseID)
 
 	return nil
 }
@@ -337,7 +336,7 @@ func (c *PfcpSimCfg) ModifySession(baseID int,
 		sess, ok := sim.GetSession(i)
 		if !ok {
 			errMsg := fmt.Sprintf("Could not retrieve session with index %v", i)
-			log.Error(errMsg)
+			logger.PfcpsimLog.Errorln(errMsg)
 
 			return status.Error(codes.Internal, errMsg)
 		}
@@ -348,8 +347,7 @@ func (c *PfcpSimCfg) ModifySession(baseID int,
 		}
 	}
 
-	infoMsg := fmt.Sprintf("%v sessions were modified", count)
-	log.Info(infoMsg)
+	logger.PfcpsimLog.Infof("%v sessions were modified", count)
 
 	return nil
 }
@@ -359,7 +357,7 @@ func (c *PfcpSimCfg) DeleteSession(baseID int) error {
 
 	if sim.GetActiveSessionNum() < count {
 		err := sim.NewNotEnoughSessionsError()
-		log.Error(err)
+		logger.PfcpsimLog.Error(err)
 
 		return status.Error(codes.Aborted, err.Error())
 	}
@@ -368,22 +366,21 @@ func (c *PfcpSimCfg) DeleteSession(baseID int) error {
 		sess, ok := sim.GetSession(i)
 		if !ok {
 			errMsg := "Session was nil. Check baseID"
-			log.Error(errMsg)
+			logger.PfcpsimLog.Errorln(errMsg)
 
 			return status.Error(codes.Aborted, errMsg)
 		}
 
 		err := c.sim.DeleteSession(sess)
 		if err != nil {
-			log.Error(err.Error())
+			logger.PfcpsimLog.Errorln(err.Error())
 			return status.Error(codes.Aborted, err.Error())
 		}
 		// remove from activeSessions
 		sim.RemoveSession(i)
 	}
 
-	infoMsg := fmt.Sprintf("%v sessions deleted; activeSessions: %v", count, sim.GetActiveSessionNum())
-	log.Info(infoMsg)
+	logger.PfcpsimLog.Infof("%v sessions deleted; activeSessions: %v", count, sim.GetActiveSessionNum())
 
 	return nil
 }

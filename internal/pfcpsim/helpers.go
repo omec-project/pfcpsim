@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/omec-project/pfcpsim/logger"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
-	log "github.com/sirupsen/logrus"
 	"github.com/wmnsk/go-pfcp/ie"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -72,7 +72,7 @@ func isRemotePeerConnected() bool {
 // exceed the max number of supported application filters.
 func isNumOfAppFiltersCorrect(filters []string) error {
 	if len(filters) > SessionStep/2 {
-		log.Errorf("Too many application filters: %v", filters)
+		logger.PfcpsimLog.Errorf("too many application filters: %v", filters)
 		return status.Error(codes.Aborted, "Too many application filters")
 	}
 
