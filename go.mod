@@ -4,14 +4,13 @@ go 1.21
 
 require (
 	github.com/c-robinson/iplib v1.0.8
-	github.com/golang/protobuf v1.5.4
 	github.com/jessevdk/go-flags v1.6.1
 	github.com/pborman/getopt/v2 v2.1.0
 	github.com/stretchr/testify v1.9.0
 	github.com/wmnsk/go-pfcp v0.0.24
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.67.1
-	google.golang.org/protobuf v1.34.2
+	google.golang.org/protobuf v1.35.1
 )
 
 require (
