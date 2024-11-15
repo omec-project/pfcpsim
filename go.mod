@@ -1,6 +1,6 @@
 module github.com/omec-project/pfcpsim
 
-go 1.21
+go 1.23
 
 require (
 	github.com/c-robinson/iplib v1.0.8
