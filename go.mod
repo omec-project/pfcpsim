@@ -1,6 +1,7 @@
 module github.com/omec-project/pfcpsim
 
-go 1.23.0
+go 1.24.0
+
 require (
 	github.com/c-robinson/iplib v1.0.8
 	github.com/jessevdk/go-flags v1.6.1
