@@ -15,8 +15,8 @@ DOCKER_TARGET            ?= pfcpsim
 
 docker-build:
 	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build \
-   	--target $(DOCKER_TARGET) \
-   	--tag ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}$(DOCKER_TARGET):${DOCKER_TAG} \
+		--target $(DOCKER_TARGET) \
+		--tag ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}$(DOCKER_TARGET):${DOCKER_TAG} \
 		.
 
 docker-push:
@@ -37,9 +37,16 @@ test: .coverage
 reuse-lint:
 	docker run --rm -v $(CURDIR):/pfcpsim -w /pfcpsim omecproject/reuse-verify:latest reuse lint
 
-build-proto:
+docker-protobuf:
+	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build \
+		--tag protobuf:latest \
+		-f $(CURDIR)/api/Dockerfile \
+		.
+
+build-proto: docker-protobuf
 	@echo "Compiling proto files..."
-	docker run --rm -v $(CURDIR)/api:/source -w /source jaegertracing/protobuf:0.3.1 \
-    -I./ \
-    --go_out=paths=source_relative,plugins=grpc:./ \
-    pfcpsim.proto
+	docker run --rm -v $(CURDIR)/api:/source -w /source protobuf:latest \
+		protoc -I./ \
+		--go_out=paths=source_relative:./ \
+		--go-grpc_out=paths=source_relative:./ \
+		pfcpsim.proto
