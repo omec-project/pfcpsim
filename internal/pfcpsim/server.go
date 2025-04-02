@@ -21,7 +21,9 @@ import (
 
 // pfcpSimService implements the Protobuf interface and keeps a connection to a remote PFCP Agent peer.
 // Its state is handled in internal/pfcpsim/state.go
-type pfcpSimService struct{}
+type pfcpSimService struct {
+	pb.UnimplementedPFCPSimServer // Embed the unimplemented server to satisfy the interface
+}
 
 // SessionStep identifies the step in loops, used while creating/modifying/deleting sessions and rules IDs.
 // It should be high enough to avoid IDs overlap when creating sessions. 5 Applications should be enough.
