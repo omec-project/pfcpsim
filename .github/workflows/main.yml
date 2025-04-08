@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2022-present Open Networking Foundation
 # Copyright 2024-present Intel Corporation
-
-name: Main workflow
 on:
   pull_request:
     branches:
@@ -13,97 +11,42 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: 'go.mod'
-
-      - name: Build
-        run: go build ./...
+    uses: omec-project/.github/.github/workflows/build.yml@main
+    with:
+      branch_name: ${{ github.ref }}
 
   docker-build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    uses: omec-project/.github/.github/workflows/docker-build.yml@main
+    with:
+      branch_name: ${{ github.ref }}
 
-      - name: Build Docker image
-        run: make docker-build
-
-  staticcheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: WillAbides/setup-go-faster@v1.14.0
-        with:
-          go-version-file: 'go.mod'
-
-      - uses: dominikh/staticcheck-action@v1.3.1
-        with:
-          version: latest
-          install-go: false
+  static-analysis:
+    uses: omec-project/.github/.github/workflows/static-analysis.yml@main
+    with:
+      branch_name: ${{ github.ref }}
 
   lint:
-    name: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: 'go.mod'
-
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v7.0.0
-        with:
-          version: latest
-          args: -v --config ./.golangci.yml
+    uses: omec-project/.github/.github/workflows/lint.yml@main
+    with:
+      branch_name: ${{ github.ref }}
 
   hadolint:
-    name: hadolint
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Dockerfile linter
-        uses: hadolint/hadolint-action@v3.1.0
-        # For now, ignoring:
-        # DL3018 warning: Pin versions in apk add (e.g., apk add <package>=<version>)
-        with:
-          dockerfile: Dockerfile
-          ignore: DL3018
+    uses: omec-project/.github/.github/workflows/hadolint.yml@main
+    with:
+      branch_name: ${{ github.ref }}
 
   license-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    uses: omec-project/.github/.github/workflows/license-check.yml@main
+    with:
+      branch_name: ${{ github.ref }}
 
-      - name: reuse lint
-        uses: fsfe/reuse-action@v5
+  fossa-scan:
+    uses: omec-project/.github/.github/workflows/fossa-scan.yml@main
+    with:
+      branch_name: ${{ github.ref }}
 
-  fossa-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: FOSSA scan
-        uses: fossa-contrib/fossa-action@v3
-        with:
-          fossa-api-key: 0c3bbcdf20e157bbd487dae173751b28
-
-  unit-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: 'go.mod'
-
-      - name: Run unit tests for PFCPSim
-        run: |
-          make test
+  unit-tests:
+    uses: omec-project/.github/.github/workflows/unit-test.yml@main
+    with:
+      branch_name: ${{ github.ref }}
+      test_flags: "-race -covermode=atomic -run=^Test -v"

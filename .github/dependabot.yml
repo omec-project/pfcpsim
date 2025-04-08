@@ -4,14 +4,6 @@
 version: 2
 updates:
 
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "wednesday"
-      time: "21:00"
-      timezone: "America/Los_Angeles"
-
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
