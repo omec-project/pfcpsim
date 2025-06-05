@@ -12,7 +12,7 @@ RUN CGO_ENABLED=0 go build -o ./pfcpctl cmd/pfcpctl/main.go && \
     CGO_ENABLED=0 go build -o ./pfcpsim cmd/pfcpsim/main.go
 
 # Stage pfcpsim: runtime image of pfcpsim, containing also pfcpctl
-FROM alpine:3.21 AS pfcpsim
+FROM alpine:3.22 AS pfcpsim
 
 RUN apk update && apk add --no-cache -U tcpdump
 
