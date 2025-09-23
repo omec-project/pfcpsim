@@ -9,7 +9,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/c-robinson/iplib"
 	"github.com/omec-project/pfcpsim/internal/pfcpsim"
 	"github.com/omec-project/pfcpsim/logger"
 	sim "github.com/omec-project/pfcpsim/pkg/pfcpsim"
@@ -132,7 +131,7 @@ func (c *PfcpSimCfg) CreateSession(baseID int,
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i)
 
-		ueAddress := iplib.NextIP(lastUEAddr)
+		ueAddress := pfcpsim.NextIP(lastUEAddr)
 		lastUEAddr = ueAddress
 
 		sessQerID := uint32(0)

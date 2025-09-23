@@ -6,77 +6,96 @@ package commands
 import (
 	"context"
 
-	"github.com/jessevdk/go-flags"
 	pb "github.com/omec-project/pfcpsim/api"
 	"github.com/omec-project/pfcpsim/logger"
+	"github.com/urfave/cli/v3"
 )
 
-type (
-	associate                struct{}
-	disassociate             struct{}
-	configureRemoteAddresses struct {
-		RemotePeerAddress  string `short:"r" long:"remote-peer-addr" default:"" description:"The remote PFCP agent address."`
-		N3InterfaceAddress string `short:"n" long:"n3-addr" default:"" description:"UPF's N3 IP address"`
+func GetServiceCommands() *cli.Command {
+	return &cli.Command{
+		Name:  "service",
+		Usage: "configure pfcpsim",
+		Commands: []*cli.Command{
+			{
+				Name:  "associate",
+				Usage: "Associate with remote PFCP agent",
+				Action: func(ctx context.Context, c *cli.Command) error {
+					return associateAction(ctx, c)
+				},
+			},
+			{
+				Name:  "disassociate",
+				Usage: "Disassociate from remote PFCP agent",
+				Action: func(ctx context.Context, c *cli.Command) error {
+					return disassociateAction(ctx, c)
+				},
+			},
+			{
+				Name:  "configure",
+				Usage: "Configure remote addresses",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "remote-peer-addr",
+						Aliases: []string{"r"},
+						Usage:   "The remote PFCP agent address",
+						Value:   "",
+					},
+					&cli.StringFlag{
+						Name:    "n3-addr",
+						Aliases: []string{"n"},
+						Usage:   "UPF's N3 IP address",
+						Value:   "",
+					},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					return configureAction(ctx, c)
+				},
+			},
+		},
 	}
-)
-
-type serviceOptions struct {
-	Associate    associate                `command:"associate"`
-	Disassociate disassociate             `command:"disassociate"`
-	Configure    configureRemoteAddresses `command:"configure"`
 }
 
-func RegisterServiceCommands(parser *flags.Parser) {
-	_, err := parser.AddCommand("service", "configure pfcpsim", "Command to configure pfcpsim", &serviceOptions{})
-	if err != nil {
-		logger.PfcpsimLog.Warnln(err)
-	}
-}
-
-func (c *configureRemoteAddresses) Execute(args []string) error {
+func configureAction(ctx context.Context, c *cli.Command) error {
 	client := connect()
-
 	defer disconnect()
 
-	res, err := client.Configure(context.Background(), &pb.ConfigureRequest{
-		UpfN3Address:      c.N3InterfaceAddress,
-		RemotePeerAddress: c.RemotePeerAddress,
+	remotePeerAddr := c.String("remote-peer-addr")
+	n3Addr := c.String("n3-addr")
+
+	res, err := client.Configure(ctx, &pb.ConfigureRequest{
+		UpfN3Address:      n3Addr,
+		RemotePeerAddress: remotePeerAddr,
 	})
 	if err != nil {
 		logger.PfcpsimLog.Fatalf("error while configuring remote addresses: %v", err)
 	}
 
 	logger.PfcpsimLog.Infoln(res.Message)
-
 	return nil
 }
 
-func (c *associate) Execute(args []string) error {
+func associateAction(ctx context.Context, _ *cli.Command) error {
 	client := connect()
-
 	defer disconnect()
 
-	res, err := client.Associate(context.Background(), &pb.EmptyRequest{})
+	res, err := client.Associate(ctx, &pb.EmptyRequest{})
 	if err != nil {
 		logger.PfcpsimLog.Fatalf("error while associating: %v", err)
 	}
 
 	logger.PfcpsimLog.Infoln(res.Message)
-
 	return nil
 }
 
-func (c *disassociate) Execute(args []string) error {
+func disassociateAction(ctx context.Context, _ *cli.Command) error {
 	client := connect()
-
 	defer disconnect()
 
-	res, err := client.Disassociate(context.Background(), &pb.EmptyRequest{})
+	res, err := client.Disassociate(ctx, &pb.EmptyRequest{})
 	if err != nil {
 		logger.PfcpsimLog.Fatalf("error while disassociating: %v", err)
 	}
 
 	logger.PfcpsimLog.Infoln(res.Message)
-
 	return nil
 }

@@ -9,7 +9,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/c-robinson/iplib"
 	pb "github.com/omec-project/pfcpsim/api"
 	"github.com/omec-project/pfcpsim/logger"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
@@ -161,7 +160,7 @@ func (P pfcpSimService) CreateSession(ctx context.Context, request *pb.CreateSes
 		// using variables to ease comprehension on how rules are linked together
 		uplinkTEID := uint32(i)
 
-		ueAddress := iplib.NextIP(lastUEAddr)
+		ueAddress := NextIP(lastUEAddr)
 		lastUEAddr = ueAddress
 
 		sessQerID := uint32(0)
@@ -443,4 +442,22 @@ func (P pfcpSimService) DeleteSession(ctx context.Context, request *pb.DeleteSes
 		StatusCode: int32(codes.OK),
 		Message:    infoMsg,
 	}, nil
+}
+
+// NextIP returns the next IP address
+func NextIP(ip net.IP) net.IP {
+	next := make(net.IP, len(ip))
+	copy(next, ip)
+
+	// Increment from the rightmost byte
+	for i := len(next) - 1; i >= 0; i-- {
+		next[i]++
+		if next[i] != 0 {
+			// No overflow, we're done
+			break
+		}
+		// Overflow occurred, continue to next byte
+	}
+
+	return next
 }
