@@ -4,6 +4,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -14,7 +15,7 @@ import (
 	pb "github.com/omec-project/pfcpsim/api"
 	"github.com/omec-project/pfcpsim/internal/pfcpsim"
 	"github.com/omec-project/pfcpsim/logger"
-	"github.com/pborman/getopt/v2"
+	"github.com/urfave/cli/v3"
 	"google.golang.org/grpc"
 )
 
@@ -51,18 +52,22 @@ func startServer(apiDoneChannel chan bool, iFace string, port string, group *syn
 }
 
 func main() {
-	port := getopt.StringLong("port", 'p', defaultgRPCServerPort, "the gRPC Server port to listen")
-	iFaceName := getopt.StringLong("interface", 'i', "", "Defines the local address. If left blank,"+
-		" the IP will be taken from the first non-loopback interface")
+	app := &cli.Command{}
+	app.Name = "pfcpsim"
+	app.Usage = "./pfcpsim --interface <interface_name> --port <gRPC_server_port>"
+	app.Flags = getCliFlags()
+	app.Action = action
 
-	optHelp := getopt.BoolLong("help", 0, "Help")
+	logger.PfcpsimLog.Infof("app name: %s", app.Name)
 
-	getopt.Parse()
-
-	if *optHelp {
-		getopt.Usage()
-		os.Exit(0)
+	if err := app.Run(context.Background(), os.Args); err != nil {
+		logger.PfcpsimLog.Fatalf("application error: %+v", err)
 	}
+}
+
+func action(ctx context.Context, c *cli.Command) error {
+	port := c.String("port")
+	iFaceName := c.String("interface")
 
 	// control channels, they are only closed when the goroutine needs to be terminated
 	doneChannel := make(chan bool)
@@ -79,12 +84,28 @@ func main() {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 
-	go startServer(doneChannel, *iFaceName, *port, &wg)
+	go startServer(doneChannel, iFaceName, port, &wg)
 	logger.PfcpsimLog.Debugln("started API gRPC Service")
 
 	wg.Wait()
 
-	defer func() {
-		logger.PfcpsimLog.Infoln("pfcp Simulator shutting down")
-	}()
+	logger.PfcpsimLog.Infoln("pfcp Simulator shutting down")
+	return nil
+}
+
+func getCliFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.StringFlag{
+			Name:    "port",
+			Aliases: []string{"p"},
+			Value:   defaultgRPCServerPort,
+			Usage:   "the gRPC Server port to listen",
+		},
+		&cli.StringFlag{
+			Name:    "interface",
+			Aliases: []string{"i"},
+			Value:   "",
+			Usage:   "Defines the local address. If left blank, the IP will be taken from the first non-loopback interface",
+		},
+	}
 }

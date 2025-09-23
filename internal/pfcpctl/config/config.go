@@ -8,15 +8,12 @@ import (
 	"os"
 
 	"github.com/omec-project/pfcpsim/logger"
+	"github.com/urfave/cli/v3"
 )
 
 const (
 	defaultgRPCServerAddress = "localhost:54321"
 )
-
-var GlobalOptions struct {
-	Server string `short:"s" long:"server" default:"" value-name:"SERVER:PORT" description:"gRPC Server IP/Host and port"`
-}
 
 type GlobalConfigSpec struct {
 	Server string
@@ -26,21 +23,40 @@ var GlobalConfig = GlobalConfigSpec{
 	Server: defaultgRPCServerAddress,
 }
 
-func ProcessGlobalOptions() {
+// GetGlobalFlags returns the global flags for urfave/cli
+func GetGlobalFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.StringFlag{
+			Name:    "server",
+			Aliases: []string{"s"},
+			Value:   "",
+			Usage:   "gRPC Server IP/Host and port (SERVER:PORT)",
+		},
+	}
+}
+
+// SetGlobalOptionsFromCli sets global options from CLI context
+func SetGlobalOptionsFromCli(c *cli.Command) {
+	serverFlag := c.String("server")
+
+	// Start with default
+	GlobalConfig.Server = defaultgRPCServerAddress
+
 	// Override from environment
-	serverFromEnv, present := os.LookupEnv("PFCPSIM_SERVER")
-	if present {
+	if serverFromEnv, present := os.LookupEnv("PFCPSIM_SERVER"); present {
 		GlobalConfig.Server = serverFromEnv
 	}
 
-	// Override from command line
-	if GlobalOptions.Server != "" {
-		GlobalConfig.Server = GlobalOptions.Server
+	// Override from command line (highest priority)
+	if serverFlag != "" {
+		GlobalConfig.Server = serverFlag
 	}
+}
 
+func ProcessGlobalOptions() {
 	// Generate error messages for required settings
 	if GlobalConfig.Server == "" {
-		logger.PfcpsimLog.Fatalln("server is not set. Please use the -s option")
+		logger.PfcpsimLog.Fatalln("server is not set. Please use the -s option or set PFCPSIM_SERVER environment variable")
 	}
 
 	// Try to resolve hostname if provided for the server
@@ -50,5 +66,5 @@ func ProcessGlobalOptions() {
 		}
 	}
 
-	logger.PfcpsimLog.Debugf("serverAddress: %v", GlobalOptions.Server)
+	logger.PfcpsimLog.Debugf("serverAddress: %v", GlobalConfig.Server)
 }

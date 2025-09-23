@@ -17,7 +17,7 @@ func connect() pb.PFCPSimClient {
 	// Create an insecure gRPC Channel
 	connection, err := grpc.NewClient(config.GlobalConfig.Server, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		logger.PfcpsimLog.Fatalf("error dialing %v: %v", config.GlobalConfig.Server, err)
+		logger.PfcpsimLog.Fatalf("error dialing %s: %v", config.GlobalConfig.Server, err)
 	}
 
 	return pb.NewPFCPSimClient(connection)
