@@ -6,7 +6,6 @@ package pfcpsim
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/wmnsk/go-pfcp/ie"
 )
 
@@ -132,13 +131,27 @@ func Test_ParseAppFilter(t *testing.T) {
 			tt.name, func(t *testing.T) {
 				filter, gateStatus, precedence, err := ParseAppFilter(tt.args.filterString)
 				if tt.wantErr {
-					require.Error(t, err)
+					if err == nil {
+						t.Fatal("Expected error but got none")
+					}
 					return
 				}
 
-				require.Equal(t, tt.want.SDFFilter, filter)
-				require.Equal(t, tt.want.gateStatus, gateStatus)
-				require.Equal(t, tt.want.precedence, precedence)
+				if err != nil {
+					t.Fatalf("Unexpected error: %v", err)
+				}
+
+				if filter != tt.want.SDFFilter {
+					t.Errorf("SDFFilter mismatch. got = %v, want = %v", filter, tt.want.SDFFilter)
+				}
+
+				if gateStatus != tt.want.gateStatus {
+					t.Errorf("gateStatus mismatch. got = %v, want = %v", gateStatus, tt.want.gateStatus)
+				}
+
+				if precedence != tt.want.precedence {
+					t.Errorf("precedence mismatch. got = %v, want = %v", precedence, tt.want.precedence)
+				}
 			},
 		)
 	}

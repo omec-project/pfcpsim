@@ -2,11 +2,33 @@
 # Copyright 2022-present Open Networking Foundation
 
 .fuzz/test_data
+
+# Toolchain
+# Goland project folder
 .idea/
-.coverage/
+# Visual Studio Code
+.vscode/
+# emacs/vim
+GPATH
+GRTAGS
+GTAGS
+TAGS
+tags
+cscope.*
+# mac
+.DS_Store
+
+# debug
 output
 *.pyc
 *.swp
 *.log
+*.pcap
+vendor*
+*.patch
+
+# coverage
+.coverage/
+
 client
 server

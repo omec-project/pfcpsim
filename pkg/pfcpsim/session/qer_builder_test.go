@@ -4,9 +4,9 @@
 package session
 
 import (
+	"reflect"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/wmnsk/go-pfcp/ie"
 )
 
@@ -30,8 +30,16 @@ func TestQERBuilderShouldPanic(t *testing.T) {
 		},
 	} {
 		t.Run(scenario.description, func(t *testing.T) {
-			assert.Panics(t, func() { scenario.input.Build() })
-			assert.Equal(t, scenario.input, scenario.expected)
+			defer func() {
+				if r := recover(); r == nil {
+					t.Error("Expected Build() to panic, but it didn't")
+				}
+			}()
+			scenario.input.Build()
+
+			if !reflect.DeepEqual(scenario.input, scenario.expected) {
+				t.Errorf("QER builder mismatch. got = %+v, want = %+v", scenario.input, scenario.expected)
+			}
 		})
 	}
 }
@@ -103,8 +111,19 @@ func TestQERBuilder(t *testing.T) {
 		},
 	} {
 		t.Run(scenario.description, func(t *testing.T) {
-			assert.NotPanics(t, func() { _ = scenario.input.Build() })
-			assert.Equal(t, scenario.input.Build(), scenario.expected)
+			var result *ie.IE
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						t.Errorf("Build() panicked unexpectedly: %v", r)
+					}
+				}()
+				result = scenario.input.Build()
+			}()
+
+			if !reflect.DeepEqual(result, scenario.expected) {
+				t.Errorf("QER build result mismatch. got = %+v, want = %+v", result, scenario.expected)
+			}
 		})
 	}
 }
