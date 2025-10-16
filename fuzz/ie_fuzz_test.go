@@ -12,7 +12,6 @@ import (
 
 	"github.com/omec-project/pfcpsim/internal/pfcpsim/export"
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim/session"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -37,7 +36,7 @@ var (
 
 func Fuzz(f *testing.F) {
 	var testcases []uint
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		testcases = append(testcases, uint(getRand(MaxInt)))
 	}
 
@@ -54,17 +53,19 @@ func Fuzz(f *testing.F) {
 
 		err := sim.InitPFCPSim()
 		if err != nil {
-			require.NoError(t, err, "InitPFCPSim failed")
+			t.Fatalf("InitPFCPSim failed: %v", err)
 		}
 
 		err = sim.Associate()
 		if err != nil {
-			require.NoError(t, err, "Associate failed")
+			t.Fatalf("Associate failed: %v", err)
 		}
 
 		defer func() {
 			err = sim.TerminatePFCPSim()
-			require.NoError(t, err)
+			if err != nil {
+				t.Errorf("TerminatePFCPSim failed: %v", err)
+			}
 		}()
 
 		err = sim.CreateSession(2, getRand(session.PdrMax),
@@ -73,7 +74,7 @@ func Fuzz(f *testing.F) {
 			int(input)%session.UrrMax,
 			input)
 		if err != nil {
-			require.NoError(t, err, "CreateSession failed")
+			t.Fatalf("CreateSession failed: %v", err)
 		}
 
 		err = sim.ModifySession(2,
@@ -81,14 +82,14 @@ func Fuzz(f *testing.F) {
 			getRand(session.UrrMax),
 			input)
 		if err != nil {
-			require.NoError(t, err, "ModifySession failed")
+			t.Fatalf("ModifySession failed: %v", err)
 		}
 
 		time.Sleep(3 * time.Second)
 
 		err = sim.DeleteSession(2)
 		if err != nil {
-			require.NoError(t, err, "DeleteSession failed")
+			t.Fatalf("DeleteSession failed: %v", err)
 		}
 	})
 }

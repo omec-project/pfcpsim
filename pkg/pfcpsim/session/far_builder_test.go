@@ -4,10 +4,9 @@
 package session
 
 import (
+	"reflect"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/wmnsk/go-pfcp/ie"
 )
 
@@ -78,8 +77,16 @@ func TestFARBuilderShouldPanic(t *testing.T) {
 		},
 	} {
 		t.Run(scenario.description, func(t *testing.T) {
-			assert.Panics(t, func() { scenario.input.BuildFAR() })
-			assert.Equal(t, scenario.input, scenario.expected)
+			defer func() {
+				if r := recover(); r == nil {
+					t.Error("Expected Build() to panic, but it didn't")
+				}
+			}()
+			scenario.input.BuildFAR()
+
+			if !reflect.DeepEqual(scenario.input, scenario.expected) {
+				t.Errorf("QER builder mismatch. got = %+v, want = %+v", scenario.input, scenario.expected)
+			}
 		})
 	}
 }
@@ -142,7 +149,10 @@ func TestFARBuilder(t *testing.T) {
 		},
 	} {
 		t.Run(scenario.description, func(t *testing.T) {
-			require.Equal(t, scenario.expected, scenario.input.BuildFAR())
+			got := scenario.input.BuildFAR()
+			if !reflect.DeepEqual(got, scenario.expected) {
+				t.Errorf("BuildFAR() result mismatch. got = %+v, want = %+v", got, scenario.expected)
+			}
 		})
 	}
 }
