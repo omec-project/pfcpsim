@@ -3,7 +3,7 @@ module github.com/omec-project/pfcpsim
 go 1.24.0
 
 require (
-	github.com/urfave/cli/v3 v3.6.0
+	github.com/urfave/cli/v3 v3.6.1
 	github.com/wmnsk/go-pfcp v0.0.24
 	go.uber.org/zap v1.27.1
 	google.golang.org/grpc v1.76.0
