@@ -171,3 +171,8 @@ as shown below:
 ```bash
 ./server -p 12345 --interface <interface-name>
 ```
+
+## Reach out to us through
+
+1. #sdcore-dev channel in [Aether Community Slack](https://aether5g-project.slack.com)
+2. Raise Github Issues
