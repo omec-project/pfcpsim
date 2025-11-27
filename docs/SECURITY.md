@@ -38,4 +38,4 @@ When using this project:
 
 ## Contact
 
-Please see [here](https://github.com/omec-project/pfcpsim/?tab=readme-ov-file#reach-out-to-us-through)
+Please see [here](https://github.com/omec-project/pfcpsim/?tab=readme-ov-file#Reach-out-to-us-through)
