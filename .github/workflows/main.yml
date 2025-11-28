@@ -95,6 +95,7 @@ jobs:
     uses: omec-project/.github/.github/workflows/unit-test.yml@453e42d23f0366133ec7c053ee92a97f374f3ac5 # v0.0.1
     with:
       branch_name: ${{ github.ref }}
+      test_flags: "-race -covermode=atomic -run=^Test -v"
 
   analysis:
     if: github.repository_owner == 'omec-project'
@@ -118,16 +119,3 @@ jobs:
     uses: omec-project/.github/.github/workflows/scorecard-analysis.yml@453e42d23f0366133ec7c053ee92a97f374f3ac5 # v0.0.1
     with:
       branch_name: ${{ github.ref }}
-
-  e2e-tests:
-    if: github.event_name == 'pull_request'
-    permissions:
-      contents: read
-      pull-requests: write
-      checks: write
-      id-token: write
-      attestations: write
-    uses: omec-project/.github/.github/workflows/e2e-test.yml@453e42d23f0366133ec7c053ee92a97f374f3ac5 # v0.0.1
-    with:
-      branch_name: ${{ github.ref }}
-      test_flags: "-race -covermode=atomic -run=^Test -v"
