@@ -6,6 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 -->
 [![Go Report Card](https://goreportcard.com/badge/github.com/omec-project/pfcpsim)](https://goreportcard.com/report/github.com/omec-project/pfcpsim)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/omec-project/pfcpsim/badge)](https://scorecard.dev/viewer/?uri=github.com/omec-project/pfcpsim)
 
 # pfcpsim
 pfcpsim is a PFCP simulator to interact with PFCP agents and can be used to
