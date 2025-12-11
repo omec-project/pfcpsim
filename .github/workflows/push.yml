@@ -30,7 +30,7 @@ jobs:
       actions: read
       id-token: write
       attestations: write
-    uses: omec-project/.github/.github/workflows/release-image.yml@453e42d23f0366133ec7c053ee92a97f374f3ac5 # v0.0.1
+    uses: omec-project/.github/.github/workflows/release-image.yml@76c248f1621bfe102956c558ea8cecfe5df143bf # v0.0.3
     with:
       changed: ${{ needs.tag-github.outputs.changed }}
       version: ${{ needs.tag-github.outputs.version }}
