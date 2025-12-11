@@ -53,7 +53,7 @@ jobs:
       checks: write
       id-token: write
       attestations: write
-    uses: omec-project/.github/.github/workflows/lint.yml@53d4a413210952112117fc4c6e2cf384f09188af # v0.0.2
+    uses: omec-project/.github/.github/workflows/lint.yml@76c248f1621bfe102956c558ea8cecfe5df143bf # v0.0.3
     with:
       branch_name: ${{ github.ref }}
 
