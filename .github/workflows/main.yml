@@ -82,7 +82,7 @@ jobs:
       security-events: write
       id-token: write
       attestations: write
-    uses: omec-project/.github/.github/workflows/fossa-scan.yml@453e42d23f0366133ec7c053ee92a97f374f3ac5 # v0.0.1
+    uses: omec-project/.github/.github/workflows/fossa-scan.yml@53d4a413210952112117fc4c6e2cf384f09188af # v0.0.2
     with:
       branch_name: ${{ github.ref }}
 
