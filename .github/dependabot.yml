@@ -12,6 +12,14 @@ updates:
       time: "21:00"
       timezone: "America/Los_Angeles"
 
+  - package-ecosystem: "docker"
+    directory: "/api"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "21:00"
+      timezone: "America/Los_Angeles"
+
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
