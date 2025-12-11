@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2024-present Intel Corporation
 
-FROM golang:1.25.5-bookworm AS protobuf
+FROM golang:1.25.5-bookworm@sha256:09f53deea14d4019922334afe6258b7b776afc1d57952be2012f2c8c4076db05 AS protobuf
 
 RUN apt-get update && apt-get install -y unzip wget && \
     wget -O protoc-latest.zip https://github.com/protocolbuffers/protobuf/releases/download/v28.2/protoc-28.2-linux-x86_64.zip && \
