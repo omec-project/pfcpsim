@@ -19,7 +19,7 @@ jobs:
       contents: write
       actions: read
       id-token: write
-    uses: omec-project/.github/.github/workflows/tag-github.yml@64e827412bb394b5458ef48b4e178fc1c702678a # v0.0.10
+    uses: omec-project/.github/.github/workflows/tag-github.yml@8dfff47ca98efd751c939d94b9c207be27f99492 # v0.0.11
     secrets: inherit
 
   release-image:
@@ -30,7 +30,7 @@ jobs:
       actions: read
       id-token: write
       attestations: write
-    uses: omec-project/.github/.github/workflows/release-image.yml@64e827412bb394b5458ef48b4e178fc1c702678a # v0.0.10
+    uses: omec-project/.github/.github/workflows/release-image.yml@8dfff47ca98efd751c939d94b9c207be27f99492 # v0.0.11
     with:
       changed: ${{ needs.tag-github.outputs.changed }}
       version: ${{ needs.tag-github.outputs.version }}
@@ -43,7 +43,7 @@ jobs:
       pull-requests: write
       actions: read
       id-token: write
-    uses: omec-project/.github/.github/workflows/update-version.yml@64e827412bb394b5458ef48b4e178fc1c702678a # v0.0.10
+    uses: omec-project/.github/.github/workflows/update-version.yml@8dfff47ca98efd751c939d94b9c207be27f99492 # v0.0.11
     with:
       changed: ${{ needs.tag-github.outputs.changed }}
       version: ${{ needs.tag-github.outputs.version }}
@@ -55,7 +55,7 @@ jobs:
       contents: write
       actions: read
       id-token: write
-    uses: omec-project/.github/.github/workflows/branch-release.yml@64e827412bb394b5458ef48b4e178fc1c702678a # v0.0.10
+    uses: omec-project/.github/.github/workflows/branch-release.yml@8dfff47ca98efd751c939d94b9c207be27f99492 # v0.0.11
     with:
       release_branch: ${{ needs.tag-github.outputs.release_branch }}
       version_branch: ${{ needs.tag-github.outputs.version_branch }}
