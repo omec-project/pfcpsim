@@ -1,52 +1,189 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2022-present Open Networking Foundation
 
-PROJECT_NAME             := sdcore
-DOCKER_VERSION           ?= $(shell cat ./VERSION)
+PROJECT_NAME             := pfcpsim
+VERSION                  ?= $(shell cat ./VERSION 2>/dev/null || echo "dev")
 
-## Docker related
+# Extract minimum Go version from go.mod file
+GOLANG_MINIMUM_VERSION   ?= $(shell awk '/^go / {print $$2}' go.mod 2>/dev/null || echo "1.25")
+
+# Number of processors for parallel builds (Linux only)
+NPROCS                   := $(shell nproc)
+
+## Docker configuration
 DOCKER_REGISTRY          ?=
 DOCKER_REPOSITORY        ?=
-DOCKER_TAG               ?= ${DOCKER_VERSION}
-DOCKER_IMAGENAME         := ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}${PROJECT_NAME}:${DOCKER_TAG}
+DOCKER_TAG               ?= $(VERSION)
+DOCKER_IMAGE_PREFIX      ?= 5gc-
+DOCKER_IMAGENAME         := $(DOCKER_REGISTRY)$(DOCKER_REPOSITORY)$(DOCKER_IMAGE_PREFIX)$(PROJECT_NAME):$(DOCKER_TAG)
 DOCKER_BUILDKIT          ?= 1
+DOCKER_BUILD_ARGS        ?= --build-arg MAKEFLAGS=-j$(NPROCS)
+DOCKER_PULL              ?= --pull
 
-DOCKER_TARGET            ?= pfcpsim
+## Docker labels with better error handling
+DOCKER_LABEL_VCS_URL     ?= $(shell git remote get-url origin 2>/dev/null || echo "unknown")
+DOCKER_LABEL_VCS_REF     ?= $(shell \
+	echo "$${GIT_COMMIT:-$${GITHUB_SHA:-$${CI_COMMIT_SHA:-$(shell \
+		if git rev-parse --git-dir > /dev/null 2>&1; then \
+			git rev-parse HEAD 2>/dev/null; \
+		else \
+			echo "unknown"; \
+		fi \
+	)}}}")
+DOCKER_LABEL_BUILD_DATE  ?= $(shell date -u "+%Y-%m-%dT%H:%M:%SZ")
 
-docker-build:
-	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build \
-		--target $(DOCKER_TARGET) \
-		--tag ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}$(DOCKER_TARGET):${DOCKER_TAG} \
-		.
+## Build configuration
+BINARY_NAME              := $(PROJECT_NAME)
+GO_PACKAGES              ?= ./...
 
-docker-push:
-	docker push ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}$(DOCKER_TARGET):${DOCKER_TAG}
+## Directory configuration
+BIN_DIR                  := bin
+COVERAGE_DIR             := .coverage
 
-golint:
-	@docker run --rm -v $(CURDIR):/app -w /app/pkg/pfcpsim golangci/golangci-lint:latest golangci-lint run -v --config /app/.golangci.yml
+## Go build configuration
+GO_FILES                 := $(shell find . -name "*.go" ! -name "*_test.go" 2>/dev/null)
+GO_FILES_ALL             := $(shell find . -name "*.go" 2>/dev/null)
 
-.coverage:
-	rm -rf $(CURDIR)/.coverage
-	mkdir -p $(CURDIR)/.coverage
+## Tool versions (for reproducible builds)
+GOLANGCI_LINT_VERSION    ?= latest
 
-# -run flag ensures that the fuzz test won't be run
-# because the fuzz test needs a UPF to run
-test: .coverage
-	go test	-race -coverprofile=.coverage/coverage-unit.txt -covermode=atomic -run=^Test -v ./...
+# Default target
+.DEFAULT_GOAL := help
 
-reuse-lint:
-	docker run --rm -v $(CURDIR):/pfcpsim -w /pfcpsim omecproject/reuse-verify:latest reuse lint
+## Help target
+help: ## Show this help message
+	@echo "Available targets:"
+	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST) | sort
 
-docker-protobuf:
-	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build \
-		--tag protobuf:latest \
-		-f $(CURDIR)/api/Dockerfile \
-		.
+## Build targets
+build: $(BIN_DIR)/$(BINARY_NAME) ## Build binary
 
-build-proto: docker-protobuf
-	@echo "Compiling proto files..."
-	docker run --rm -v $(CURDIR)/api:/source -w /source protobuf:latest \
-		protoc -I./ \
-		--go_out=paths=source_relative:./ \
-		--go-grpc_out=paths=source_relative:./ \
-		pfcpsim.proto
+all: build ## Build binary (alias for compatibility)
+
+$(BIN_DIR)/$(BINARY_NAME): $(GO_FILES) | bin-dir
+	@echo "Building $(BINARY_NAME)..."
+	@CGO_ENABLED=0 go build -o $@ .
+
+bin-dir: ## Create binary directory
+	@mkdir -p $(BIN_DIR)
+
+## Docker targets
+docker-build: ## Build Docker image
+	@echo "Building Docker image: $(DOCKER_IMAGENAME)"
+	@go mod vendor
+	@DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build $(DOCKER_PULL) $(DOCKER_BUILD_ARGS) \
+		--build-arg VERSION="$(VERSION)" \
+		--build-arg VCS_URL="$(DOCKER_LABEL_VCS_URL)" \
+		--build-arg VCS_REF="$(DOCKER_LABEL_VCS_REF)" \
+		--build-arg BUILD_DATE="$(DOCKER_LABEL_BUILD_DATE)" \
+		--tag $(DOCKER_IMAGENAME) \
+		. \
+		|| exit 1
+	@rm -rf vendor
+
+docker-push: ## Push Docker image to registry
+	@echo "Pushing Docker image: $(DOCKER_IMAGENAME)"
+	@docker push $(DOCKER_IMAGENAME)
+
+docker-clean: ## Remove local Docker image
+	@echo "Cleaning local Docker image..."
+	@docker rmi $(DOCKER_IMAGENAME) 2>/dev/null || true
+
+## Testing targets
+$(COVERAGE_DIR): ## Create coverage directory
+	@mkdir -p $(COVERAGE_DIR)
+
+test: $(COVERAGE_DIR) ## Run unit tests with coverage
+	@echo "Running unit tests..."
+	@docker run --rm \
+		-v $(CURDIR):/$(PROJECT_NAME) \
+		-w /$(PROJECT_NAME) \
+		golang:$(GOLANG_MINIMUM_VERSION) \
+		go test \
+			-race \
+			-failfast \
+			-coverprofile=$(COVERAGE_DIR)/coverage-unit.txt \
+			-covermode=atomic \
+			-v \
+			$(GO_PACKAGES)
+
+test-local: $(COVERAGE_DIR) ## Run unit tests locally (without Docker)
+	@echo "Running unit tests locally..."
+	@go test \
+		-race \
+		-failfast \
+		-coverprofile=$(COVERAGE_DIR)/coverage-unit.txt \
+		-covermode=atomic \
+		-v \
+		$(GO_PACKAGES)
+
+## Code quality targets
+fmt: ## Format Go code
+	@echo "Formatting Go code..."
+	@go fmt ./...
+
+lint: ## Run linter
+	@echo "Running linter..."
+	@docker run --rm \
+		-v $(CURDIR):/app \
+		-w /app \
+		golangci/golangci-lint:$(GOLANGCI_LINT_VERSION) \
+		golangci-lint run -v --config /app/.golangci.yml
+
+lint-local: ## Run linter locally (without Docker)
+	@echo "Running linter locally..."
+	@golangci-lint run -v --config .golangci.yml
+
+check-reuse: ## Check REUSE compliance
+	@echo "Checking REUSE compliance..."
+	@docker run --rm \
+		-v $(CURDIR):/$(PROJECT_NAME) \
+		-w /$(PROJECT_NAME) \
+		omecproject/reuse-verify:latest \
+		reuse lint
+
+check: fmt lint check-reuse ## Run all code quality checks
+
+## Utility targets
+clean: ## Clean build artifacts
+	@echo "Cleaning build artifacts..."
+	@rm -rf $(BIN_DIR)
+	@rm -rf $(COVERAGE_DIR)
+	@rm -rf vendor
+	@docker system prune -f --filter label=org.opencontainers.image.source="https://github.com/omec-project/$(PROJECT_NAME)" 2>/dev/null || true
+
+print-version: ## Print current version
+	@echo $(VERSION)
+
+env: ## Print environment variables
+	@echo "PROJECT_NAME=$(PROJECT_NAME)"
+	@echo "VERSION=$(VERSION)"
+	@echo "GOLANG_MINIMUM_VERSION=$(GOLANG_MINIMUM_VERSION)"
+	@echo "BINARY_NAME=$(BINARY_NAME)"
+	@echo "DOCKER_REGISTRY=$(DOCKER_REGISTRY)"
+	@echo "DOCKER_REPOSITORY=$(DOCKER_REPOSITORY)"
+	@echo "DOCKER_IMAGE_PREFIX=$(DOCKER_IMAGE_PREFIX)"
+	@echo "DOCKER_TAG=$(DOCKER_TAG)"
+	@echo "DOCKER_IMAGENAME=$(DOCKER_IMAGENAME)"
+	@echo "DOCKER_LABEL_VCS_URL=$(DOCKER_LABEL_VCS_URL)"
+	@echo "DOCKER_LABEL_VCS_REF=$(DOCKER_LABEL_VCS_REF)"
+	@echo "NPROCS=$(NPROCS)"
+
+## Phony targets
+.PHONY: all \
+        bin-dir \
+        build \
+        check \
+        check-reuse \
+        clean \
+        docker-build \
+        docker-clean \
+        docker-push \
+        env \
+        fmt \
+        help \
+        lint \
+        lint-local \
+        print-version \
+        test \
+        test-local
