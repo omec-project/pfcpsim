@@ -5,7 +5,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -24,7 +23,8 @@ const (
 )
 
 func startServer(apiDoneChannel chan bool, iFace string, port string, group *sync.WaitGroup) {
-	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%v", port))
+	var lc net.ListenConfig
+	lis, err := lc.Listen(context.Background(), "tcp", net.JoinHostPort("0.0.0.0", port))
 	if err != nil {
 		logger.PfcpsimLog.Fatalf("api gRPC Server failed to listen: %v", err)
 	}

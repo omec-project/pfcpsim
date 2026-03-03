@@ -4,6 +4,7 @@
 package config
 
 import (
+	"context"
 	"net"
 	"os"
 
@@ -61,7 +62,13 @@ func ProcessGlobalOptions() {
 
 	// Try to resolve hostname if provided for the server
 	if host, port, err := net.SplitHostPort(GlobalConfig.Server); err == nil {
-		if addrs, err := net.LookupHost(host); err == nil {
+		var resolver net.Resolver
+		if addrs, err := resolver.LookupHost(context.Background(), host); err != nil {
+			logger.PfcpsimLog.Warnf("failed to resolve server host %q: %v", host, err)
+			return
+		} else if len(addrs) == 0 {
+			logger.PfcpsimLog.Warnf("no addresses returned for server host %q", host)
+		} else {
 			GlobalConfig.Server = net.JoinHostPort(addrs[0], port)
 		}
 	}
