@@ -24,10 +24,7 @@ const (
 	SVC_ASSOCIATED
 )
 
-var (
-	errNotConnected  = errors.New("not connected")
-	errNotAssociated = errors.New("not associated")
-)
+var errNotConnected = errors.New("not connected")
 
 const SessionStep = 10
 
