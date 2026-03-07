@@ -36,6 +36,12 @@ docker container run --rm -d --name pfcpsim pfcpsim:<image_tag> -p 12345 --inter
 ```
  - `-p` (**optional**, default is 54321): to set a custom gRPC listening port
  - `--interface` (**optional**, default is first non-loopback interface): to indicate a specific interface from which retrieve the local IP address
+ - `PFCPSIM_LOG_LEVEL` (**optional**, default is `info`): set runtime log level via environment variable (`panic|fatal|error|warn|info|debug`)
+
+Example with debug logs enabled:
+```bash
+docker container run --rm -d --name pfcpsim -e PFCPSIM_LOG_LEVEL=debug pfcpsim:<image_tag> -p 12345 --interface <interface-name>
+```
 
 #### 2. Use `pfcpctl` to configure server's remote peer address and N3 interface address:
 ```bash
