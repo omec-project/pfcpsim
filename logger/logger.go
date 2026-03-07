@@ -44,11 +44,7 @@ func init() {
 	PfcpsimLog = log.Sugar().With("component", "LIB", "category", "Pfcpsim")
 }
 
-func GetLogger() *zap.Logger {
-	return log
-}
-
-// SetLogLevel: set the log level (panic|fatal|error|warn|info|debug)
+// SetLogLevel sets the runtime log level (panic|fatal|error|warn|info|debug)
 func SetLogLevel(level zapcore.Level) {
 	PfcpsimLog.Infoln("set log level:", level)
 	atomicLevel.SetLevel(level)

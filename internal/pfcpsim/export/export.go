@@ -86,26 +86,6 @@ func (c *PfcpSimCfg) Associate() error {
 	return nil
 }
 
-func (c *PfcpSimCfg) Deassociate() error {
-	switch c.state {
-	case SVC_INIT:
-		return errNotConnected
-	case SVC_CONNECTED:
-		return errNotAssociated
-	case SVC_ASSOCIATED:
-		err := c.sim.TeardownAssociation()
-		if err != nil {
-			return err
-		}
-
-		c.sim.DisconnectN4()
-	}
-
-	c.state = SVC_INIT
-
-	return nil
-}
-
 type SessionIEs struct{}
 
 func (c *PfcpSimCfg) CreateSession(baseID int,
