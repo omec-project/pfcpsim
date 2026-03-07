@@ -24,10 +24,7 @@ const (
 	SVC_ASSOCIATED
 )
 
-var (
-	errNotConnected  = errors.New("not connected")
-	errNotAssociated = errors.New("not associated")
-)
+var errNotConnected = errors.New("not connected")
 
 const SessionStep = 10
 
@@ -82,26 +79,6 @@ func (c *PfcpSimCfg) Associate() error {
 	}
 
 	c.state = SVC_ASSOCIATED
-
-	return nil
-}
-
-func (c *PfcpSimCfg) Deassociate() error {
-	switch c.state {
-	case SVC_INIT:
-		return errNotConnected
-	case SVC_CONNECTED:
-		return errNotAssociated
-	case SVC_ASSOCIATED:
-		err := c.sim.TeardownAssociation()
-		if err != nil {
-			return err
-		}
-
-		c.sim.DisconnectN4()
-	}
-
-	c.state = SVC_INIT
 
 	return nil
 }

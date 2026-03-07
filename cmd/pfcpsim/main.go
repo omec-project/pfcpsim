@@ -15,6 +15,7 @@ import (
 	"github.com/omec-project/pfcpsim/internal/pfcpsim"
 	"github.com/omec-project/pfcpsim/logger"
 	"github.com/urfave/cli/v3"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
@@ -52,6 +53,14 @@ func startServer(apiDoneChannel chan bool, iFace string, port string, group *syn
 }
 
 func main() {
+	if lvl := os.Getenv("PFCPSIM_LOG_LEVEL"); lvl != "" {
+		if level, err := zap.ParseAtomicLevel(lvl); err != nil {
+			logger.PfcpsimLog.Warnf("invalid PFCPSIM_LOG_LEVEL [%s], keeping default info", lvl)
+		} else {
+			logger.SetLogLevel(level.Level())
+		}
+	}
+
 	app := &cli.Command{}
 	app.Name = "pfcpsim"
 	app.Usage = "./pfcpsim --interface <interface_name> --port <gRPC_server_port>"

@@ -118,10 +118,6 @@ func NewPFCPClient(localAddr string) *PFCPClient {
 	return client
 }
 
-func (c *PFCPClient) SetPFCPResponseTimeout(timeout time.Duration) {
-	c.responseTimeout = timeout
-}
-
 func (c *PFCPClient) getNextSequenceNumber() uint32 {
 	c.seqNumLock.Lock()
 	defer c.seqNumLock.Unlock()
@@ -249,6 +245,10 @@ func (c *PFCPClient) PeekNextHeartbeatResponse() (*message.HeartbeatResponse, er
 	case <-time.After(c.responseTimeout):
 		return nil, NewTimeoutExpiredError()
 	}
+}
+
+func (c *PFCPClient) SetPFCPResponseTimeout(timeout time.Duration) {
+	c.responseTimeout = timeout
 }
 
 // PeekNextResponse can be used to wait for a next PFCP message from a peer.
