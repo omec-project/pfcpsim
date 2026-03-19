@@ -6,7 +6,7 @@ require (
 	github.com/urfave/cli/v3 v3.7.0
 	github.com/wmnsk/go-pfcp v0.0.24
 	go.uber.org/zap v1.27.1
-	google.golang.org/grpc v1.79.2
+	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.11
 )
 
