@@ -43,7 +43,6 @@ COVERAGE_DIR             := .coverage
 
 ## Go build configuration
 GO_FILES                 := $(shell find . -name "*.go" ! -name "*_test.go" 2>/dev/null)
-GO_FILES_ALL             := $(shell find . -name "*.go" 2>/dev/null)
 
 ## Tool versions (for reproducible builds)
 GOLANGCI_LINT_VERSION    ?= latest
