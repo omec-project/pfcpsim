@@ -17,14 +17,14 @@ type measurementMethodParams struct {
 }
 
 type urrBuilder struct {
-	urrID             uint32
-	method            IEMethod
 	measurementMethod *measurementMethodParams
-	measurementPeriod time.Duration
-	measurementInfo   uint8
-	rptTrig           ReportingTrigger
 	volumThreshold    *volumThreshold
 	volumeQuota       *volumeQuota
+	measurementPeriod time.Duration
+	urrID             uint32
+	rptTrig           ReportingTrigger
+	method            IEMethod
+	measurementInfo   uint8
 }
 
 const (

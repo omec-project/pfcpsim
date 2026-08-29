@@ -144,7 +144,7 @@ func ParseAppFilter(filter string) (string, uint8, uint32, error) {
 			"Action. Please make sure to use 'allow' or 'deny'")
 	}
 
-	if !(proto == "ip" || proto == "udp" || proto == "tcp") {
+	if proto != "ip" && proto != "udp" && proto != "tcp" {
 		return "", 0, 0, pfcpsim.NewInvalidFormatError("Unsupported or unknown protocol.")
 	}
 
@@ -164,7 +164,7 @@ func ParseAppFilter(filter string) (string, uint8, uint32, error) {
 
 	if portRange != "any" {
 		portList := strings.Split(portRange, "-")
-		if !(len(portList) == 2) {
+		if len(portList) != 2 {
 			return "", 0, 0, pfcpsim.NewInvalidFormatError(
 				"Port range. Please make sure to use dash '-' to separate the two ports",
 			)

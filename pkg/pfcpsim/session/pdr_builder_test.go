@@ -11,6 +11,8 @@ import (
 	"github.com/wmnsk/go-pfcp/ie"
 )
 
+const testUEAddress = "10.0.0.1"
+
 func TestPDRBuilderShouldPanic(t *testing.T) {
 	type testCase struct {
 		input       *pdrBuilder
@@ -46,12 +48,12 @@ func TestPDRBuilderShouldPanic(t *testing.T) {
 		{
 			input: NewPDRBuilder().
 				WithMethod(Create).
-				WithUEAddress("10.0.0.1").
+				WithUEAddress(testUEAddress).
 				MarkAsDownlink(),
 			expected: &pdrBuilder{
 				method:    Create,
 				direction: downlink,
-				ueAddress: "10.0.0.1",
+				ueAddress: testUEAddress,
 				qerIDs:    make([]*ie.IE, 0),
 			},
 			description: "Invalid Downlink PDR: Partial parameters provided",
@@ -59,11 +61,11 @@ func TestPDRBuilderShouldPanic(t *testing.T) {
 		{
 			input: NewPDRBuilder().
 				WithMethod(Create).
-				WithUEAddress("10.0.0.1").
+				WithUEAddress(testUEAddress).
 				WithTEID(100),
 			expected: &pdrBuilder{
 				method:    Create,
-				ueAddress: "10.0.0.1",
+				ueAddress: testUEAddress,
 				teid:      100,
 				qerIDs:    make([]*ie.IE, 0),
 			},
@@ -72,12 +74,12 @@ func TestPDRBuilderShouldPanic(t *testing.T) {
 		{
 			input: NewPDRBuilder().
 				WithMethod(Create).
-				WithUEAddress("10.0.0.1").
+				WithUEAddress(testUEAddress).
 				WithTEID(100).
 				MarkAsUplink(),
 			expected: &pdrBuilder{
 				method:    Create,
-				ueAddress: "10.0.0.1",
+				ueAddress: testUEAddress,
 				direction: uplink,
 				teid:      100,
 				qerIDs:    make([]*ie.IE, 0),

@@ -11,18 +11,16 @@ import (
 )
 
 type pdrBuilder struct {
-	precedence uint32
-	method     IEMethod
 	sdfFilter  string
-	id         uint16
+	ueAddress  string
+	n3Address  string
+	qerIDs     []*ie.IE
+	direction  direction
+	precedence uint32
 	teid       uint32
 	farID      uint32
-
-	qerIDs []*ie.IE
-
-	ueAddress string
-	n3Address string
-	direction direction
+	id         uint16
+	method     IEMethod
 }
 
 var doCheck = true
