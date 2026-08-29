@@ -17,8 +17,8 @@ func (e *pfcpSimError) unwrap() string {
 	errMsg := strings.Builder{}
 	errMsg.WriteString("")
 
-	for i, e := range e.error {
-		fmt.Fprintf(&errMsg, "\n\t- Error %v: %v", i, e)
+	for i, err := range e.error {
+		fmt.Fprintf(&errMsg, "\n\t- Error %v: %v", i, err)
 	}
 
 	return errMsg.String()
