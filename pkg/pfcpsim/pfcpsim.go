@@ -78,28 +78,25 @@ func RemoveSession(index int) {
 //   - 2nd mode gives a user more control over PFCP sequence flow
 //     and enables send and receive of individual messages (e.g., SendAssociationSetupRequest(), PeekNextResponse())
 type PFCPClient struct {
+	ctx            context.Context
+	recvChan       chan message.Message
+	cancel         context.CancelFunc
+	heartbeatsChan chan *message.HeartbeatResponse
+	conn           *net.UDPConn
+	localAddr      string
+	remoteAddr     string
+
 	// keeps the current number of active PFCP sessions
 	// it is also used as F-SEID
 	lastFSEID uint64
 
-	aliveLock           sync.Mutex
-	isAssociationActive bool
-
-	ctx    context.Context
-	cancel context.CancelFunc
-
-	heartbeatsChan chan *message.HeartbeatResponse
-	recvChan       chan message.Message
-
-	sequenceNumber uint32
-	seqNumLock     sync.Mutex
-
-	localAddr  string
-	remoteAddr string
-	conn       *net.UDPConn
-
 	// responseTimeout timeout to wait for PFCP response (default: 5 seconds)
 	responseTimeout time.Duration
+
+	aliveLock           sync.Mutex
+	seqNumLock          sync.Mutex
+	sequenceNumber      uint32
+	isAssociationActive bool
 }
 
 func NewPFCPClient(localAddr string) *PFCPClient {

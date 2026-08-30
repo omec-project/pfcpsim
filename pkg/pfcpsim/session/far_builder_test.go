@@ -10,6 +10,8 @@ import (
 	"github.com/wmnsk/go-pfcp/ie"
 )
 
+const testDownlinkIP = "10.0.0.1"
+
 func TestFARBuilderShouldPanic(t *testing.T) {
 	type testCase struct {
 		input       *farBuilder
@@ -49,13 +51,13 @@ func TestFARBuilderShouldPanic(t *testing.T) {
 			input: NewFARBuilder().WithMethod(Create).
 				WithID(1).
 				WithAction(ActionForward).
-				WithDownlinkIP("10.0.0.1"),
+				WithDownlinkIP(testDownlinkIP),
 			expected: &farBuilder{
 				farID:       1,
 				method:      Create,
 				applyAction: ActionForward,
 				isActionSet: true,
-				downlinkIP:  "10.0.0.1",
+				downlinkIP:  testDownlinkIP,
 			},
 			description: "Invalid FAR: Providing DownlinkIP without TEID",
 		},
@@ -63,14 +65,14 @@ func TestFARBuilderShouldPanic(t *testing.T) {
 			input: NewFARBuilder().WithMethod(Create).
 				WithID(1).
 				WithAction(ActionForward | ActionDrop).
-				WithDownlinkIP("10.0.0.1").
+				WithDownlinkIP(testDownlinkIP).
 				WithTEID(100),
 			expected: &farBuilder{
 				farID:       1,
 				method:      Create,
 				applyAction: ActionForward | ActionDrop,
 				isActionSet: true,
-				downlinkIP:  "10.0.0.1",
+				downlinkIP:  testDownlinkIP,
 				teid:        100,
 			},
 			description: "Invalid FAR: Providing both forward and drop actions",
@@ -121,13 +123,13 @@ func TestFARBuilder(t *testing.T) {
 				WithAction(ActionForward | ActionBuffer).
 				WithDstInterface(ie.DstInterfaceAccess).
 				WithTEID(12).
-				WithDownlinkIP("10.0.0.1"),
+				WithDownlinkIP(testDownlinkIP),
 			expected: ie.NewCreateFAR(
 				ie.NewFARID(1),
 				ie.NewApplyAction(ActionForward|ActionBuffer),
 				ie.NewForwardingParameters(
 					ie.NewDestinationInterface(ie.DstInterfaceAccess),
-					ie.NewOuterHeaderCreation(S_TAG, 12, "10.0.0.1", "", 0, 0, 0),
+					ie.NewOuterHeaderCreation(S_TAG, 12, testDownlinkIP, "", 0, 0, 0),
 				),
 			),
 			description: "Valid FAR action with 2 flags",

@@ -29,11 +29,11 @@ var errNotConnected = errors.New("not connected")
 const SessionStep = 10
 
 type PfcpSimCfg struct {
+	sim           *sim.PFCPClient
 	interfaceName string
 	upfN3         string
 	serverAddr    string
 	state         int
-	sim           *sim.PFCPClient
 }
 
 func NewPfcpSimCfg(iface, upfN3, serverAddr string) *PfcpSimCfg {

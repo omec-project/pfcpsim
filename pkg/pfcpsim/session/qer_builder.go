@@ -9,18 +9,17 @@ import (
 )
 
 type qerBuilder struct {
-	method     IEMethod
-	qerID      uint32
-	qfi        uint8
-	isMbrSet   bool
 	ulMbr      uint64
 	dlMbr      uint64
-	isGbrSet   bool
 	ulGbr      uint64
 	dlGbr      uint64
+	qerID      uint32
+	method     IEMethod
+	qfi        uint8
+	isMbrSet   bool
+	isGbrSet   bool
 	gateStatus uint8
-
-	isIDSet bool
+	isIDSet    bool
 }
 
 const (
