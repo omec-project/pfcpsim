@@ -41,6 +41,7 @@ jobs:
     uses: omec-project/.github/.github/workflows/static-analysis.yml@d57b6360a2cc92237c201f2bb9ad58b924ef7082 # v0.0.32
     with:
       branch_name: ${{ github.ref }}
+      staticcheck_version: 'v0.8.1'
   lint:
     permissions:
       contents: read
