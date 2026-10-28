@@ -6,6 +6,8 @@ SPDX-License-Identifier: Apache-2.0
 
 -->
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/omec-project/pfcpsim/badge)](https://scorecard.dev/viewer/?uri=github.com/omec-project/pfcpsim)
+[![GitHub latest release (SemVer)](https://img.shields.io/github/v/release/omec-project/pfcpsim?sort=semver)](https://github.com/omec-project/pfcpsim/releases)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://spdx.org/licenses/Apache-2.0.html)
 
 # pfcpsim
 pfcpsim is a PFCP simulator to interact with PFCP agents and can be used to
@@ -29,7 +31,6 @@ is performed through RPCs, as shown in the following schema:
 
 #### 1. Deploy container
 Note: Release images are available on [DockerHub](https://hub.docker.com/r/omecproject/pfcpsim/tags),
-while per-PR images are available on [Aether registry](https://registry.aetherproject.org/harbor/projects/9/repositories/pfcpsim/artifacts-tab)
 ```bash
 docker container run --rm -d --name pfcpsim pfcpsim:<image_tag> -p 12345 --interface <interface-name>
 ```
