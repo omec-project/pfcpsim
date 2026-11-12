@@ -23,6 +23,14 @@ type pdrBuilder struct {
 	method     IEMethod
 }
 
+// UE IP Address flags, TS 29.244 clause 8.2.62.
+const (
+	ueIPAddrV4 uint8 = 0x02
+	// ueIPAddrDst is the S/D bit: set means the address is a destination
+	// address. The UE is the destination of downlink traffic.
+	ueIPAddrDst uint8 = 0x04
+)
+
 var doCheck = true
 
 func SetCheck(check bool) {
@@ -168,7 +176,7 @@ func (b *pdrBuilder) BuildPDR() *ie.IE {
 	if b.direction == downlink {
 		pdi := ie.NewPDI(
 			ie.NewSourceInterface(ie.SrcInterfaceCore),
-			ie.NewUEIPAddress(0x2, b.ueAddress, "", 0, 0),
+			ie.NewUEIPAddress(ueIPAddrV4|ueIPAddrDst, b.ueAddress, "", 0, 0),
 		)
 
 		if b.sdfFilter != "" {
