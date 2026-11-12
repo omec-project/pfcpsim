@@ -152,7 +152,7 @@ func TestPDRBuilder(t *testing.T) {
 				ie.NewFARID(3),
 				ie.NewPDI(
 					ie.NewSourceInterface(ie.SrcInterfaceCore),
-					ie.NewUEIPAddress(0x2, "172.16.0.1", "", 0, 0),
+					ie.NewUEIPAddress(0x6, "172.16.0.1", "", 0, 0),
 					ie.NewSDFFilter("permit ip any to assigned", "", "", "", 1),
 				),
 				ie.NewQERID(4),
@@ -175,7 +175,7 @@ func TestPDRBuilder(t *testing.T) {
 				ie.NewFARID(3),
 				ie.NewPDI(
 					ie.NewSourceInterface(ie.SrcInterfaceCore),
-					ie.NewUEIPAddress(0x2, "172.16.0.1", "", 0, 0),
+					ie.NewUEIPAddress(0x6, "172.16.0.1", "", 0, 0),
 				),
 				ie.NewQERID(4),
 			),
@@ -198,7 +198,7 @@ func TestPDRBuilder(t *testing.T) {
 					ie.NewFARID(3),
 					ie.NewPDI(
 						ie.NewSourceInterface(ie.SrcInterfaceCore),
-						ie.NewUEIPAddress(0x2, "172.16.0.1", "", 0, 0),
+						ie.NewUEIPAddress(0x6, "172.16.0.1", "", 0, 0),
 					),
 					ie.NewQERID(4),
 				),
