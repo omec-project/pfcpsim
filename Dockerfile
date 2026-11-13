@@ -36,4 +36,9 @@ RUN apk add --no-cache tcpdump
 
 COPY --from=builder /pfcpctl/pfcp* /usr/local/bin
 
+# Run as a non-root user (UID 1000)
+RUN adduser -D -u 1000 pfcpsim
+
+USER 1000
+
 ENTRYPOINT [ "pfcpsim" ]
